@@ -3,8 +3,7 @@ using EmDia.Application.Interfaces;
 using EmDia.Application.Interfaces.Repositories;
 using EmDia.Application.Services;
 using EmDia.Application.Validators;
-using EmDia.Api.Middlewares;
-using EmDia.Infrastructure.Data;
+using EmDia.Api.Middlewares;using EmDia.Infrastructure.Data;
 using EmDia.Infrastructure.Repositories;
 using EmDia.Infrastructure.Security;
 using EmDia.Infrastructure.Services;
@@ -44,6 +43,9 @@ builder.Services.AddScoped<IAvisoRepository, AvisoRepository>();
 
 // ── Serviços de aplicação ────────────────────────────────────────────────────
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<CatalogoService>();
+builder.Services.AddScoped<VeiculoService>();
+builder.Services.AddScoped<ItemService>();
 builder.Services.AddScoped<IPasswordHasher, BCryptPasswordHasher>();
 builder.Services.AddScoped<ITokenService, JwtTokenService>();
 // IRelogio da Application (herda de Domain.Interfaces.IRelogio)
