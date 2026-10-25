@@ -1,11 +1,7 @@
 namespace EmDia.Application.Interfaces;
 
 /// <summary>
-/// Abstração do relógio para facilitar testes (fixar data).
-/// "Hoje" sempre no fuso America/Sao_Paulo.
+/// Re-exporta IRelogio do Domain para que a camada Application use
+/// a mesma abstração sem criar dependência circular.
 /// </summary>
-public interface IRelogio
-{
-    DateOnly Hoje { get; }
-    DateTimeOffset Agora { get; }
-}
+public interface IRelogio : EmDia.Domain.Interfaces.IRelogio { }

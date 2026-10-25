@@ -6,9 +6,14 @@ namespace EmDia.Domain.Exceptions;
 /// </summary>
 public sealed class NotFoundException : Exception
 {
-    public NotFoundException(string recurso)
-        : base($"Não encontramos este {recurso}.") { }
+    public string Code { get; }
 
-    public NotFoundException(string recurso, string detalhe)
-        : base($"Não encontramos este {recurso}: {detalhe}.") { }
+    public NotFoundException(string code, string message)
+        : base(message)
+        => Code = code;
+
+    // Sobrecarga de compatibilidade com código Domain existente
+    public NotFoundException(string recurso)
+        : base($"Não encontramos este {recurso}.")
+        => Code = "NAO_ENCONTRADO";
 }

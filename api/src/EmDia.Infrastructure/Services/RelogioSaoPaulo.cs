@@ -1,4 +1,4 @@
-using EmDia.Domain.Interfaces;
+using EmDia.Application.Interfaces;
 
 namespace EmDia.Infrastructure.Services;
 

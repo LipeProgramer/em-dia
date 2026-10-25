@@ -5,5 +5,5 @@ namespace EmDia.Application.Interfaces;
 public interface ITokenService
 {
     string GerarAccessToken(Usuario usuario);
-    RefreshToken GerarRefreshToken(Guid usuarioId);
+    RefreshToken GerarRefreshToken(Guid usuarioId, DateTimeOffset agora);
 }

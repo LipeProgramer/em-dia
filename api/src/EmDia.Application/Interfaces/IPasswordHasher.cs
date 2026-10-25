@@ -2,6 +2,6 @@ namespace EmDia.Application.Interfaces;
 
 public interface IPasswordHasher
 {
-    string Hash(string password);
-    bool Verify(string password, string hash);
+    string Hash(string senha);
+    bool Verificar(string senha, string hash);
 }
