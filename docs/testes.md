@@ -145,12 +145,12 @@ Fase: **8** | Status: ⏳ PENDENTE
 
 ## Testes de Frontend (CT47 a CT51)
 
-Fase: **7** | Status: ⏳ PENDENTE
+Fase: **6** | Status: ✅ APROVADO | Commit / Branch: `feature/fase-6-frontend`
 
-| ID | Descrição | Status |
-|---|---|---|
-| CT47 | F1: Cadastro e check-up ponta a ponta | ⏳ |
-| CT48 | F2: Concluir item no Radar | ⏳ |
-| CT49 | F3: Criar item manual | ⏳ |
-| CT50 | F4: Atualizar km | ⏳ |
-| CT51 | Acessibilidade: status nunca só por cor | ⏳ |
+| ID | Descrição | Status | Observações |
+|---|---|---|---|
+| CT47 | F1: Cadastro e check-up ponta a ponta | ✅ PASSOU | Vitest + Testing Library |
+| CT48 | F2: Concluir item no Radar | ✅ PASSOU | Validação de passos pendentes RN06 |
+| CT49 | F3: Criar item manual | ✅ PASSOU | Formulário com tipos de vencimento |
+| CT50 | F4: Atualizar km | ✅ PASSOU | Validação de km não decrescente RN07 |
+| CT51 | Acessibilidade: status nunca só por cor | ✅ PASSOU | RNF02: ícone + cor + texto legível |
