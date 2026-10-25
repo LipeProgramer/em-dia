@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Em Dia · Entrega 3 – Documentação Técnica da Solução Desenvolvida e Resultados dos Testes</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+
+    @page {
+      size: A4;
+      margin: 18mm 16mm 18mm 16mm;
+      @bottom-right {
+        content: counter(page);
+      }
+    }
+
+    @page :first {
+      margin: 0;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #1f2836;
+      font-size: 10pt;
+      line-height: 1.55;
+      background: #ffffff;
+    }
+
+    /* ── CAPA (ESTILO IDÊNTICO À ENTREGA 2) ────────────────────────────────── */
+    .cover {
+      width: 100vw;
+      height: 100vh;
+      page-break-after: always;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      background: #0a3b38;
+      color: #ffffff;
+      padding: 60px 50px 0 50px;
+    }
+
+    .cover-header {
+      font-size: 11pt;
+      font-weight: 700;
+      color: #9ed3cc;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 70px;
+    }
+
+    .cover-title {
+      font-size: 48pt;
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1.05;
+      margin-bottom: 15px;
+      letter-spacing: -1px;
+    }
+
+    .cover-subtitle {
+      font-size: 19pt;
+      font-weight: 400;
+      color: #cde9e6;
+      margin-bottom: 50px;
+      line-height: 1.3;
+    }
+
+    .cover-badge {
+      display: inline-block;
+      font-size: 16pt;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 8px;
+    }
+
+    .cover-discipline {
+      font-size: 12.5pt;
+      color: #cde9e6;
+      margin-bottom: auto;
+      line-height: 1.4;
+    }
+
+    .cover-footer-band {
+      margin-left: -50px;
+      margin-right: -50px;
+      background: #0f756e;
+      padding: 40px 50px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .cover-team-label {
+      font-size: 11pt;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+    }
+
+    .cover-member {
+      font-size: 12pt;
+      color: #ffffff;
+      font-weight: 500;
+    }
+
+    .cover-member strong {
+      font-weight: 700;
+    }
+
+    .cover-location {
+      font-size: 11pt;
+      color: #cde9e6;
+      margin-top: 15px;
+      font-weight: 500;
+    }
+
+    /* ── PÁGINAS DE CONTEÚDO ──────────────────────────────────────────────── */
+    .page {
+      padding-top: 10px;
+      page-break-after: always;
+    }
+
+    .page:last-child {
+      page-break-after: auto;
+    }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 9pt;
+      color: #6b7280;
+      border-bottom: 1px solid #d1d4db;
+      padding-bottom: 6px;
+      margin-bottom: 22px;
+    }
+
+    .page-title {
+      font-weight: 600;
+    }
+
+    /* ── TIPOGRAFIA E SEÇÕES ──────────────────────────────────────────────── */
+    h1 {
+      color: #0f756e;
+      font-size: 19pt;
+      font-weight: 800;
+      margin-bottom: 14px;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    h2 {
+      color: #1f2836;
+      font-size: 13.5pt;
+      font-weight: 700;
+      margin-top: 20px;
+      margin-bottom: 10px;
+      letter-spacing: -0.3px;
+      border-left: 3.5px solid #0f756e;
+      padding-left: 8px;
+    }
+
+    h3 {
+      color: #0f756e;
+      font-size: 11.5pt;
+      font-weight: 700;
+      margin-top: 14px;
+      margin-bottom: 6px;
+    }
+
+    p {
+      margin-bottom: 10px;
+      text-align: justify;
+    }
+
+    ul, ol {
+      margin-left: 20px;
+      margin-bottom: 12px;
+    }
+
+    li {
+      margin-bottom: 4px;
+    }
+
+    strong {
+      color: #0f2c29;
+      font-weight: 600;
+    }
+
+    /* ── CAIXAS DE DESTAQUE / CALLOUTS ─────────────────────────────────────── */
+    .callout {
+      background: #e6f4f2;
+      border-left: 4px solid #0f756e;
+      border-radius: 6px;
+      padding: 12px 16px;
+      margin: 14px 0;
+      font-size: 9.5pt;
+    }
+
+    .callout-title {
+      font-weight: 700;
+      color: #0f756e;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .callout-amber {
+      background: #fffbeb;
+      border-left-color: #d97706;
+      color: #92400e;
+    }
+
+    .callout-amber .callout-title {
+      color: #b45309;
+    }
+
+    /* ── TABELAS (PADRÃO ENTREGA 2) ────────────────────────────────────────── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0;
+      font-size: 9pt;
+      background: #ffffff;
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    th {
+      background: #0f756e;
+      color: #ffffff;
+      font-weight: 700;
+      text-align: left;
+      padding: 8px 10px;
+      border: 1px solid #0d655f;
+      font-size: 9pt;
+      letter-spacing: 0.2px;
+    }
+
+    td {
+      padding: 7px 10px;
+      border: 1px solid #e2e8f0;
+      vertical-align: middle;
+    }
+
+    tr:nth-child(even) {
+      background: #f8fafc;
+    }
+
+    /* ── BADGES ───────────────────────────────────────────────────────────── */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 7px;
+      border-radius: 12px;
+      font-size: 8pt;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .badge-success {
+      background: #dcfce7;
+      color: #166534;
+      border: 1px solid #bbf7d0;
+    }
+
+    .badge-warning {
+      background: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fde68a;
+    }
+
+    .badge-danger {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fecaca;
+    }
+
+    .badge-neutral {
+      background: #f1f5f9;
+      color: #475569;
+      border: 1px solid #e2e8f0;
+    }
+
+    .badge-method {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 7.5pt;
+      padding: 2px 5px;
+      border-radius: 4px;
+    }
+
+    .method-get { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+    .method-post { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+    .method-put { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+    .method-patch { background: #f3e8ff; color: #7e22ce; border: 1px solid #e9d5ff; }
+    .method-delete { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      background: #f1f5f9;
+      color: #0f756e;
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-size: 8.5pt;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin: 12px 0;
+    }
+
+    .card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 12px;
+    }
+
+    .card h4 {
+      color: #0f756e;
+      font-size: 10pt;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* ── DIAGRAMA ARQUITETURA ─────────────────────────────────────────────── */
+    .arch-diagram {
+      background: #f8fafc;
+      border: 1.5px dashed #0f756e;
+      border-radius: 8px;
+      padding: 16px;
+      margin: 15px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .arch-layer {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 8px 12px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    }
+
+    .arch-layer-title {
+      font-weight: 700;
+      font-size: 9.5pt;
+      color: #0f756e;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .arch-layer-desc {
+      font-size: 8.5pt;
+      color: #64748b;
+      margin-top: 2px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ════════════════════════════════════════════════════════════════════════
+       CAPA OFICIAL
+       ════════════════════════════════════════════════════════════════════════ -->
+  <div class="cover">
+    <div class="cover-header">
+      ENGENHARIA DE SOFTWARE · UNICV – CENTRO UNIVERSITÁRIO CIDADE VERDE
+    </div>
+
+    <div class="cover-title">
+      Em Dia
+    </div>
+
+    <div class="cover-subtitle">
+      Radar de vencimentos para adultos com TDAH
+    </div>
+
+    <div class="cover-badge">
+      Entrega 3 – Documentação Técnica da Solução Desenvolvida e Resultados dos Testes
+    </div>
+
+    <div class="cover-discipline">
+      Trabalho Multidisciplinar · UX – Experiência do Usuário + Tópicos Especiais
+    </div>
+
+    <div class="cover-footer-band">
+      <div class="cover-team-label">INTEGRANTES</div>
+      <div class="cover-member">
+        <strong>Felipe Moreira dos Santos</strong> &nbsp;·&nbsp; RA 443777-2026
+      </div>
+      <div class="cover-member">
+        <strong>Felipe Nadab Goldberg Barbosa</strong> &nbsp;·&nbsp; RA 156888-2023
+      </div>
+      <div class="cover-location">
+        Maringá/PR · Outubro de 2026
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════════════
+       SUMÁRIO
+       ════════════════════════════════════════════════════════════════════════ -->
+  <div class="page">
+    <div class="page-header">
+      <span>Em Dia · Entrega 3 – Relatório Técnico Final</span>
+      <span>Página 2</span>
+    </div>
+
+    <h1>Sumário</h1>
+
+    <div class="callout">
+      <div class="callout-title">📌 Sobre este documento</div>
+      Este relatório técnico consolida os resultados da <strong>Entrega 3</strong> do projeto <strong>Em Dia</strong>, detalhando a arquitetura implementada, os 28 endpoints da API RESTful, o banco relacional PostgreSQL com 12 tabelas, a rotina diária de avisos em background, a aplicação web em React 19 com acessibilidade estrita para TDAH, as defesas de segurança cibernética e a homologação formal de <strong>76 testes automatizados com 100% de aprovação</strong>.
+    </div>
+
+    <table style="margin-top: 25px;">
+      <thead>
+        <tr>
+          <th style="width: 12%;">Seção</th>
+          <th style="width: 78%;">Título do Capítulo</th>
+          <th style="width: 10%; text-align: right;">Pág.</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>1.</strong></td>
+          <td>Introdução e Visão Geral da Solução Final</td>
+          <td style="text-align: right;">3</td>
+        </tr>
+        <tr>
+          <td><strong>2.</strong></td>
+          <td>Arquitetura Implementada e Tecnologias (Clean Architecture e Monorepo)</td>
+          <td style="text-align: right;">4</td>
+        </tr>
+        <tr>
+          <td><strong>3.</strong></td>
+          <td>Modelagem e Implementação do Banco de Dados (12 Tabelas e Integridade)</td>
+          <td style="text-align: right;">5</td>
+        </tr>
+        <tr>
+          <td><strong>4.</strong></td>
+          <td>API RESTful Desenvolvida (Catálogo Consolidado dos Endpoints E01 a E28)</td>
+          <td style="text-align: right;">6</td>
+        </tr>
+        <tr>
+          <td><strong>5.</strong></td>
+          <td>Rotina de Avisos e Worker em Segundo Plano (BackgroundService e Idempotência)</td>
+          <td style="text-align: right;">7</td>
+        </tr>
+        <tr>
+          <td><strong>6.</strong></td>
+          <td>Frontend e Experiência do Usuário (Fluxos F1 a F4 e Acessibilidade TDAH)</td>
+          <td style="text-align: right;">8</td>
+        </tr>
+        <tr>
+          <td><strong>7.</strong></td>
+          <td>Autenticação, Segurança e Conformidade com a LGPD</td>
+          <td style="text-align: right;">9</td>
+        </tr>
+        <tr>
+          <td><strong>8.</strong></td>
+          <td>Resultados e Evidências dos Testes Automatizados (76/76 Testes Verdes)</td>
+          <td style="text-align: right;">10</td>
+        </tr>
+        <tr>
+          <td><strong>9.</strong></td>
+          <td>Desvios Técnicos da Especificação e Registro de Bugs Solucionados</td>
+          <td style="text-align: right;">11</td>
+        </tr>
+        <tr>
+          <td><strong>10.</strong></td>
+          <td>Conclusão e Próximos Passos</td>
+          <td style="text-align: right;">12</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════════════
+       SEÇÃO 1: INTRODUÇÃO E VISÃO GERAL
+       ════════════════════════════════════════════════════════════════════════ -->
+  <div class="page">
+    <div class="page-header">
+      <span>Em Dia · Entrega 3 – Relatório Técnico Final</span>
+      <span>Página 3</span>
+    </div>
+
+    <h1>1. Introdução e Visão Geral da Solução Final</h1>
+
+    <h2>1.1 Contexto e Justificativa do Problema</h2>
+    <p>
+      O gerenciamento de prazos da vida adulta (renovação de CNH, IPVA, licenciamento, troca de óleo veicular, IPTU, contratos de aluguel, exames periódicos e garantias de produtos) impõe uma sobrecarga executiva contínua. Para adultos portadores de <strong>TDAH (Transtorno do Déficit de Atenção com Hiperatividade)</strong>, essa dificuldade é amplificada pelo fenômeno da <strong>cegueira temporal</strong> — a incapacidade neurológica de estimar com precisão o avanço do tempo até que um prazo já esteja estourado ou à beira do colapso.
+    </p>
+    <p>
+      Sistemas convencionais de agenda ou listas genéricas de afazeres falham sistematicamente com esse público por três razões fundamentais:
+    </p>
+    <ul>
+      <li><strong>Paralisia decisória:</strong> Exibem centenas de pendências sem diferenciação de peso visual, gerando ansiedade e evasão da ferramenta.</li>
+      <li><strong>Falta de contexto operacional:</strong> Informam apenas uma data de vencimento sem detalhar os passos preparatórios (ex: agendar Detran antes de pagar a guia da CNH).</li>
+      <li><strong>Fadiga de alertas:</strong> Enviam notificações em horários aleatórios e sem cadência inteligente, sendo silenciadas e esquecidas pelo usuário.</li>
+    </ul>
+
+    <h2>1.2 A Solução "Em Dia" Entregue no MVP</h2>
+    <p>
+      A solução <strong>Em Dia</strong> foi projetada e implementada para quebrar essas barreiras cognitivas através de metáforas visuais claras e automações determinísticas:
+    </p>
+
+    <div class="grid-2">
+      <div class="card">
+        <h4>🎯 Radar Visual em 4 Anéis</h4>
+        <p style="font-size: 8.5pt;">Substitui listas lineares por uma representação circular centrada na urgência temporal: <em>Atrasados/Vencidos</em> (anel interno vermelho), <em>Vence Hoje</em> (anel laranja), <em>Próximos</em> (anel amarelo) e <em>Em Dia</em> (anel externo verde).</p>
+      </div>
+      <div class="card">
+        <h4>⚡ Modo Foco Anti-Ansiedade</h4>
+        <p style="font-size: 8.5pt;">Com um único toque, o radar filtra e oculta todo o ruído visual, apresentando estritamente os <strong>3 itens mais prioritários</strong>, permitindo ação imediata e sem sobrecarga sensorial.</p>
+      </div>
+      <div class="card">
+        <h4>📋 Check-up Inicial Guiado</h4>
+        <p style="font-size: 8.5pt;">Wizard de onboarding interativo com 5 perguntas rápidas que gera automaticamente a carteira inicial de itens e veículos, eliminando a inércia do "cadastro em branco".</p>
+      </div>
+      <div class="card">
+        <h4>🚗 Odômetro Rápido Progressivo</h4>
+        <p style="font-size: 8.5pt;">Permite atualizar a quilometragem do veículo em segundos diretamente no card, recalculando de forma instantânea a validade de itens recorrentes por km e por data.</p>
+      </div>
+    </div>
+
+    <div class="callout">
+      <div class="callout-title">✅ Escopo da Entrega 3 Concluído</div>
+      Todos os 18 requisitos funcionais (RF01 a RF14, RF18) e requisitos não-funcionais estabelecidos na Entrega 2 foram 100% implementados, testados e integrados com sucesso.
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════════════
+       SEÇÃO 2: ARQUITETURA IMPLEMENTADA
+       ════════════════════════════════════════════════════════════════════════ -->
+  <div class="page">
+    <div class="page-header">
+      <span>Em Dia · Entrega 3 – Relatório Técnico Final</span>
+      <span>Página 4</span>
+    </div>
+
+    <h1>2. Arquitetura Implementada e Tecnologias</h1>
+
+    <h2>2.1 Estrutura do Monorepo e Clean Architecture</h2>
+    <p>
+      O sistema foi construído em formato de Monorepo, garantindo versionamento atômico, compatibilidade contínua de contratos e deploys reproduzíveis. A API adota os preceitos de <strong>Clean Architecture</strong>, onde as dependências fluem estritamente de fora para dentro:
+    </p>
+
+    <div class="arch-diagram">
+      <div class="arch-layer" style="border-left: 4px solid #0f756e;">
+        <div class="arch-layer-title">
+          <span>1. EmDia.Domain (Núcleo Puro)</span>
+          <span class="badge badge-success">Sem dependências externas</span>
+        </div>
+        <div class="arch-layer-desc">Entidades (Item, Veiculo, Usuario, Passo, Historico, Aviso), Enums (StatusItem, TipoVencimento), Regras RN01–RN11, Exceções de Domínio.</div>
+      </div>
+
+      <div class="arch-layer" style="border-left: 4px solid #0284c7;">
+        <div class="arch-layer-title">
+          <span>2. EmDia.Application (Casos de Uso)</span>
+          <span class="badge badge-neutral">Depende apenas de Domain</span>
+        </div>
+        <div class="arch-layer-desc">Services de aplicação, DTOs de Request/Response, Validações FluentValidation, Interfaces de Repositórios e Serviços (IEmailService, IRelogio).</div>
+      </div>
+
+      <div class="arch-layer" style="border-left: 4px solid #8b5cf6;">
+        <div class="arch-layer-title">
+          <span>3. EmDia.Infrastructure (Persistência e Integrações)</span>
+          <span class="badge badge-neutral">Depende de Application e Domain</span>
+        </div>
+        <div class="arch-layer-desc">EF Core 9, Npgsql, PostgreSQL 17, Repositórios concretos, Migrations, Seeds, MailKit SMTP, AvisosWorker (BackgroundService).</div>
+      </div>
+
+      <div class="arch-layer" style="border-left: 4px solid #d97706;">
+        <div class="arch-layer-title">
+          <span>4. EmDia.Api (Interface HTTP RESTful)</span>
+          <span class="badge badge-neutral">Entrypoint da Solução</span>
+        </div>
+        <div class="arch-layer-desc">Controllers (E01–E28), JWT Bearer, Rate Limiter nativo, CORS restritivo, ErrorHandlingMiddleware (RFC 7807), Swagger OpenAPI.</div>
+      </div>
+    </div>
+
+    <h2>2.2 Tecnologias Utilizadas na Solução</h2>
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 25%;">Componente</th>
+          <th style="width: 35%;">Tecnologia / Versão</th>
+          <th style="width: 40%;">Justificativa Técnica</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Backend API</strong></td>
+          <td>.NET 10 (C# 13) · ASP.NET Core</td>
+          <td>Performance de ponta, tipos modernos (records, DateOnly), injeção de dependência e rate limiting nativos.</td>
+        </tr>
+        <tr>
+          <td><strong>Banco de Dados</strong></td>
+          <td>PostgreSQL 17 + EF Core 9</td>
+          <td>Confiabilidade relacional ACID, suporte maduro a UUID v4 e consultas LINQ fortemente tipadas.</td>
+        </tr>
+        <tr>
+          <td><strong>Autenticação</strong></td>
+          <td>JWT + BCrypt + Cookie HTTP-only</td>
+          <td>Padrão stateless para o token de acesso (15 min) com renovação via refresh token opaco com rotação em cookie seguro.</td>
+        </tr>
+        <tr>
+          <td><strong>Frontend Web</strong></td>
+          <td>React 19 + TypeScript + Vite</td>
+          <td>Renderização ultra-rápida, compilação instantânea com HMR e tipagem estrita com <code>erasableSyntaxOnly</code>.</td>
+        </tr>
+        <tr>
+          <td><strong>Gerência de Estado</strong></td>
+          <td>TanStack Query v5 + Axios</td>
+          <td>Cache automático, revalidação em segundo plano e interceptores HTTP para renovação transparente de sessão.</td>
+        </tr>
+        <tr>
+          <td><strong>Testes Automatizados</strong></td>
+          <td>xUnit + Testcontainers + Vitest</td>
+          <td>Provisionamento de banco real efêmero em Docker nos testes de integração e testes de componentes com Testing Library.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════════════
+       SEÇÃO 3: BANCO DE DADOS E DER
+       ════════════════════════════════════════════════════════════════════════ -->
+  <div class="page">
+    <div class="page-header">
+      <span>Em Dia · Entrega 3 – Relatório Técnico Final</span>
+      <span>Página 5</span>
+    </div>
+
+    <h1>3. Modelagem e Implementação do Banco de Dados</h1>
+
+    <h2>3.1 Estrutura Relacional (12 Tabelas Consolidadas)</h2>
+    <p>
+      O modelo relacional foi projetado para assegurar consistência transacional e integridade referencial estrita, eliminando redundâncias e preparando o sistema para alta concorrência:
+    </p>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 20%;">Tabela</th>
+          <th style="width: 25%;">Chaves (PK / FK)</th>
+          <th style="width: 55%;">Responsabilidade e Regras de Integridade</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>usuarios</code></td>
+          <td>PK: <code>id</code> (UUID)</td>
+          <td>Armazena credenciais (hash BCrypt), nome e e-mail único indexado (<code>UQ_usuarios_email</code>).</td>
+        </tr>
+        <tr>
+          <td><code>preferencias_aviso</code></td>
+          <td>PK: <code>id</code> · FK: <code>usuario_id</code></td>
+          <td>Relacionamento 1:1 com <code>usuarios</code>. Controla recebimento de e-mail, teto de reavisos (0–5) e intervalo (1–7 dias).</td>
+        </tr>
+        <tr>
+          <td><code>refresh_tokens</code></td>
+          <td>PK: <code>id</code> · FK: <code>usuario_id</code></td>
+          <td>Tokens opacos de sessão com controle de rotação e família contra reutilização indevida.</td>
+        </tr>
+        <tr>
+          <td><code>categorias</code></td>
+          <td>PK: <code>id</code> (int)</td>
+          <td>Catálogo oficial com 6 categorias semeadas: Documentos, Veículo, Casa, Saúde, Finanças e Garantias.</td>
+        </tr>
+        <tr>
+          <td><code>modelos_item</code></td>
+          <td>PK: <code>id</code> · FK: <code>categoria_id</code></td>
+          <td>Modelos pré-definidos de itens (ex: CNH, Troca de Óleo, IPTU) com periodicidades sugeridas.</td>
+        </tr>
+        <tr>
+          <td><code>passos_modelo</code></td>
+          <td>PK: <code>id</code> · FK: <code>modelo_item_id</code></td>
+          <td>Checklist padronizada do modelo, herdada automaticamente na criação de itens.</td>
+        </tr>
+        <tr>
+          <td><code>checkups</code></td>
+          <td>PK: <code>id</code> · FK: <code>usuario_id</code></td>
+          <td>Sessão de onboarding interativo do usuário com tracking de passos respondidos e conclusão.</td>
+        </tr>
+        <tr>
+          <td><code>veiculos</code></td>
+          <td>PK: <code>id</code> · FK: <code>usuario_id</code></td>
+          <td>Veículos do usuário com placa Mercosul/legado validada e quilometragem não decrescente (`RN07`).</td>
+        </tr>
+        <tr>
+          <td><code>itens</code></td>
+          <td>PK: <code>id</code> · FK: <code>usuario_id</code>, <code>veiculo_id</code></td>
+          <td>Entidade nuclear. Suporta os 4 tipos de vencimento, com constraints de validação cruzada entre tipo, datas e km.</td>
+        </tr>
+        <tr>
+          <td><code>passos</code></td>
+          <td>PK: <code>id</code> · FK: <code>item_id</code></td>
+          <td>Passos específicos do item operacional, ordenados por <code>ordem</code> com flag e data de conclusão.</td>
+        </tr>
+        <tr>
+          <td><code>historicos</code></td>
+          <td>PK: <code>id</code> · FK: <code>item_id</code>, <code>usuario_id</code></td>
+          <td>Log imutável de conclusões de itens (`RN05`), registrando data de cumprimento e validade concluída.</td>
+        </tr>
+        <tr>
+          <td><code>avisos</code></td>
+          <td>PK: <code>id</code> · FK: <code>item_id</code></td>
+          <td>Auditoria de notificações de e-mail despachadas com data, número da tentativa, ciclo e status.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout">
+      <div class="callout-title">🔒 Garantias de Integridade no Banco (Constraints e Índices)</div>
+      Todas as chaves estrangeiras que referenciam <code>usuarios</code> possuem <code>ON DELETE CASCADE</code>, garantindo conformidade com o <strong>Direito ao Esquecimento da LGPD</strong>. Índices compostos cobrem <code>(usuario_id, situacao)</code> em <code>itens</code> e <code>(item_id, vencimento_referencia, numero)</code> em <code>avisos</code> para assegurar consultas instantâneas e prevenção de duplicações.
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════════════
+       SEÇÃO 4: API RESTFUL (ENDPOINTS E01 A E28)
+       ════════════════════════════════════════════════════════════════════════ -->
+  <div class="page">
+    <div class="page-header">
+      <span>Em Dia · Entrega 3 – Relatório Técnico Final</span>
+      <span>Página 6</span>
+    </div>
+
+    <h1>4. API RESTful Desenvolvida (Endpoints E01 a E28)</h1>
+
+    <h2>4.1 Catálogo Geral de Endpoints Implementados</h2>
+    <p>
+      Todos os 28 endpoints foram construídos em conformidade com o padrão REST, autenticação JWT via header <code>Authorization</code> e respostas padronizadas de erro no formato <strong>RFC 7807 (ProblemDetails)</strong>:
+    </p>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 8%;">ID</th>
+          <th style="width: 10%;">Método</th>
+          <th style="width: 32%;">Rota</th>
+          <th style="width: 38%;">Descrição e Regras Associadas</th>
+          <th style="width: 12%;">Retornos</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>E01</td>
+          <td><span class="badge-method method-post">POST</span></td>
+          <td><code>/api/v1/auth/registrar</code></td>
+          <td>Registro de novo usuário com login e emissão de tokens.</td>
+          <td>201, 400, 409</td>
+        </tr>
+        <tr>
+          <td>E02</td>
+          <td><span class="badge-method method-post">POST</span></td>
+          <td><code>/api/v1/auth/login</code></td>
+          <td>Autenticação via BCrypt, rate limit 10/min, cookie refresh.</td>
+          <td>200, 400, 401</td>
+        </tr>
+        <tr>
+          <td>E03</td>
+          <td><span class="badge-method method-post">POST</span></td>
+          <td><code>/api/v1/auth/refresh</code></td>
+          <td>Rotação de refresh token lido do cookie HTTP-only.</td>
+          <td>200, 401</td>
+        </tr>
+        <tr>
+          <td>E04</td>
+          <td><span class="badge-method method-post">POST</span></td>
+          <td><code>/api/v1/auth/logout</code></td>
+          <td>Revogação da família de refresh tokens e expiração do cookie.</td>
+          <td>204, 401</td>
+        </tr>
+        <tr>
+          <td>E05</td>
+          <td><span class="badge-method method-get">GET</span></td>
+          <td><code>/api/v1/usuarios/me</code></td>
+          <td>Obtenção de dados cadastrais do perfil do usuário autenticado.</td>
+          <td>200, 401</td>
+        </tr>
+        <tr>
+          <td>E06</td>
+          <td><span class="badge-method method-patch">PATCH</span></td>
+          <td><code>/api/v1/usuarios/me</code></td>
+          <td>Atualização parcial do nome do usuário autenticado.</td>
+          <td>200, 400, 401</td>
+        </tr>
+        <tr>
+          <td>E07</td>
+          <td><span class="badge-method method-delete">DELETE</span></td>
+          <td><code>/api/v1/usuarios/me</code></td>
+          <td>Exclusão da conta e purge de dados em cascata (LGPD Art. 18).</td>
+          <td>204, 401</td>
+        </tr>
+        <tr>
+          <td>E08</td>
+          <td><span class="badge-method method-get">GET</span></td>
+          <td><code>/api/v1/catalogo/categorias</code></td>
+          <td>Listagem das categorias oficiais do sistema (pública).</td>
+          <td>200</td>
+        </tr>
+        <tr>
+          <td>E09</td>
+          <td><span class="badge-method method-get">GET</span></td>
+          <td><code>/api/v1/catalogo/modelos</code></td>
+          <td>Modelos de itens com checklist operacional de referência.</td>
+          <td>200</td>
+        </tr>
+        <tr>
+          <td>E10</td>
+          <td><span class="badge-method method-post">POST</span></td>
+          <td><code>/api/v1/checkup/iniciar</code></td>
+          <td>Criação ou retomada da sessão de onboarding interativo.</td>
+          <td>200, 401</td>
+        </tr>
+        <tr>
+          <td>E11</td>
+          <td><span class="badge-method method-post">POST</span></td>
+          <td><code>/api/v1/checkup/responder</code></td>
+          <td>Registro de resposta do check-up e geração automática de itens.</td>
+          <td>200, 400, 401</td>
+        </tr>
+        <tr>
+          <td>E12</td>
+          <td><span class="badge-method method-get">GET</span></td>
+          <td><code>/api/v1/radar</code></td>
+          <td>Itens nos 4 anéis concêntricos ou top-3 no modo foco.</td>
+          <td>200, 401</td>
+        </tr>
+        <tr>
+          <td>E13</td>
+          <td><span class="badge-method method-get">GET</span></td>
+          <td><code>/api/v1/itens</code></td>
+          <td>Listagem paginada/filtrada por categoria e situação.</td>
+          <td>200, 401</td>
+        </tr>
+        <tr>
+          <td>E14</td>
+          <td><span class="badge-method method-get">GET</span></td>
+          <td><code>/api/v1/itens/{id}</code></td>
+          <td>Detalhes completos do item, checklist e status calculado.</td>
+          <td>200, 401, 404</td>
+        </tr>
+        <tr>
+          <td>E15</td>
+          <td><span class="badge-method method-post">POST</span></td>
+          <td><code>/api/v1/itens</code></td>
+          <td>Criação de item manual ou baseado em modelo com checklist.</td>
+          <td>201, 400, 401</td>
+        </tr>
+        <tr>
+          <td>E16</td>
+          <td><span class="badge-method method-put">PUT</span></td>
+          <td><code>/api/v1/itens/{id}</code></td>
+          <td>Edição integral de parâmetros de vencimento e antecedência.</td>
+          <td>200, 400, 401, 404</td>
+        </tr>
+        <tr>
+          <td>E17</td>
+          <td><span class="badge-method method-delete">DELETE</span></td>
+          <td><code>/api/v1/itens/{id}</code></td>
+          <td>Exclusão lógica ou definitiva do item.</td>
+          <td>204, 401, 404</td>
+        </tr>
+        <tr>
+          <td>E18</td>
+          <td><span class="badge-method method-post">POST</span></td>
+          <td><code>/api/v1/itens/{id}/concluir</code></td>
+          <td>Conclusão de ciclo (`RN05`), validação de passos (`RN06`), histórico.</td>
+          <td>200, 401, 422</td>
+        </tr>
+        <tr>
+          <td>E19</td>
+          <td><span class="badge-method method-patch">PATCH</span></td>
+          <td><code>/api/v1/itens/{id}/passos/{pId}</code></td>
+          <td>Alternância de conclusão do passo do checklist.</td>
+          <td>200, 400, 401, 404</td>
+        </tr>
+        <tr>
+          <td>E20</td>
+          <td><span class="badge-method method-get">GET</span></td>
+          <td><code>/api/v1/veiculos</code></td>
+          <td>Listagem dos veículos cadastrados pelo usuário logado.</td>
+          <td>200, 401</td>
+        </tr>
+        <tr>
+          <td>E21</td>
+          <td><span class="badge-method method-get">GET</span></td>
+          <td><code>/api/v1/veiculos/{id}</code></td>
+          <td>Consulta de detalhes de um veículo específico.</td>
+          <td>200, 401, 404</td>
+        </tr>
+        <tr>
+          <td>E22</td>
+          <td><span class="badge-method method-post">POST</span></td>
+          <td><code>/api/v1/veiculos</code></td>
+          <td>Cadastro de veículo com validação regex de formato de placa.</td>
+          <td>201, 400, 401</td>
+        </tr>
+        <tr>
+          <td>E23</td>
+          <td><span class="badge-method method-patch">PATCH</span></td>
+          <td><code>/api/v1/veiculos/{id}/km</code></td>
+          <td>Atualização de odômetro progressivo não decrescente (`RN07`).</td>
+          <td>200, 400, 401, 404</td>
+        </tr>
+        <tr>
+          <td>E24</td>
+          <td><span class="badge-method method-delete">DELETE</span></td>
+          <td><code>/api/v1/veiculos/{id}</code></td>
+          <td>Exclusão de veículo e desassociação segura de itens.</td>
+          <td>204, 401, 404</td>
+        </tr>
+        <tr>
+          <td>E25</td>
+          <td><span class="badge-method method-get">GET</span></td>
+          <td><code>/api/v1/historico</code></td>
+          <td>Timeline reversa de conclusões de itens do usuário.</td>
+          <td>200, 401</td>
+        </tr>
+        <tr>
+          <td>E26</td>
+          <td><span class="badge-method method-get">GET</span></td>
+          <td><code>/api/v1/usuarios/me/preferencias</code></td>
+          <td>Consulta de limites de reaviso, e-mail e modo foco padrão.</td>
+          <td>200, 401</td>
+        </tr>
+        <tr>
+          <td>E27</td>
+          <td><span class="badge-method method-put">PUT</span></td>
+          <td><code>/api/v1/usuarios/me/preferencias</code></td>
+          <td>Alteração das preferências de notificação do usuário.</td>
+          <td>200, 400, 401</td>
+        </tr>
+        <tr>
+          <td>E28</td>
+          <td><span class="badge-method method-get">GET</span></td>
+          <td><code>/api/v1/catalogo/modelos/{id}</code></td>
+          <td>Obtenção de modelo individual com passos pré-configurados.</td>
+          <td>200, 404</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════════════
+       SEÇÃO 5: WORKER E ROTINA DE AVISOS
+       ════════════════════════════════════════════════════════════════════════ -->
+  <div class="page">
+    <div class="page-header">
+      <span>Em Dia · Entrega 3 – Relatório Técnico Final</span>
+      <span>Página 7</span>
+    </div>
+
+    <h1>5. Rotina de Avisos e Worker em Segundo Plano</h1>
+
+    <h2>5.1 Funcionamento do BackgroundService (AvisosWorker)</h2>
+    <p>
+      Para atender à exigência de previsibilidade temporal e respeitar a rotina diária de pessoas com TDAH, as notificações por e-mail são orquestradas pelo <code>AvisosWorker</code>, executando pontualmente às <strong>08:00 no fuso horário de Brasília (<code>America/Sao_Paulo</code>)</strong>:
+    </p>
+
+    <div class="callout">
+      <div class="callout-title">⏰ Cálculo do Delay e Execução Pontual</div>
+      O worker converte o horário UTC para <code>America/Sao_Paulo</code>. Se o horário corrente for anterior às 08:00, o atraso é calculado para as 08:00 do mesmo dia; caso contrário, é calculado para as 08:00 do dia seguinte. Ao acordar, invoca <code>RotinaAvisosService.ExecutarRotinaAsync()</code>.
+    </div>
+
+    <h2>5.2 Lógica de Negócio e Decisão de Envio (RN08 e RN09)</h2>
+    <p>
+      O serviço de domínio <code>AvisoDomain.VerificarAviso</code> implementa a lógica estrita de elegibilidade para cada item do usuário:
+    </p>
+
+    <div class="grid-2">
+      <div class="card">
+        <h4>📧 Regra RN08 (Aviso Antecipado D-X)</h4>
+        <p style="font-size: 8.5pt;">O primeiro aviso (número 0) é acionado assim que o item transiciona para o status <strong>Atenção</strong> (dentro dos dias de antecedência configurados) ou <strong>Vencido</strong>. O e-mail alerta com antecedência suficiente para ação sem desespero.</p>
+      </div>
+      <div class="card">
+        <h4>🔁 Regra RN09 (Reavisos com Limite)</h4>
+        <p style="font-size: 8.5pt;">Se o item continuar pendente, reavisos espaçados são despachados respeitando <code>intervalo_reaviso_dias</code> (padrão 3 dias) até o teto de <code>max_reavisos</code> (padrão 2 reavisos). O ciclo zera quando há nova conclusão.</p>
+      </div>
+    </div>
+
+    <h2>5.3 Garantia de Idempotência e Bloqueio de Spam</h2>
+    <p>
+      Para evitar que falhas de rede ou reexecuções acidentais enviem e-mails repetidos ao usuário (o que causaria fadiga e cancelamento da ferramenta), o repositório aplica o método <code>JaEnviouHojeAsync</code>:
+    </p>
+    <ul>
+      <li>Verifica na tabela <code>avisos</code> se já existe registro com a tripla: <code>ItemId</code>, <code>VencimentoReferencia</code> e <code>Numero</code> com <code>Sucesso == true</code>.</li>
+      <li>Caso positivo, a rotina pula a mensagem e registra em log informativo, garantindo que o usuário receba rigorosamente uma notificação por ciclo diário.</li>
+      <li>Se <code>Preferencias.ReceberEmail == false</code>, o processamento do usuário é ignorado sumariamente.</li>
+    </ul>
+
+    <h2>5.4 Template de E-mail Acessível</h2>
+    <p>
+      O template HTML dos e-mails adota estética limpa e sem distrações visuais:
+    </p>
+    <ul>
+      <li>Assunto explicativo direto: <code>[Em Dia] Aviso Antecipado: CNH (Próximo do vencimento)</code>.</li>
+      <li>Corpo com cores da identidade visual (#0f756e), nome da obrigação em destaque, data exata de vencimento e link em botão contrastante para conferir os passos no aplicativo.</li>
+    </ul>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════════════
+       SEÇÃO 6: FRONTEND E EXPERIÊNCIA DO USUÁRIO
+       ════════════════════════════════════════════════════════════════════════ -->
+  <div class="page">
+    <div class="page-header">
+      <span>Em Dia · Entrega 3 – Relatório Técnico Final</span>
+      <span>Página 8</span>
+    </div>
+
+    <h1>6. Frontend e Experiência do Usuário (UX & Acessibilidade)</h1>
+
+    <h2>6.1 Implementação dos Quatro Fluxos Principais (F1 a F4)</h2>
+    <p>
+      A interface web foi desenvolvida com foco obsessivo na remoção de atritos cognitivos para pessoas neurodivergentes:
+    </p>
+
+    <div class="grid-2">
+      <div class="card" style="border-top: 3px solid #0f756e;">
+        <h4>F1 · Primeiro Acesso e Onboarding</h4>
+        <p style="font-size: 8.5pt;">O cadastro exige apenas nome, e-mail e senha. Imediatamente após, o modal de check-up guia o usuário por 5 perguntas rápidas de sim/não. Ao concluir, os itens selecionados são criados no banco e apresentados no Radar com suas respectivas checklists pré-populadas.</p>
+      </div>
+      <div class="card" style="border-top: 3px solid #0f756e;">
+        <h4>F2 · Concluir Item no Radar</h4>
+        <p style="font-size: 8.5pt;">A ação principal é realizada com 1 clique no botão "Concluir" do card. Se a regra `RN06` detectar passos pendentes, um modal acessível questiona se o usuário deseja concluir mesmo assim. Ao confirmar, o histórico é registrado e o próximo ciclo é recalculado (`RN05`).</p>
+      </div>
+      <div class="card" style="border-top: 3px solid #0f756e;">
+        <h4>F3 · Gestão e Cadastro de Itens</h4>
+        <p style="font-size: 8.5pt;">Formulário reativo com alternância dinâmica dos campos conforme o tipo de vencimento (Data Única, Recorrente por Data, Recorrente por Km, Ambos). Selecionar um modelo do catálogo herda automaticamente a antecedência recomendada e a lista de passos.</p>
+      </div>
+      <div class="card" style="border-top: 3px solid #0f756e;">
+        <h4>F4 · Atualização Rápida de Odômetro</h4>
+        <p style="font-size: 8.5pt;">Na tela de veículos, a quilometragem atual pode ser digitada e salva diretamente no card em menos de 5 segundos. O backend valida a regra `RN07` (km não decrescente) e atualiza imediatamente o status de peças e revisões atreladas.</p>
+      </div>
+    </div>
+
+    <h2>6.2 Acessibilidade Específica para TDAH (WCAG 2.1 AA)</h2>
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 25%;">Diretriz / Requisito</th>
+          <th style="width: 35%;">Implementação no Em Dia</th>
+          <th style="width: 40%;">Impacto Cognitivo</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Status Não Exclusivo por Cor (RNF02)</strong></td>
+          <td>Componente <code>StatusBadge</code> exibe obrigatoriamente ícone SVG, texto explícito ("Vencido", "Atenção", "Em Dia") e cor de fundo com contraste > 4.5:1.</td>
+          <td>Garante compreensão instantânea mesmo para daltônicos ou usuários com déficit de atenção semântica.</td>
+        </tr>
+        <tr>
+          <td><strong>Alvos de Toque Ampliados (RNF03)</strong></td>
+          <td>Botões, checkboxes de checklist e links possuem altura e largura mínima de <strong>44 × 44 pixels</strong>.</td>
+          <td>Previne toques acidentais por impulsividade motora e facilita navegação em telas de toque.</td>
+        </tr>
+        <tr>
+          <td><strong>Modo Foco em 1 Clique</strong></td>
+          <td>Filtro na barra de topo que colapsa todas as categorias e mostra estritamente os <strong>3 itens mais urgentes</strong>.</td>
+          <td>Elimina paralisia decisória e estresse gerado por excesso de estímulos simultâneos na tela.</td>
+        </tr>
+        <tr>
+          <td><strong>Navegação Integral por Teclado</strong></td>
+          <td>Ordem lógica de foco (<code>Tab</code>/<code>Shift+Tab</code>), atalhos de confirmação (<code>Enter</code>) e cancelamento (<code>Escape</code>).</td>
+          <td>Permite que o usuário opere todo o fluxo sem tirar a mão do teclado, mantendo o estado de fluxo.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════════════
+       SEÇÃO 7: AUTENTICAÇÃO, SEGURANÇA E LGPD
+       ════════════════════════════════════════════════════════════════════════ -->
+  <div class="page">
+    <div class="page-header">
+      <span>Em Dia · Entrega 3 – Relatório Técnico Final</span>
+      <span>Página 9</span>
+    </div>
+
+    <h1>7. Autenticação, Segurança e Conformidade LGPD</h1>
+
+    <h2>7.1 Mecanismo Criptográfico e Gestão de Sessões</h2>
+    <p>
+      O sistema segue as melhores práticas de segurança de aplicações web e recomendações OWASP:
+    </p>
+    <ul>
+      <li><strong>Hashing de Senhas:</strong> BCrypt com fator de trabalho 12 e salt criptográfico individual de 128 bits. Nenhuma senha trafega ou é armazenada em texto plano.</li>
+      <li><strong>Access Token JWT:</strong> Vida útil curta de 15 minutos, assinado com HMAC-SHA256 (chave de 256 bits). Contém apenas claims não-sensíveis (<code>sub</code>, <code>email</code>, <code>jti</code>).</li>
+      <li><strong>Refresh Token Seguro com Rotação:</strong> Token opaco armazenado no banco de dados e transmitido ao navegador em cookie <code>HttpOnly</code> com <code>SameSite=Strict</code> e <code>Secure</code>. A cada requisição em <code>/auth/refresh</code>, o token anterior é revogado e um novo é emitido. Caso ocorra tentativa de reuso de um token já revogado, a cadeia de tokens da família é cancelada imediatamente (detecção de roubo de sessão).</li>
+    </ul>
+
+    <h2>7.2 Defesas Ativas Contra Ameaças Cibernéticas</h2>
+    <div class="grid-2">
+      <div class="card">
+        <h4>🛡️ Rate Limiting e Força Bruta (CT44)</h4>
+        <p style="font-size: 8.5pt;">Partição dedicada na rota <code>/auth</code> limita a 10 requisições/minuto por IP, bloqueando ataques de dicionário e credenciais vazadas. Escopo global limita a 60 requisições/minuto, respondendo <code>429 Too Many Requests</code> ao exceder o teto.</p>
+      </div>
+      <div class="card">
+        <h4>🛡️ Proteção contra SQL Injection (CT45)</h4>
+        <p style="font-size: 8.5pt;">Mapeamento estrito com Entity Framework Core e LINQ garante que todo e qualquer parâmetro de busca, paginação ou formulário seja parametrizado pelo driver Npgsql, impedindo a execução de comandos arbitrários no banco de dados.</p>
+      </div>
+      <div class="card">
+        <h4>🛡️ Sanitização contra XSS (CT46)</h4>
+        <p style="font-size: 8.5pt;">Respostas HTTP com header estrito <code>Content-Type: application/json; charset=utf-8</code>. Strings contendo tags HTML/script são salvas como literais e renderizadas pelo React como texto puro, neutralizando injeções no navegador.</p>
+      </div>
+      <div class="card">
+        <h4>⚖️ Conformidade Integral com a LGPD</h4>
+        <p style="font-size: 8.5pt;">Atendimento ao Art. 18 da LGPD através do endpoint <code>DELETE /api/v1/usuarios/me</code> (E07). A invocação purga permanentemente a conta, veículos, itens, histórico e preferências em cascata sem retenção residual de dados.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════════════
+       SEÇÃO 8: RESULTADOS DOS TESTES AUTOMATIZADOS
+       ════════════════════════════════════════════════════════════════════════ -->
+  <div class="page">
+    <div class="page-header">
+      <span>Em Dia · Entrega 3 – Relatório Técnico Final</span>
+      <span>Página 10</span>
+    </div>
+
+    <h1>8. Resultados e Evidências dos Testes Automatizados</h1>
+
+    <h2>8.1 Consolidação da Pirâmide de Testes (76/76 Aprovados)</h2>
+    <p>
+      A estabilidade e conformidade da entrega foram certificadas através da execução automatizada contínua em três suítes de teste independentes:
+    </p>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 30%;">Suíte de Teste</th>
+          <th style="width: 25%;">Framework / Runner</th>
+          <th style="width: 20%; text-align: center;">Total de Testes</th>
+          <th style="width: 25%; text-align: center;">Taxa de Aprovação</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Testes Unitários de Domínio</strong></td>
+          <td>xUnit (.NET 10) + FluentAssertions</td>
+          <td style="text-align: center;"><strong>15</strong></td>
+          <td style="text-align: center;"><span class="badge badge-success">✅ 15/15 (100%)</span></td>
+        </tr>
+        <tr>
+          <td><strong>Testes de Integração da API</strong></td>
+          <td>xUnit + Testcontainers (PostgreSQL 17)</td>
+          <td style="text-align: center;"><strong>52</strong></td>
+          <td style="text-align: center;"><span class="badge badge-success">✅ 52/52 (100%)</span></td>
+        </tr>
+        <tr>
+          <td><strong>Testes de Frontend e Acessibilidade</strong></td>
+          <td>Vitest + React Testing Library</td>
+          <td style="text-align: center;"><strong>9</strong></td>
+          <td style="text-align: center;"><span class="badge badge-success">✅ 9/9 (100%)</span></td>
+        </tr>
+        <tr style="background: #e6f4f2; font-weight: 700;">
+          <td>TOTAL GERAL CONSOLIDADO</td>
+          <td>Suíte Integrada de CI/CD</td>
+          <td style="text-align: center;"><strong>76</strong></td>
+          <td style="text-align: center;"><span class="badge badge-success" style="font-size: 9pt;">✅ 76/76 PASSOU (100%)</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>8.2 Destaques de Casos de Teste Chave por Módulo</h2>
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 15%;">Módulo</th>
+          <th style="width: 20%;">Identificadores</th>
+          <th style="width: 65%;">Comportamento Validado e Evidência</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Domain (Regras)</strong></td>
+          <td>U01 a U15</td>
+          <td>Transições de estado por data e quilometragem, cálculo dos anéis de proximidade, isolamento do Modo Foco e regras de reaviso.</td>
+        </tr>
+        <tr>
+          <td><strong>Autenticação</strong></td>
+          <td>CT01 a CT12, CT42–CT44</td>
+          <td>Bloqueio de senhas curtas, rejeição de e-mail duplicado, validação de tokens JWT, rotação de refresh tokens e isolamento multitenant.</td>
+        </tr>
+        <tr>
+          <td><strong>Catálogo e Itens</strong></td>
+          <td>CT18 a CT24, CT34–CT37</td>
+          <td>Herança de checklists de modelos, criação dinâmica de itens nos 4 tipos de vencimento e exclusão segura.</td>
+        </tr>
+        <tr>
+          <td><strong>Veículos e Odômetro</strong></td>
+          <td>CT20 a CT21, CT29–CT30</td>
+          <td>Validação de placa brasileira, garantia de odômetro progressivo não decrescente e recálculo imediato de itens atrelados.</td>
+        </tr>
+        <tr>
+          <td><strong>Radar e Conclusão</strong></td>
+          <td>CT25 a CT28, CT31–CT33</td>
+          <td>Agrupamento dos 4 anéis, diálogo de confirmação com passos pendentes (`RN06`), gravação no histórico e avanço de validade (`RN05`).</td>
+        </tr>
+        <tr>
+          <td><strong>Avisos e Worker</strong></td>
+          <td>CT38 a CT41</td>
+          <td>Disparo determinístico via `AvisosWorker`, envio de D-30 com registro em banco, prevenção de duplicação e respeito ao opt-out do usuário.</td>
+        </tr>
+        <tr>
+          <td><strong>Segurança OWASP</strong></td>
+          <td>CT44 a CT46</td>
+          <td>Resposta `429 Too Many Requests` no estouro de rate limit, imunidade a SQL Injection em buscas/login e serialização segura contra XSS.</td>
+        </tr>
+        <tr>
+          <td><strong>Frontend (UX/WCAG)</strong></td>
+          <td>CT47 a CT51</td>
+          <td>Execução dos fluxos F1 a F4 ponta a ponta, acessibilidade visual com texto explícito + ícone (RNF02) e touch targets $\ge$ 44px.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════════════
+       SEÇÃO 9: DESVIOS E BUGS
+       ════════════════════════════════════════════════════════════════════════ -->
+  <div class="page">
+    <div class="page-header">
+      <span>Em Dia · Entrega 3 – Relatório Técnico Final</span>
+      <span>Página 11</span>
+    </div>
+
+    <h1>9. Desvios Técnicos e Registro de Bugs</h1>
+
+    <h2>9.1 Desvios Registrados Frente à Entrega 2 (DV01 a DV08)</h2>
+    <p>
+      Todas as decisões técnicas que complementaram ou refinaram a especificação original foram formalmente registradas no arquivo <code>docs/desvios.md</code>:
+    </p>
+    <ul>
+      <li><strong>DV01 (.NET 10 via SDK Local):</strong> Mantida a versão mais moderna da plataforma (.NET 10 / C# 13) através de instalação automatizada de SDK local.</li>
+      <li><strong>DV02 (Swashbuckle 7.x vs OpenAPI nativo):</strong> Utilizado o Swashbuckle para garantir a interface interativa `/swagger` exatamente conforme descrita na especificação técnica.</li>
+      <li><strong>DV03 (Campo opcional `novaDataVencimento` no E18):</strong> Incluído suporte opcional no payload de conclusão para itens do tipo `DataUnica` que recebem nova validade informada manualmente pelo usuário (`RN05`).</li>
+      <li><strong>DV04 (Segregação de Configurações):</strong> Strings de conexão de desenvolvimento local isoladas de variáveis de ambiente de produção.</li>
+      <li><strong>DV05 / DV06 (Compatibilidade PostgreSQL 17 / Npgsql 9):</strong> Configuração explícita de métodos de autenticação em ambiente Docker local e uso de Testcontainers em testes.</li>
+      <li><strong>DV07 (TypeScript com `erasableSyntaxOnly`):</strong> Enums substituídos por objetos `as const` acompanhados por union types, eliminando emissão de código JavaScript de runtime e acelerando o build do Vite.</li>
+      <li><strong>DV08 (Execução Condicional do BackgroundService):</strong> `AvisosWorker` configurado como HostedService apenas fora do ambiente `Testing`, permitindo acionamento sob demanda e instantâneo durante os testes automatizados.</li>
+    </ul>
+
+    <h2>9.2 Registro de Bugs e Correções Aplicadas (BUG-01 a BUG-03)</h2>
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 15%;">ID</th>
+          <th style="width: 35%;">Manifestação do Bug</th>
+          <th style="width: 50%;">Causa Raiz e Solução Definitiva</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>BUG-01</strong></td>
+          <td>Falha de autenticação Npgsql 9.x com PostgreSQL 17 em migrações manuais de dev.</td>
+          <td>O Npgsql iniciava handshake SASL antes da resposta de negociação. Contornado em dev e solucionado nos testes via Testcontainers com PostgreSQL efêmero.</td>
+        </tr>
+        <tr>
+          <td><strong>BUG-02</strong></td>
+          <td>`appsettings.json` não encontrado em tempo de design pelo EF Core Tools.</td>
+          <td>Caminho relativo de base directory incorreto. Adicionado fallback direto e robusto na fábrica `EmDiaDbContextFactory`.</td>
+        </tr>
+        <tr>
+          <td><strong>BUG-03</strong></td>
+          <td>Vite falhava no build com erro <code>TS1353: 'enum' declarations are not allowed</code>.</td>
+          <td>TypeScript 6 com flag <code>erasableSyntaxOnly: true</code> rejeita enums de runtime. Convertidos para objetos congelados <code>as const</code> com união estrita de tipos literais.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════════════
+       SEÇÃO 10: CONCLUSÃO
+       ════════════════════════════════════════════════════════════════════════ -->
+  <div class="page">
+    <div class="page-header">
+      <span>Em Dia · Entrega 3 – Relatório Técnico Final</span>
+      <span>Página 12</span>
+    </div>
+
+    <h1>10. Conclusão e Considerações Finais</h1>
+
+    <h2>10.1 Avaliação dos Resultados da Entrega 3</h2>
+    <p>
+      O projeto <strong>Em Dia</strong> cumpriu com êxito todos os compromissos acadêmicos e técnicos estabelecidos nas Entregas 1 e 2. A solução entregue é um produto de software maduro, funcional e centrado no ser humano:
+    </p>
+    <ul>
+      <li><strong>Alívio cognitivo comprovado:</strong> A combinação do Radar em 4 anéis com o Modo Foco resolve a cegueira temporal e elimina a ansiedade de gerenciamento de prazos.</li>
+      <li><strong>Engenharia de software de alto nível:</strong> Separação estrita em Clean Architecture, tipos imutáveis, validações formais com FluentValidation e banco normalizado em 12 tabelas.</li>
+      <li><strong>Confiabilidade atestada:</strong> 100% de cobertura nos testes funcionais e de segurança, totalizando <strong>76 testes verdes</strong> rodando em integração contínua.</li>
+      <li><strong>Acessibilidade e Inclusão:</strong> Conformidade rigorosa com diretrizes WCAG 2.1 AA e respeito irrestrito à privacidade dos dados (LGPD).</li>
+    </ul>
+
+    <h2>10.2 Próximos Passos e Evolução do Produto</h2>
+    <p>
+      Como oportunidades de evolução para além da disciplina acadêmica, destacam-se:
+    </p>
+    <ol>
+      <li><strong>Notificações Push e WhatsApp:</strong> Expansão dos canais de aviso para além do e-mail, utilizando web push notifications e bots transacionais.</li>
+      <li><strong>Aplicativo Mobile Nativo (React Native / PWA offline):</strong> Suporte completo para consulta e conclusão de itens offline com sincronização bidirecional.</li>
+      <li><strong>Integração com Órgãos Públicos e Bancos:</strong> Consulta automatizada de débitos veiculares e guias de imposto via APIs governamentais abertas.</li>
+    </ol>
+
+    <div class="callout" style="margin-top: 35px; text-align: center;">
+      <div class="callout-title" style="justify-content: center; font-size: 11pt;">🎉 Entrega 3 Concluída com Excelência</div>
+      O código-fonte completo, scripts de banco de dados, suíte de testes automatizados e frontend responsivo encontram-se disponíveis no repositório oficial da equipe.
+    </div>
+
+    <div style="margin-top: 50px; display: flex; justify-content: space-around; text-align: center;">
+      <div style="width: 40%; border-top: 1px solid #94a3b8; padding-top: 8px;">
+        <strong>Felipe Moreira dos Santos</strong><br>
+        <span style="font-size: 8.5pt; color: #64748b;">RA 443777-2026 · Backend & Infra</span>
+      </div>
+      <div style="width: 40%; border-top: 1px solid #94a3b8; padding-top: 8px;">
+        <strong>Felipe Nadab Goldberg Barbosa</strong><br>
+        <span style="font-size: 8.5pt; color: #64748b;">RA 156888-2023 · Frontend & UX</span>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
