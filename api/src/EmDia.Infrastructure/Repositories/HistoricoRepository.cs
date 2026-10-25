@@ -23,6 +23,18 @@ public class HistoricoRepository : IHistoricoRepository
             .ToListAsync(ct);
     }
 
+    public async Task<IReadOnlyList<Historico>> ListarPorItemEUsuarioAsync(Guid itemId, Guid usuarioId, CancellationToken ct = default)
+    {
+        // Verifica ownership do item
+        var pertence = await _db.Itens.AnyAsync(i => i.Id == itemId && i.UsuarioId == usuarioId, ct);
+        if (!pertence) return Array.Empty<Historico>();
+
+        return await _db.Historicos
+            .Where(h => h.ItemId == itemId)
+            .OrderByDescending(h => h.ConcluidoEm)
+            .ToListAsync(ct);
+    }
+
     public async Task AdicionarAsync(Historico historico, CancellationToken ct = default)
         => await _db.Historicos.AddAsync(historico, ct);
 

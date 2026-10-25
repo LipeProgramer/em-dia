@@ -13,6 +13,8 @@ namespace EmDia.Api.Controllers;
 /// E22: PUT    /api/v1/itens/{id}
 /// E23: DELETE /api/v1/itens/{id}
 /// E24: PATCH  /api/v1/itens/{id}/passos/{passoId}
+/// E25: POST   /api/v1/itens/{id}/concluir
+/// E26: GET    /api/v1/itens/{id}/historico
 /// </summary>
 [ApiController]
 [Route("api/v1/itens")]
@@ -20,8 +22,13 @@ namespace EmDia.Api.Controllers;
 public class ItensController : ControllerBase
 {
     private readonly ItemService _itens;
+    private readonly ConcluirService _concluir;
 
-    public ItensController(ItemService itens) => _itens = itens;
+    public ItensController(ItemService itens, ConcluirService concluir)
+    {
+        _itens    = itens;
+        _concluir = concluir;
+    }
 
     private Guid UsuarioIdLogado =>
         Guid.Parse(User.FindFirstValue("sub")
@@ -65,4 +72,17 @@ public class ItensController : ControllerBase
     public async Task<IActionResult> MarcarPasso(
         Guid id, Guid passoId, [FromBody] MarcarPassoRequest req, CancellationToken ct)
         => Ok(await _itens.MarcarPassoAsync(id, passoId, UsuarioIdLogado, req.Concluido, ct));
+
+    // ── E25: Concluir item ────────────────────────────────────────────────────
+    [HttpPost("{id:guid}/concluir")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Concluir(
+        Guid id, [FromBody] ConcluirItemRequest req, CancellationToken ct)
+        => Ok(await _concluir.ConcluirAsync(id, UsuarioIdLogado, req, ct));
+
+    // ── E26: Histórico do item ────────────────────────────────────────────────
+    [HttpGet("{id:guid}/historico")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Historico(Guid id, CancellationToken ct)
+        => Ok(await _concluir.ListarHistoricoAsync(id, UsuarioIdLogado, ct));
 }

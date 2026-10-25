@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using EmDia.Application.DTOs.Auth;
+using EmDia.Application.DTOs.Preferencias;
 using EmDia.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -9,6 +10,8 @@ namespace EmDia.Api.Controllers;
 /// E05: GET    /api/v1/usuarios/me
 /// E06: PATCH  /api/v1/usuarios/me
 /// E07: DELETE /api/v1/usuarios/me
+/// E27: GET    /api/v1/usuarios/me/preferencias
+/// E28: PUT    /api/v1/usuarios/me/preferencias
 /// </summary>
 [ApiController]
 [Route("api/v1/usuarios")]
@@ -16,8 +19,13 @@ namespace EmDia.Api.Controllers;
 public class UsuariosController : ControllerBase
 {
     private readonly AuthService _auth;
+    private readonly PreferenciasService _preferencias;
 
-    public UsuariosController(AuthService auth) => _auth = auth;
+    public UsuariosController(AuthService auth, PreferenciasService preferencias)
+    {
+        _auth         = auth;
+        _preferencias = preferencias;
+    }
 
     private Guid UsuarioIdLogado =>
         Guid.Parse(
@@ -62,4 +70,17 @@ public class UsuariosController : ControllerBase
 
         return NoContent();
     }
+
+    // ── E27: Obter preferências ───────────────────────────────────────────────
+    [HttpGet("me/preferencias")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> ObterPreferencias(CancellationToken ct)
+        => Ok(await _preferencias.ObterAsync(UsuarioIdLogado, ct));
+
+    // ── E28: Atualizar preferências ───────────────────────────────────────────
+    [HttpPut("me/preferencias")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> AtualizarPreferencias(
+        [FromBody] AtualizarPreferenciasRequest req, CancellationToken ct)
+        => Ok(await _preferencias.AtualizarAsync(UsuarioIdLogado, req, ct));
 }

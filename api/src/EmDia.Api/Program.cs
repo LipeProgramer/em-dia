@@ -46,6 +46,10 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<CatalogoService>();
 builder.Services.AddScoped<VeiculoService>();
 builder.Services.AddScoped<ItemService>();
+builder.Services.AddScoped<RadarService>();
+builder.Services.AddScoped<CheckupService>();
+builder.Services.AddScoped<ConcluirService>();
+builder.Services.AddScoped<PreferenciasService>();
 builder.Services.AddScoped<IPasswordHasher, BCryptPasswordHasher>();
 builder.Services.AddScoped<ITokenService, JwtTokenService>();
 // IRelogio da Application (herda de Domain.Interfaces.IRelogio)
