@@ -72,13 +72,16 @@ dotnet ef database update --project src/EmDia.Infrastructure --startup-project s
 ```
 
 ### 4. API
-```bash
-dotnet run --project api/src/EmDia.Api
+```powershell
+# Em um terminal separado:
+cd api
+dotnet run --project src/EmDia.Api
 # Swagger: http://localhost:5196/swagger
 ```
 
 ### 5. Frontend
-```bash
+```powershell
+# Em outro terminal:
 cd web
 npm install
 npm run dev
@@ -86,15 +89,17 @@ npm run dev
 ```
 
 ### 6. Testes
-```bash
-# Unitários
-dotnet test api/tests/EmDia.Domain.Tests
+```powershell
+# Unitários (Domain)
+cd api
+dotnet test tests/EmDia.Domain.Tests
 
-# Integração (requer Docker)
-dotnet test api/tests/EmDia.Api.IntegrationTests
+# Integração (requer Docker rodando)
+dotnet test tests/EmDia.Api.IntegrationTests
 
 # Frontend
-cd web && npm test
+cd web
+npm test -- --run
 ```
 
 ## Documentação complementar
