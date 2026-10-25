@@ -107,7 +107,7 @@ npm test -- --run
 | Arquivo | Conteúdo |
 |---|---|
 | [`docs/desvios.md`](docs/desvios.md) | Decisões que se afastam da Entrega 2 |
-| [`docs/testes.md`](docs/testes.md) | Resultado de cada caso de teste (U01–U15, CT01–CT51) |
+| [`docs/testes.md`](docs/testes.md) | Resultado de cada caso de teste (U01–U15, CT01–CT55) |
 | [`docs/bugs.md`](docs/bugs.md) | Bugs encontrados, causas e correções |
 | `api/src/EmDia.Api` → `/swagger` | Documentação interativa da API |
 

@@ -68,3 +68,25 @@ Conforme instrução do projeto: _o quê_, _por quê_ e o _commit/branch_ onde f
 | **Por quê** | Para garantir compatibilidade com Npgsql 9.x em dev, foram adicionados `POSTGRES_HOST_AUTH_METHOD=md5` e `POSTGRES_INITDB_ARGS="--auth-host=md5"`. Em produção, scram-sha-256 é preferível. |
 | **Branch** | `feature/fase-2-infrastructure` |
 | **Impacto** | Apenas desenvolvimento local. |
+
+---
+
+## DV07 — TypeScript 6 com `erasableSyntaxOnly` no Frontend
+
+| Campo | Valor |
+|---|---|
+| **O quê** | Enums TypeScript convencionais substituídos por objetos `as const` e union types. |
+| **Por quê** | Vite / TS 6 configurado com `erasableSyntaxOnly: true` rejeita enums com código em tempo de execução. O uso de `const StatusItem = { ... } as const` e `type StatusItem = typeof StatusItem[keyof typeof StatusItem]` garante tipos estritos sem violar o padrão de apagamento de tipos. |
+| **Branch** | `feature/fase-6-frontend` |
+| **Impacto** | Nenhum; total compatibilidade com os tipos da API .NET. |
+
+---
+
+## DV08 — Execução condicional de BackgroundService no ambiente de testes
+
+| Campo | Valor |
+|---|---|
+| **O quê** | `AvisosWorker` registrado como Singleton e adicionado a `AddHostedService` apenas quando `!Environment.IsEnvironment("Testing")`. |
+| **Por quê** | Evita que workers autônomos em background concorram com fixtures de Testcontainers durante a execução concorrente da suíte de testes xUnit, ao mesmo tempo permitindo que testes invoquem `AvisosWorker.ExecutarAgoraAsync()` sob demanda de forma determinística. |
+| **Branch** | `feature/fase-7-avisos-worker` |
+| **Impacto** | Aumenta o determinismo e velocidade dos testes de integração. |

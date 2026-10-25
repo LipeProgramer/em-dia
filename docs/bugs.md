@@ -27,3 +27,16 @@
 | **Causa raiz** | O path calculado por `AppContext.BaseDirectory` no design-time aponta para `bin/Debug/net10.0/` e a busca por `../../../../EmDia.Api` não encontra o diretório no ambiente de desenvolvimento do dev |
 | **Correção** | A factory tem fallback para a connection string hardcoded com `SSL Mode=Disable`. O `appsettings.Development.json` será criado no projeto `EmDia.Api` na Fase 3. |
 | **Status** | ✅ Contornado via fallback |
+
+---
+
+## BUG-03 — TypeScript com `erasableSyntaxOnly` rejeita enums no frontend
+
+| Campo | Valor |
+|---|---|
+| **Como apareceu** | O comando `npm run build` do frontend falhou com erro `TS1353: 'enum' declarations are not allowed with erasableSyntaxOnly`. |
+| **Fase** | Fase 6 |
+| **Branch** | `feature/fase-6-frontend` |
+| **Causa raiz** | O Vite / TypeScript configurado com `erasableSyntaxOnly: true` não permite sintaxes que gerem código JS de runtime (como `enum`). |
+| **Correção** | Enums convertidos para objetos congelados `as const` acompanhados por union types (`typeof X[keyof typeof X]`). |
+| **Status** | ✅ Resolvido |

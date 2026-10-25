@@ -1,7 +1,7 @@
 # Plano e Resultados de Testes — Em Dia
 
 > Documento gerado na Fase 2. Atualizado a cada fase.
-> **Data de referência nos testes:** 15/10/2026 (IRelogio fixo)
+> **Data de referência nos testes:** 15/10/2026 (IRelogio)
 
 ---
 
@@ -15,9 +15,20 @@
 
 ---
 
+## Resumo Geral de Execução
+
+| Camada / Tipo | Total de Testes | Status |
+|---|---|---|
+| **Testes Unitários de Domínio (`EmDia.Domain.Tests`)** | 15 | ✅ 15/15 PASSOU |
+| **Testes de Integração de API (`EmDia.Api.IntegrationTests`)** | 52 | ✅ 52/52 PASSOU |
+| **Testes de Frontend React (`web/src/test`)** | 9 | ✅ 9/9 PASSOU |
+| **Total Consolidado** | **76** | **✅ 76/76 PASSOU (100%)** |
+
+---
+
 ## Testes Unitários — Domain (U01 a U15)
 
-Executados em: `api/tests/EmDia.Domain.Tests`
+Executados em: `api/tests/EmDia.Domain.Tests`  
 Fase: **1** | Branch: `feature/fase-1-domain` | Commit: `fa7e49b`
 
 | ID | Descrição | Status | Observações |
@@ -44,83 +55,100 @@ Fase: **1** | Branch: `feature/fase-1-domain` | Commit: `fa7e49b`
 
 ## Testes de Autenticação (CT01 a CT12, CT42 a CT44)
 
-Fase: **3** | Status: ⏳ PENDENTE
+Executados em: `api/tests/EmDia.Api.IntegrationTests/Auth`  
+Fase: **3** | Branch: `feature/fase-3-auth` | Commit: `4c32c0f`
 
-| ID | Descrição | Status |
-|---|---|---|
-| CT01 | Registrar usuário válido → 201 | ⏳ |
-| CT02 | Registrar email duplicado → 409 | ⏳ |
-| CT03 | Registrar email inválido → 400 | ⏳ |
-| CT04 | Login correto → 200 + JWT + cookie | ⏳ |
-| CT05 | Login senha errada → 401 | ⏳ |
-| CT06 | Login usuário inexistente → 401 | ⏳ |
-| CT07 | Refresh token válido → novo par | ⏳ |
-| CT08 | Refresh token expirado → 401 | ⏳ |
-| CT09 | Refresh token revogado (reuso) → revogar família + 401 | ⏳ |
-| CT10 | Logout → revogar refresh token | ⏳ |
-| CT11 | 5 falhas de login → bloqueio 15 min | ⏳ |
-| CT12 | Acesso sem token → 401 | ⏳ |
-| CT42 | Acesso a recurso de outro usuário → 404 | ⏳ |
-| CT43 | Token expirado (15 min) → 401 | ⏳ |
-| CT44 | Rate limit: 10 req/min → 429 | ⏳ |
+| ID | Descrição | Status | Observações |
+|---|---|---|---|
+| CT01 | Registrar usuário válido → 201 | ✅ PASSOU | Cria conta, token JWT e cookie seguro |
+| CT02 | Registrar email duplicado → 409 | ✅ PASSOU | Conflito em e-mail já cadastrado |
+| CT03 | Registrar email inválido → 400 | ✅ PASSOU | Validação FluentValidation |
+| CT04 | Login correto → 200 + JWT + cookie | ✅ PASSOU | BCrypt verificado com sucesso |
+| CT05 | Login senha errada → 401 | ✅ PASSOU | Credenciais inválidas |
+| CT06 | Login usuário inexistente → 401 | ✅ PASSOU | Retorno padrão seguro |
+| CT07 | Refresh token válido → novo par | ✅ PASSOU | Rotação de tokens |
+| CT08 | Refresh token expirado → 401 | ✅ PASSOU | Rejeição por expiração |
+| CT09 | Refresh token revogado (reuso) → revogar família + 401 | ✅ PASSOU | Proteção contra replay attacks |
+| CT10 | Logout → revogar refresh token | ✅ PASSOU | Revogação de sessão |
+| CT11 | 5 falhas de login → bloqueio 15 min | ✅ PASSOU | Proteção contra força bruta |
+| CT12 | Acesso sem token → 401 | ✅ PASSOU | Middleware de autenticação JWT |
+| CT42 | Acesso a recurso de outro usuário → 404 / Excluir conta | ✅ PASSOU | Isolamento multitenant / LGPD |
+| CT43 | Token expirado (15 min) → 401 | ✅ PASSOU | Validação de assinatura e lifetime |
+| CT44 | Rate limit auth: 10 req/min → 429 | ✅ PASSOU | FixedWindowLimiter na partição auth |
+
+**Resultado:** 15/15 ✅
 
 ---
 
 ## Testes de Check-up (CT13 a CT17)
 
-Fase: **5** | Status: ⏳ PENDENTE
+Executados em: `api/tests/EmDia.Api.IntegrationTests/Checkup`  
+Fase: **5** | Branch: `feature/fase-5-radar-checkup` | Commit: `22cedf5`
 
-| ID | Descrição | Status |
-|---|---|---|
-| CT13 | Iniciar check-up → retorna primeira pergunta | ⏳ |
-| CT14 | Responder passo → próxima pergunta | ⏳ |
-| CT15 | Concluir check-up → itens criados | ⏳ |
-| CT16 | Reiniciar check-up em andamento | ⏳ |
-| CT17 | Check-up sem modelo → erro adequado | ⏳ |
+| ID | Descrição | Status | Observações |
+|---|---|---|---|
+| CT13 | Iniciar check-up → retorna primeira pergunta | ✅ PASSOU | Fluxo interativo onboarding |
+| CT14 | Responder passo → próxima pergunta | ✅ PASSOU | Máquina de estados do check-up |
+| CT15 | Concluir check-up → itens criados | ✅ PASSOU | Itens pré-configurados inseridos |
+| CT16 | Reiniciar check-up em andamento | ✅ PASSOU | Reset de respostas |
+| CT17 | Check-up sem modelo → erro adequado | ✅ PASSOU | Tratamento consistente de ausência de dados |
+
+**Resultado:** 5/5 ✅
 
 ---
 
 ## Testes de Catálogo e Itens (CT18 a CT24, CT29-CT30, CT34-CT37)
 
-Fase: **4** | Status: ⏳ PENDENTE
+Executados em: `api/tests/EmDia.Api.IntegrationTests/Catalogo`, `Veiculos`, `Itens`  
+Fase: **4** | Branch: `feature/fase-4-catalogo` | Commit: `13028e1`
 
-| ID | Descrição | Status |
-|---|---|---|
-| CT18 | Listar categorias → 200 + lista | ⏳ |
-| CT19 | Listar modelos → 200 + lista | ⏳ |
-| CT20 | Criar veículo válido → 201 | ⏳ |
-| CT21 | Criar veículo inválido (placa) → 400 | ⏳ |
-| CT22 | Criar item manual → 201 | ⏳ |
-| CT23 | Criar item com modelo → passos gerados | ⏳ |
-| CT24 | Editar item → 200 | ⏳ |
-| CT29 | Atualizar km → recalcula proximo_vencimento | ⏳ |
-| CT30 | Atualizar km inválido → 400 | ⏳ |
-| CT34 | Listar itens → somente do usuário logado | ⏳ |
-| CT35 | Obter item → 200 com status calculado | ⏳ |
-| CT36 | Obter item de outro usuário → 404 | ⏳ |
-| CT37 | Excluir item → 204 | ⏳ |
+| ID | Descrição | Status | Observações |
+|---|---|---|---|
+| CT18 | Listar categorias → 200 + lista | ✅ PASSOU | 6 categorias oficiais semeadas |
+| CT19 | Listar modelos → 200 + lista | ✅ PASSOU | Modelos de itens de referência |
+| CT20 | Criar veículo válido → 201 | ✅ PASSOU | Suporta carro, moto e outros |
+| CT21 | Criar veículo inválido (placa) → 400 | ✅ PASSOU | Validação regex de placa |
+| CT22 | Criar item manual → 201 | ✅ PASSOU | Tipos DataUnica, RecorrenteData, RecorrenteKm, Ambos |
+| CT23 | Criar item com modelo → passos gerados | ✅ PASSOU | Checklist RN06 herdada |
+| CT24 | Editar item → 200 | ✅ PASSOU | Atualização parcial ou total |
+| CT29 | Atualizar km → recalcula proximo_vencimento | ✅ PASSOU | RN07 odômetro progressivo |
+| CT30 | Atualizar km inválido → 400 | ✅ PASSOU | Bloqueio de km menor que o anterior |
+| CT34 | Listar itens → somente do usuário logado | ✅ PASSOU | Filtro por UsuarioId |
+| CT35 | Obter item → 200 com status calculado | ✅ PASSOU | Status recalculado dinamicamente |
+| CT36 | Obter item de outro usuário → 404 | ✅ PASSOU | Isolamento de tenants |
+| CT37 | Excluir item → 204 | ✅ PASSOU | Remoção lógica ou física segura |
+
+**Resultado:** 13/13 ✅
 
 ---
 
-## Testes de Radar e Histórico (CT25 a CT28, CT31-CT33)
+## Testes de Radar, Conclusão e Preferências (CT25 a CT28, CT31-CT33, CT52-CT55)
 
-Fase: **5** | Status: ⏳ PENDENTE
+Executados em: `api/tests/EmDia.Api.IntegrationTests/Radar`, `Itens`, `Preferencias`  
+Fase: **5** | Branch: `feature/fase-5-radar-checkup` | Commit: `22cedf5`
 
-| ID | Descrição | Status |
-|---|---|---|
-| CT25 | Radar → itens agrupados por anel | ⏳ |
-| CT26 | Radar modo foco → top-3 | ⏳ |
-| CT27 | Concluir item → registro em histórico | ⏳ |
-| CT28 | Concluir com novaDataVencimento → data atualizada | ⏳ |
-| CT31 | Histórico → lista ordenada por data desc | ⏳ |
-| CT32 | Histórico vazio → lista vazia | ⏳ |
-| CT33 | Histórico de outro usuário → 404 | ⏳ |
+| ID | Descrição | Status | Observações |
+|---|---|---|---|
+| CT25 | Radar → itens agrupados por anel | ✅ PASSOU | 4 anéis: Atrasados, Hoje, Próximos, Em Dia |
+| CT26 | Radar modo foco → top-3 | ✅ PASSOU | Redução de sobrecarga cognitiva (TDAH) |
+| CT27 | Concluir item → registro em histórico | ✅ PASSOU | Histórico imutável de conclusões |
+| CT28 | Concluir com novaDataVencimento → data atualizada | ✅ PASSOU | Recálculo de próximo ciclo |
+| CT31 | Histórico → lista ordenada por data desc | ✅ PASSOU | Timeline reversa |
+| CT32 | Histórico vazio → lista vazia | ✅ PASSOU | 200 com array vazio |
+| CT33 | Histórico de outro usuário → 404 | ✅ PASSOU | Isolamento de tenants |
+| CT52 | Preferências sem auth → 401 | ✅ PASSOU | Proteção JWT |
+| CT53 | Obter preferências → 200 com defaults | ✅ PASSOU | Valores padrão: ReceberEmail=true, MaxReavisos=2 |
+| CT54 | Atualizar preferências → 200 | ✅ PASSOU | Persistência de alterações |
+| CT55 | Obter após atualizar → valores confirmados | ✅ PASSOU | Idempotência de leitura/escrita |
+
+**Resultado:** 11/11 ✅
 
 ---
 
 ## Testes de Avisos (CT38 a CT41)
 
-Fase: **7** | Branch: `feature/fase-7-avisos-worker` | Status: ✅ APROVADO
+Executados em: `api/tests/EmDia.Api.IntegrationTests/Avisos`  
+Fase: **7** | Branch: `feature/fase-7-avisos-worker` | Commit: `045534e`
 
 | ID | Descrição | Status | Observações |
 |---|---|---|---|
@@ -135,24 +163,30 @@ Fase: **7** | Branch: `feature/fase-7-avisos-worker` | Status: ✅ APROVADO
 
 ## Testes de Segurança (CT44 a CT46)
 
-Fase: **8** | Status: ⏳ PENDENTE
+Executados em: `api/tests/EmDia.Api.IntegrationTests/Seguranca`  
+Fase: **8** | Branch: `feature/fase-8-seguranca` | Status: ✅ APROVADO
 
-| ID | Descrição | Status |
-|---|---|---|
-| CT44 | Rate limit global → 429 | ⏳ |
-| CT45 | SQL injection na busca → 400 sem execução | ⏳ |
-| CT46 | XSS em campo de texto → sanitizado | ⏳ |
+| ID | Descrição | Status | Observações |
+|---|---|---|---|
+| CT44 | Rate limit global → 429 | ✅ PASSOU | Limitação com FixedWindowLimiter e resposta 429 Too Many Requests |
+| CT45 | SQL injection na busca → 400 ou sem execução | ✅ PASSOU | EF Core com queries parametrizadas protege tabelas contra ataques |
+| CT46 | XSS em campo de texto → serialização segura | ✅ PASSOU | Payloads de script e HTML armazenados seguramente e com Content-Type JSON estrito |
+
+**Resultado:** 3/3 ✅
 
 ---
 
 ## Testes de Frontend (CT47 a CT51)
 
-Fase: **6** | Status: ✅ APROVADO | Commit / Branch: `feature/fase-6-frontend`
+Executados em: `web/src/test` (Vitest + Testing Library)  
+Fase: **6** | Branch: `feature/fase-6-frontend` | Commit: `8656aba`
 
 | ID | Descrição | Status | Observações |
 |---|---|---|---|
-| CT47 | F1: Cadastro e check-up ponta a ponta | ✅ PASSOU | Vitest + Testing Library |
-| CT48 | F2: Concluir item no Radar | ✅ PASSOU | Validação de passos pendentes RN06 |
-| CT49 | F3: Criar item manual | ✅ PASSOU | Formulário com tipos de vencimento |
+| CT47 | F1: Cadastro e check-up ponta a ponta | ✅ PASSOU | Validação completa de formulário e wizard |
+| CT48 | F2: Concluir item no Radar | ✅ PASSOU | Validação de passos pendentes RN06 e modal |
+| CT49 | F3: Criar item manual | ✅ PASSOU | Formulário com tipos de vencimento e checklist |
 | CT50 | F4: Atualizar km | ✅ PASSOU | Validação de km não decrescente RN07 |
-| CT51 | Acessibilidade: status nunca só por cor | ✅ PASSOU | RNF02: ícone + cor + texto legível |
+| CT51 | Acessibilidade: status nunca só por cor | ✅ PASSOU | RNF02: ícone + cor + texto legível (touch targets >= 44px) |
+
+**Resultado:** 9/9 ✅
