@@ -19,6 +19,12 @@ public class AvisoRepository : IAvisoRepository
               && a.Sucesso,
             ct);
 
+    public async Task<IReadOnlyList<Aviso>> ListarPorItemAsync(Guid itemId, CancellationToken ct = default)
+        => await _db.Avisos
+            .Where(a => a.ItemId == itemId)
+            .OrderBy(a => a.Numero)
+            .ToListAsync(ct);
+
     public async Task AdicionarAsync(Aviso aviso, CancellationToken ct = default)
         => await _db.Avisos.AddAsync(aviso, ct);
 

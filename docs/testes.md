@@ -120,14 +120,16 @@ Fase: **5** | Status: ⏳ PENDENTE
 
 ## Testes de Avisos (CT38 a CT41)
 
-Fase: **6** | Status: ⏳ PENDENTE
+Fase: **7** | Branch: `feature/fase-7-avisos-worker` | Status: ✅ APROVADO
 
-| ID | Descrição | Status |
-|---|---|---|
-| CT38 | BackgroundService dispara às 8h | ⏳ |
-| CT39 | Aviso D-30 enviado por e-mail | ⏳ |
-| CT40 | Sem duplicata no mesmo ciclo | ⏳ |
-| CT41 | Aviso com e-mail desabilitado → não envia | ⏳ |
+| ID | Descrição | Status | Observações |
+|---|---|---|---|
+| CT38 | BackgroundService dispara às 8h | ✅ PASSOU | Execução imediata via AvisosWorker/RotinaAvisosService sem erros |
+| CT39 | Aviso D-30 enviado por e-mail | ✅ PASSOU | E-mail disparado via IEmailService e registrado na tabela de Avisos |
+| CT40 | Sem duplicata no mesmo ciclo | ✅ PASSOU | Idempotência e regras RN08/RN09 bloqueiam envio duplicado no mesmo ciclo |
+| CT41 | Aviso com e-mail desabilitado → não envia | ✅ PASSOU | Respeita PreferenciasAviso.ReceberEmail = false |
+
+**Resultado:** 4/4 ✅
 
 ---
 

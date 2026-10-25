@@ -3,7 +3,9 @@ using EmDia.Application.Interfaces;
 using EmDia.Application.Interfaces.Repositories;
 using EmDia.Application.Services;
 using EmDia.Application.Validators;
-using EmDia.Api.Middlewares;using EmDia.Infrastructure.Data;
+using EmDia.Api.Middlewares;
+using EmDia.Infrastructure.Data;
+using EmDia.Infrastructure.Jobs;
 using EmDia.Infrastructure.Repositories;
 using EmDia.Infrastructure.Security;
 using EmDia.Infrastructure.Services;
@@ -50,6 +52,12 @@ builder.Services.AddScoped<RadarService>();
 builder.Services.AddScoped<CheckupService>();
 builder.Services.AddScoped<ConcluirService>();
 builder.Services.AddScoped<PreferenciasService>();
+builder.Services.AddScoped<RotinaAvisosService>();
+builder.Services.AddSingleton<AvisosWorker>();
+if (!builder.Environment.IsEnvironment("Testing"))
+{
+    builder.Services.AddHostedService(sp => sp.GetRequiredService<AvisosWorker>());
+}
 builder.Services.AddScoped<IPasswordHasher, BCryptPasswordHasher>();
 builder.Services.AddScoped<ITokenService, JwtTokenService>();
 // IRelogio da Application (herda de Domain.Interfaces.IRelogio)
