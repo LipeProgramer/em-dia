@@ -1,0 +1,47 @@
+/* Tokens de design — Em Dia
+ * Fase 7: valores reais serão definidos com base nas metáforas do Figma.
+ */
+
+:root {
+  /* Cores de status (sempre acompanham ícone e texto — RNF02) */
+  --color-vencido: #d32f2f;
+  --color-atencao: #f57c00;
+  --color-em-dia: #2e7d32;
+  --color-encerrado: #757575;
+
+  /* Superfície e texto */
+  --color-bg: #f8f9fa;
+  --color-surface: #ffffff;
+  --color-text-primary: #1a1a2e;
+  --color-text-secondary: #5f6368;
+
+  /* Espaçamentos */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 40px;
+
+  /* Touch target mínimo — RNF03 (44px) */
+  --touch-target: 44px;
+
+  /* Tipografia */
+  --font-family: 'Inter', system-ui, sans-serif;
+  --font-size-sm: 0.875rem;
+  --font-size-md: 1rem;
+  --font-size-lg: 1.25rem;
+  --font-size-xl: 1.5rem;
+
+  /* Raio de borda */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+}
+
+/* Preferência por movimentos reduzidos — RNF02 */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
