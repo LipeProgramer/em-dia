@@ -24,7 +24,7 @@ public class EmDiaDbContextFactory : IDesignTimeDbContextFactory<EmDiaDbContext>
             .Build();
 
         var connStr = config.GetConnectionString("Default")
-            ?? "Host=localhost;Port=5432;Database=emdia;Username=emdia;Password=emdia_dev;SSL Mode=Disable";
+            ?? "Host=localhost;Port=5433;Database=emdia;Username=emdia;Password=emdia_dev;SSL Mode=Disable";
 
         var opts = new DbContextOptionsBuilder<EmDiaDbContext>();
         opts.UseNpgsql(connStr, o => o.MigrationsAssembly("EmDia.Infrastructure"));

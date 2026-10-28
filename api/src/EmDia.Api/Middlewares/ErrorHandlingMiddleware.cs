@@ -12,11 +12,13 @@ public class ErrorHandlingMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly ILogger<ErrorHandlingMiddleware> _logger;
+    private readonly IHostEnvironment _env;
 
-    public ErrorHandlingMiddleware(RequestDelegate next, ILogger<ErrorHandlingMiddleware> logger)
+    public ErrorHandlingMiddleware(RequestDelegate next, ILogger<ErrorHandlingMiddleware> logger, IHostEnvironment env)
     {
         _next = next;
         _logger = logger;
+        _env = env;
     }
 
     public async Task InvokeAsync(HttpContext ctx)
@@ -55,7 +57,9 @@ public class ErrorHandlingMiddleware
         }
         else
         {
-            status = 500; code = "ERRO_INTERNO"; mensagem = "Ocorreu um erro inesperado.";
+            status = 500;
+            code = "ERRO_INTERNO";
+            mensagem = _env.IsDevelopment() ? $"{ex.GetType().Name}: {ex.Message}" : "Ocorreu um erro inesperado.";
             _logger.LogError(ex, "Erro não tratado: {Path}", ctx.Request.Path);
         }
 
