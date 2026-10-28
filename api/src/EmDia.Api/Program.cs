@@ -61,9 +61,9 @@ if (!builder.Environment.IsEnvironment("Testing"))
 builder.Services.AddScoped<IPasswordHasher, BCryptPasswordHasher>();
 builder.Services.AddScoped<ITokenService, JwtTokenService>();
 // IRelogio da Application (herda de Domain.Interfaces.IRelogio)
-builder.Services.AddScoped<IRelogio, RelogioSaoPaulo>();
+builder.Services.AddSingleton<IRelogio, RelogioSaoPaulo>();
 // Registrar também como Domain.Interfaces.IRelogio para serviços que o injetam diretamente
-builder.Services.AddScoped<EmDia.Domain.Interfaces.IRelogio>(sp =>
+builder.Services.AddSingleton<EmDia.Domain.Interfaces.IRelogio>(sp =>
     sp.GetRequiredService<IRelogio>());
 
 // ── E-mail ───────────────────────────────────────────────────────────────────
@@ -170,17 +170,20 @@ var app = builder.Build();
 
 app.UseMiddleware<ErrorHandlingMiddleware>();
 
-if (app.Environment.IsDevelopment())
+// Swagger habilitado por padrão para avaliação e documentação interativa
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Em Dia API v1"));
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Em Dia API v1");
+    c.RoutePrefix = "swagger";
+});
 
 app.UseCors();
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapGet("/", () => Results.Redirect("/swagger"));
 
 app.Run();
 
