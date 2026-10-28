@@ -1,124 +1,86 @@
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  useCallback,
-  type ReactNode,
-} from 'react';
-import { authApi } from '../api/services';
-import { loadStoredAuth, setAccessToken } from '../api/client';
-import type {
-  LoginRequest,
-  RegistrarRequest,
-  UsuarioResponse,
-} from '../api/types';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { guardarRefresh, lerRefresh, onSessaoExpirada, renovarToken, setAccessToken } from '../api/client';
+import { authApi, usuariosApi } from '../api/services';
+import type { UsuarioLogado } from '../api/types';
 
-interface AuthContextType {
-  user: UsuarioResponse | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  login: (req: LoginRequest) => Promise<UsuarioResponse>;
-  registrar: (req: RegistrarRequest) => Promise<UsuarioResponse>;
-  logout: () => Promise<void>;
-  refreshUser: () => Promise<void>;
-  updateNome: (nome: string) => Promise<void>;
+interface Sessao {
+  usuario: UsuarioLogado | null;
+  carregando: boolean;
+  entrar: (email: string, senha: string) => Promise<UsuarioLogado>;
+  registrar: (nome: string, email: string, senha: string) => Promise<UsuarioLogado>;
+  sair: () => Promise<void>;
+  atualizarUsuario: (dados: Partial<UsuarioLogado>) => void;
+  encerrarLocalmente: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const SessaoContext = createContext<Sessao | null>(null);
 
+/**
+ * Sessão do app (spec §4.1/§4.3). Ao abrir, usa o token de renovação guardado no SecureStore para
+ * continuar a sessão sem pedir a senha. O token de acesso fica só em memória.
+ */
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<UsuarioResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [usuario, setUsuario] = useState<UsuarioLogado | null>(null);
+  const [carregando, setCarregando] = useState(true);
 
-  const refreshUser = useCallback(async () => {
-    try {
-      const me = await authApi.getMe();
-      setUser(me);
-    } catch {
-      setUser(null);
-      await setAccessToken(null);
-    }
+  const encerrarLocalmente = useCallback(async () => {
+    setAccessToken(null);
+    await guardarRefresh(null);
+    setUsuario(null);
   }, []);
 
-  // Tentativa inicial de restaurar sessão com token salvo no AsyncStorage
   useEffect(() => {
-    let isMounted = true;
-    const initAuth = async () => {
-      try {
-        const token = await loadStoredAuth();
-        if (token) {
-          const me = await authApi.getMe();
-          if (isMounted) setUser(me);
-        } else {
-          if (isMounted) setUser(null);
-        }
-      } catch {
-        if (isMounted) {
-          setUser(null);
-          await setAccessToken(null);
-        }
-      } finally {
-        if (isMounted) setIsLoading(false);
-      }
-    };
-
-    initAuth();
+    onSessaoExpirada(() => setUsuario(null));
+    let ativo = true;
+    renovarToken()
+      .then(() => usuariosApi.me())
+      .then((me) => ativo && setUsuario({ id: me.id, nome: me.nome, precisaCheckup: me.precisaCheckup }))
+      .catch(() => ativo && setUsuario(null))
+      .finally(() => ativo && setCarregando(false));
     return () => {
-      isMounted = false;
+      ativo = false;
+      onSessaoExpirada(null);
     };
   }, []);
 
-  const login = async (req: LoginRequest): Promise<UsuarioResponse> => {
-    const res = await authApi.login(req);
-    setUser(res.usuario);
-    return res.usuario;
-  };
+  const entrar = useCallback(async (email: string, senha: string) => {
+    const r = await authApi.login({ email: email.trim(), senha });
+    setAccessToken(r.accessToken);
+    await guardarRefresh(r.refreshToken);
+    setUsuario(r.usuario);
+    return r.usuario;
+  }, []);
 
-  const registrar = async (req: RegistrarRequest): Promise<UsuarioResponse> => {
-    await authApi.registrar(req);
-    // Realiza login automaticamente após cadastro
-    const loginRes = await authApi.login({ email: req.email, senha: req.senha });
-    setUser(loginRes.usuario);
-    return loginRes.usuario;
-  };
+  const registrar = useCallback(async (nome: string, email: string, senha: string) => {
+    await authApi.registrar({ nome: nome.trim(), email: email.trim(), senha });
+    return entrar(email, senha);
+  }, [entrar]);
 
-  const logout = async () => {
+  const sair = useCallback(async () => {
     try {
-      await authApi.logout();
+      await authApi.logout(await lerRefresh());
+    } catch {
+      // Sem rede: a sessão local é encerrada mesmo assim
     } finally {
-      setUser(null);
-      await setAccessToken(null);
+      await encerrarLocalmente();
     }
-  };
+  }, [encerrarLocalmente]);
 
-  const updateNome = async (nome: string) => {
-    const updated = await authApi.alterarNome({ nome });
-    setUser(updated);
-  };
-
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        isAuthenticated: !!user,
-        isLoading,
-        login,
-        registrar,
-        logout,
-        refreshUser,
-        updateNome,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+  const atualizarUsuario = useCallback(
+    (dados: Partial<UsuarioLogado>) => setUsuario((u) => (u ? { ...u, ...dados } : u)),
+    [],
   );
+
+  const valor = useMemo(
+    () => ({ usuario, carregando, entrar, registrar, sair, atualizarUsuario, encerrarLocalmente }),
+    [usuario, carregando, entrar, registrar, sair, atualizarUsuario, encerrarLocalmente],
+  );
+
+  return <SessaoContext.Provider value={valor}>{children}</SessaoContext.Provider>;
 }
 
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth deve ser usado dentro de um AuthProvider');
-  }
-  return context;
+export function useAuth(): Sessao {
+  const ctx = useContext(SessaoContext);
+  if (!ctx) throw new Error('useAuth precisa estar dentro de <AuthProvider>.');
+  return ctx;
 }

@@ -1,30 +1,25 @@
 import type { NavigatorScreenParams } from '@react-navigation/native';
-import type { ItemResponse } from '../api/types';
 
 export type RootStackParamList = {
-  // Telas Não Autenticadas
+  // Sem sessão (T01, T02)
   Welcome: undefined;
   Login: undefined;
   Register: undefined;
 
-  // App Principal
+  // Com sessão
+  Checkup: undefined;                         // T03 → T04 → T05
   MainTabs: NavigatorScreenParams<MainTabParamList>;
-
-  // Modais e Telas em Pilha
-  ItemDetail: { itemId: string; item?: ItemResponse };
-  AdicionarItem: { categoriaId?: number };
-  ModoFoco: undefined;
-  Notificacoes: undefined;
-  Veiculos: undefined;
-  Checkup: undefined;
-  PreferenciasNotificacao: undefined;
+  ItemDetail: { itemId: string };             // T10 (+ T12 em janela)
+  ItemForm: { itemId?: string };              // T09 (novo) e T11 (editar)
+  Veiculos: undefined;                        // T15
   Sobre: undefined;
 };
 
+/** Menu inferior: Radar · Itens · + Novo · Histórico · Perfil (spec §5.2). */
 export type MainTabParamList = {
   RadarTab: undefined;
-  TarefasTab: undefined;
-  AdicionarTab: undefined;
-  CarteiraTab: undefined;
+  ItensTab: undefined;
+  NovoTab: undefined;
+  HistoricoTab: undefined;
   PerfilTab: undefined;
 };

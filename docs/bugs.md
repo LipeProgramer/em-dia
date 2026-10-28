@@ -54,3 +54,9 @@
 ## BUG-11 — Observação em branco gravada no histórico
 - **Como apareceu:** teste de unidade complementar.
 - **Correção:** espaços em branco viram `null`, como no item. ✅
+
+## BUG-12 — App mobile incompatível com a API e com o Expo Go
+- **Como apareceu:** revisão do app: chamava rotas que não existem (`/modelos-item`, `/preferencias-aviso`, `/checkup/atual`),
+  usava enums numéricos e bibliotecas nativas de SDKs antigos, que o Expo Go (SDK 58) não carrega.
+- **Correção:** camada de dados e telas reescritas sobre o contrato E01–E25; dependências alinhadas com
+  `expo install --fix`; endereço da API descoberto pelo IP do Metro; sessão com SecureStore (DV17). ✅

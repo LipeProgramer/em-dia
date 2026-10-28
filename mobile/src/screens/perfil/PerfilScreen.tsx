@@ -1,338 +1,138 @@
-import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import {
-  User,
-  Car,
-  Bell,
-  Target,
-  Palette,
-  HelpCircle,
-  Info,
-  LogOut,
-  ChevronRight,
-  Edit2,
-  CheckCircle,
-} from 'lucide-react-native';
-import type { CompositeScreenProps } from '@react-navigation/native';
-import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import type {
-  MainTabParamList,
-  RootStackParamList,
-} from '../../navigation/types';
-import { colors, radius, spacing, typography } from '../../theme';
+import React, { useEffect, useState } from 'react';
+import { Pressable, Switch, Text, View } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Car, ChevronRight, Info, Sparkles } from 'lucide-react-native';
+import type { RootStackParamList } from '../../navigation/types';
+import type { Preferencias } from '../../api/types';
+import { usuariosApi } from '../../api/services';
+import { API_URL, errosPorCampo, mensagemDeErro } from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
+import { Button } from '../../components/Button';
+import { Input } from '../../components/Input';
+import { Alerta, Carregando, ErroTela, Janela, Tela, estilos, useCarregar } from '../../components/ui';
+import { inteiro, type Erros } from '../../utils/validacao';
+import { colors, spacing } from '../../theme';
 
-type Props = CompositeScreenProps<
-  BottomTabScreenProps<MainTabParamList, 'PerfilTab'>,
-  NativeStackScreenProps<RootStackParamList>
->;
+/** Preferências de aviso (E06): reavisos 0 a 5; intervalo 1 a 7 dias. */
+function PreferenciasForm({ inicial }: { inicial: Preferencias }) {
+  const [p, setP] = useState({ ...inicial, maxReavisos: String(inicial.maxReavisos), intervaloReavisoDias: String(inicial.intervaloReavisoDias) });
+  const [erros, setErros] = useState<Erros>({});
+  const [aviso, setAviso] = useState<{ texto: string; tipo: 'erro' | 'sucesso' } | null>(null);
+  const [salvando, setSalvando] = useState(false);
+  useEffect(() => setAviso(null), [p]);
 
-interface MenuItemProps {
-  icon: any;
-  label: string;
-  value?: string;
-  onPress: () => void;
-  destructive?: boolean;
-}
-
-function MenuItem({ icon: Icon, label, value, onPress, destructive }: MenuItemProps) {
-  return (
-    <TouchableOpacity
-      activeOpacity={0.7}
-      onPress={onPress}
-      style={styles.menuItem}
-    >
-      <View style={styles.menuLeft}>
-        <View
-          style={[
-            styles.menuIconCircle,
-            destructive && { backgroundColor: colors.errorMuted },
-          ]}
-        >
-          <Icon
-            size={18}
-            color={destructive ? colors.error : colors.textSecondary}
-            strokeWidth={2}
-          />
-        </View>
-        <Text
-          style={[
-            styles.menuLabel,
-            destructive && { color: colors.error, fontWeight: '700' },
-          ]}
-        >
-          {label}
-        </Text>
-      </View>
-
-      <View style={styles.menuRight}>
-        {value && <Text style={styles.menuValue}>{value}</Text>}
-        {!destructive && <ChevronRight size={18} color={colors.borderLight} />}
-      </View>
-    </TouchableOpacity>
-  );
-}
-
-export function PerfilScreen({ navigation }: Props) {
-  const { user, logout } = useAuth();
-
-  const handleLogout = () => {
-    Alert.alert('Sair da conta', 'Deseja realmente sair da sua conta?', [
-      { text: 'Cancelar', style: 'cancel' },
-      {
-        text: 'Sair',
-        style: 'destructive',
-        onPress: async () => {
-          await logout();
-        },
-      },
-    ]);
+  const salvar = async () => {
+    const e: Erros = {};
+    const max = inteiro(p.maxReavisos);
+    const intervalo = inteiro(p.intervaloReavisoDias);
+    if (max === undefined || Number.isNaN(max) || max < 0 || max > 5) e.maxReavisos = 'Escolha entre 0 e 5 reavisos.';
+    if (intervalo === undefined || Number.isNaN(intervalo) || intervalo < 1 || intervalo > 7) e.intervaloReavisoDias = 'Escolha entre 1 e 7 dias.';
+    setErros(e);
+    if (Object.keys(e).length) return;
+    setSalvando(true);
+    try {
+      await usuariosApi.atualizarPreferencias({ receberEmail: p.receberEmail, maxReavisos: max!, intervaloReavisoDias: intervalo!, modoFocoPadrao: p.modoFocoPadrao });
+      setAviso({ texto: 'Preferências salvas.', tipo: 'sucesso' });
+    } catch (err) {
+      const porCampo = errosPorCampo(err);
+      if (Object.keys(porCampo).length) setErros(porCampo);
+      else setAviso({ texto: mensagemDeErro(err), tipo: 'erro' });
+    } finally {
+      setSalvando(false);
+    }
   };
 
-  const nomeExibicao = user?.nome || 'Felipe Nadab';
-  const emailExibicao = user?.email || 'felipe@emdia.com';
-  const inicial = nomeExibicao.charAt(0).toUpperCase();
-
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-      <ScrollView
-        contentContainerStyle={styles.container}
-        showsVerticalScrollIndicator={false}
-      >
-        <Text style={styles.headerTitle}>Perfil e configurações</Text>
-
-        {/* Card do Usuário */}
-        <View style={styles.userCard}>
-          <View style={styles.avatarCircle}>
-            <Text style={styles.avatarInitial}>{inicial}</Text>
-          </View>
-          <View style={styles.userInfo}>
-            <Text style={styles.userName}>{nomeExibicao}</Text>
-            <Text style={styles.userEmail}>{emailExibicao}</Text>
-          </View>
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={() =>
-              Alert.alert('Editar Dados', 'Função de atualização de perfil acessível em breve.')
-            }
-            style={styles.editBtn}
-          >
-            <Edit2 size={18} color={colors.textSecondary} strokeWidth={2} />
-          </TouchableOpacity>
-        </View>
-
-        {/* Menu Principal */}
-        <View style={styles.menuSection}>
-          <Text style={styles.sectionHeader}>Gerenciamento</Text>
-
-          <View style={styles.menuGroup}>
-            <MenuItem
-              icon={User}
-              label="Meus dados"
-              onPress={() =>
-                Alert.alert('Meus Dados', `Nome: ${nomeExibicao}\nE-mail: ${emailExibicao}`)
-              }
-            />
-            <View style={styles.divider} />
-            <MenuItem
-              icon={Car}
-              label="Veículos"
-              onPress={() => navigation.navigate('Veiculos')}
-            />
-            <View style={styles.divider} />
-            <MenuItem
-              icon={CheckCircle}
-              label="Check-up de Vencimentos"
-              onPress={() => navigation.navigate('Checkup')}
-            />
-          </View>
-
-          <Text style={styles.sectionHeader}>Preferências</Text>
-          <View style={styles.menuGroup}>
-            <MenuItem
-              icon={Bell}
-              label="Preferências de notificação"
-              onPress={() => navigation.navigate('PreferenciasNotificacao')}
-            />
-            <View style={styles.divider} />
-            <MenuItem
-              icon={Target}
-              label="Modo foco"
-              onPress={() => navigation.navigate('ModoFoco')}
-            />
-            <View style={styles.divider} />
-            <MenuItem
-              icon={Palette}
-              label="Tema"
-              value="Escuro (Auto)"
-              onPress={() =>
-                Alert.alert('Tema', 'O tema escuro de alto contraste do Em Dia foi desenhado especialmente para conforto visual e foco.')
-              }
-            />
-          </View>
-
-          <Text style={styles.sectionHeader}>Suporte & Legal</Text>
-          <View style={styles.menuGroup}>
-            <MenuItem
-              icon={HelpCircle}
-              label="Ajuda e suporte"
-              onPress={() =>
-                Alert.alert(
-                  'Ajuda & Suporte',
-                  'Precisa de suporte? Entre em contato pelo e-mail suporte@emdia.app.'
-                )
-              }
-            />
-            <View style={styles.divider} />
-            <MenuItem
-              icon={Info}
-              label="Sobre o Em Dia"
-              value="v1.0.0"
-              onPress={() => navigation.navigate('Sobre')}
-            />
-          </View>
-
-          {/* Sair */}
-          <View style={[styles.menuGroup, { marginTop: spacing.md }]}>
-            <MenuItem
-              icon={LogOut}
-              label="Sair da conta"
-              destructive
-              onPress={handleLogout}
-            />
-          </View>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+    <View style={estilos.cartao}>
+      <Text style={estilos.subtitulo}>Avisos</Text>
+      <Interruptor rotulo="Receber avisos por e-mail" valor={p.receberEmail} aoMudar={(v) => setP({ ...p, receberEmail: v })} />
+      <Input label="Quantos reavisos, no máximo?" keyboardType="number-pad" value={p.maxReavisos} error={erros.maxReavisos}
+             onChangeText={(v) => setP({ ...p, maxReavisos: v })} />
+      <Input label="Intervalo entre reavisos (dias)" keyboardType="number-pad" value={p.intervaloReavisoDias} error={erros.intervaloReavisoDias}
+             onChangeText={(v) => setP({ ...p, intervaloReavisoDias: v })} />
+      <Interruptor rotulo="Abrir o Radar já no modo foco" valor={p.modoFocoPadrao} aoMudar={(v) => setP({ ...p, modoFocoPadrao: v })} />
+      {aviso && <Alerta texto={aviso.texto} tipo={aviso.tipo} />}
+      <Button title="Salvar preferências" variant="outline" onPress={salvar} loading={salvando} />
+    </View>
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  container: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.huge,
-  },
-  headerTitle: {
-    ...typography.h1,
-    color: colors.textPrimary,
-    fontWeight: '800',
-    marginTop: spacing.md,
-    marginBottom: spacing.lg,
-  },
-  userCard: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.lg,
-    padding: spacing.md + 2,
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.xl,
-  },
-  avatarCircle: {
-    width: 52,
-    height: 52,
-    borderRadius: radius.full,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: spacing.md,
-  },
-  avatarInitial: {
-    ...typography.h2,
-    color: '#0F172A',
-    fontWeight: '800',
-  },
-  userInfo: {
-    flex: 1,
-  },
-  userName: {
-    ...typography.bodyBold,
-    color: colors.textPrimary,
-    fontSize: 16,
-  },
-  userEmail: {
-    ...typography.caption,
-    color: colors.textMuted,
-    marginTop: 2,
-  },
-  editBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: radius.md,
-    backgroundColor: colors.surfaceElevated,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  menuSection: {
-    gap: spacing.sm,
-  },
-  sectionHeader: {
-    ...typography.caption,
-    color: colors.textMuted,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginTop: spacing.md,
-    marginBottom: spacing.xs,
-  },
-  menuGroup: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.lg,
-    overflow: 'hidden',
-  },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.md + 2,
-  },
-  menuLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  menuIconCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: radius.sm,
-    backgroundColor: colors.surfaceElevated,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  menuLabel: {
-    ...typography.body,
-    color: colors.textPrimary,
-    fontWeight: '500',
-  },
-  menuRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  menuValue: {
-    ...typography.caption,
-    color: colors.textMuted,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: colors.border,
-    marginLeft: 56,
-  },
-});
+function Interruptor({ rotulo, valor, aoMudar }: { rotulo: string; valor: boolean; aoMudar: (v: boolean) => void }) {
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 44 }}>
+      <Text style={{ color: colors.textSecondary, flex: 1 }}>{rotulo}</Text>
+      <Switch value={valor} onValueChange={aoMudar} accessibilityLabel={rotulo} />
+    </View>
+  );
+}
+
+/** T14 · Perfil: dados, preferências, refazer check-up, veículos, sair e excluir conta (E04–E07). */
+export function PerfilScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { sair, encerrarLocalmente } = useAuth();
+  const me = useCarregar(() => usuariosApi.me());
+  const [excluindo, setExcluindo] = useState(false);
+  const [senha, setSenha] = useState('');
+  const [erroExclusao, setErroExclusao] = useState<string | null>(null);
+
+  const excluirConta = async () => {
+    if (!senha) {
+      setErroExclusao('Digite sua senha para confirmar.');
+      return;
+    }
+    try {
+      await usuariosApi.excluirConta(senha);
+      await encerrarLocalmente();
+    } catch (err) {
+      setErroExclusao(mensagemDeErro(err));
+    }
+  };
+
+  return (
+    <Tela titulo="Perfil">
+      {me.carregando && !me.dados && <Carregando />}
+      {me.erro != null && <ErroTela erro={me.erro} tentarDeNovo={me.recarregar} />}
+      {me.dados && (
+        <>
+          <View style={estilos.cartao}>
+            <Text style={estilos.subtitulo}>{me.dados.nome}</Text>
+            <Text style={estilos.textoApoio}>{me.dados.email}</Text>
+          </View>
+
+          <View style={[estilos.cartao, { gap: 0, paddingVertical: spacing.xs }]}>
+            <ItemMenu icone={<Sparkles size={18} color={colors.primary} />} rotulo="Refazer o check-up" aoTocar={() => navigation.navigate('Checkup')} />
+            <ItemMenu icone={<Car size={18} color={colors.primary} />} rotulo="Meus veículos" aoTocar={() => navigation.navigate('Veiculos')} />
+            <ItemMenu icone={<Info size={18} color={colors.primary} />} rotulo="Sobre o Em Dia" aoTocar={() => navigation.navigate('Sobre')} />
+          </View>
+
+          <PreferenciasForm key={me.dados.id} inicial={me.dados.preferencias} />
+
+          <Button title="Sair" variant="outline" onPress={sair} fullWidth />
+          <Button title="Excluir conta" variant="ghost" textStyle={{ color: colors.error }} onPress={() => setExcluindo(true)} fullWidth />
+          <Text style={[estilos.textoApoio, { textAlign: 'center' }]}>Servidor: {API_URL}</Text>
+        </>
+      )}
+
+      <Janela aberta={excluindo} titulo="Excluir sua conta?" aoFechar={() => { setExcluindo(false); setErroExclusao(null); }}>
+        <Text style={[estilos.textoApoio, { marginBottom: spacing.md }]}>
+          Isso apaga todos os seus dados: itens, veículos, histórico e avisos. Não dá para desfazer.
+        </Text>
+        <Input label="Digite sua senha para confirmar" value={senha} onChangeText={setSenha} secureTextEntry />
+        {erroExclusao && <Alerta texto={erroExclusao} />}
+        <Button title="Excluir minha conta" variant="danger" onPress={excluirConta} fullWidth style={{ marginTop: spacing.md }} />
+      </Janela>
+    </Tela>
+  );
+}
+
+function ItemMenu({ icone, rotulo, aoTocar }: { icone: React.ReactNode; rotulo: string; aoTocar: () => void }) {
+  return (
+    <Pressable onPress={aoTocar} accessibilityRole="button"
+               style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 52 }}>
+      {icone}
+      <Text style={{ color: colors.textPrimary, flex: 1 }}>{rotulo}</Text>
+      <ChevronRight size={18} color={colors.textMuted} />
+    </Pressable>
+  );
+}

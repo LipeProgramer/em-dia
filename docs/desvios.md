@@ -64,9 +64,15 @@ O cookie de refresh é sempre `HttpOnly; Secure; SameSite=Strict; Path=/api/v1/a
 sistema, porque é com ele que o middleware JwtBearer confere a validade; assim os testes podem fixar "hoje" em
 15/10/2026 sem invalidar os tokens.
 
-### DV15 — Aplicativo `mobile/` fora do escopo
-A pasta `mobile/` (React Native/Expo) não está prevista na Entrega 2 e foi criada sobre o contrato antigo da API.
-Ela **não foi atualizada** e precisa ser adaptada às rotas atuais se for mantida.
+### DV15 — Aplicativo `mobile/` (extra)
+A pasta `mobile/` (React Native + Expo SDK 58, para o Expo Go) não está prevista na Entrega 2. Ela foi reescrita sobre
+o contrato atual da API (E01–E25), com as mesmas regras de validação e mensagens do front web.
+
+### DV17 — Sessão do app nativo sem cookie
+O app nativo não tem cookies de navegador. Quando a requisição traz `X-Cliente: mobile`, o login e a renovação
+devolvem o token de renovação **no corpo**; o app o guarda no **SecureStore** do aparelho e o reenvia no cabeçalho
+`X-Refresh-Token`. Rotação e detecção de reuso continuam iguais. Sem esse cabeçalho (navegador), nada muda: o token
+de renovação vai só no cookie HttpOnly e o cabeçalho `X-Refresh-Token` é ignorado. Coberto por um teste de integração.
 
 ### DV16 — Sem SMTP configurado, e-mails só vão para o log
 Se `Email:Smtp:Host` estiver vazio, a API usa um serviço de e-mail falso que só registra as mensagens. Com o host

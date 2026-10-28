@@ -76,3 +76,32 @@ jobs:
 
       - name: Testes (Vitest)
         run: npx vitest run --reporter=verbose
+
+  mobile-check:
+    name: App mobile — Tipos, testes e Expo Doctor
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Tipos (TypeScript)
+        run: npx tsc --noEmit
+
+      - name: Testes (Vitest)
+        run: npx vitest run
+
+      - name: Dependências compatíveis com o SDK
+        run: npx expo-doctor

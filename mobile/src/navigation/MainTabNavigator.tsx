@@ -1,135 +1,59 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import {
-  Compass,
-  Briefcase,
-  Plus,
-  CheckSquare,
-  User,
-} from 'lucide-react-native';
+import { Compass, History, List, Plus, User } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { MainTabParamList } from './types';
-import { colors, radius, spacing } from '../theme';
+import { colors, radius } from '../theme';
 import { RadarScreen } from '../screens/radar/RadarScreen';
-import { CarteiraScreen } from '../screens/carteira/CarteiraScreen';
-import { TarefasScreen } from '../screens/tarefas/TarefasScreen';
+import { ItensScreen } from '../screens/itens/ItensScreen';
+import { HistoricoScreen } from '../screens/historico/HistoricoScreen';
 import { PerfilScreen } from '../screens/perfil/PerfilScreen';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
-// Componente placeholder para a aba central (ação que abre o modal de Adicionar)
-function DummyAdicionarScreen() {
+function Vazia() {
   return null;
 }
 
+/** Menu inferior com 5 entradas: Radar · Itens · + Novo (botão central) · Histórico · Perfil (spec §5.2). */
 export function MainTabNavigator() {
+  const insets = useSafeAreaInsets();
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarStyle: styles.tabBar,
+        tabBarStyle: [estilos.barra, { height: 64 + insets.bottom, paddingBottom: 8 + insets.bottom }],
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textDisabled,
-        tabBarLabelStyle: styles.tabLabel,
+        tabBarLabelStyle: estilos.rotulo,
       }}
     >
-      <Tab.Screen
-        name="RadarTab"
-        component={RadarScreen}
-        options={{
-          tabBarLabel: 'Início',
-          tabBarIcon: ({ color, size }) => (
-            <Compass size={size - 2} color={color} strokeWidth={2.2} />
-          ),
-        }}
-      />
-
-      <Tab.Screen
-        name="CarteiraTab"
-        component={CarteiraScreen}
-        options={{
-          tabBarLabel: 'Carteira',
-          tabBarIcon: ({ color, size }) => (
-            <Briefcase size={size - 2} color={color} strokeWidth={2.2} />
-          ),
-        }}
-      />
-
-      {/* Botão Central (+) Flutuante */}
-      <Tab.Screen
-        name="AdicionarTab"
-        component={DummyAdicionarScreen}
+      <Tab.Screen name="RadarTab" component={RadarScreen}
+        options={{ tabBarLabel: 'Radar', tabBarIcon: ({ color, size }) => <Compass size={size - 2} color={color} /> }} />
+      <Tab.Screen name="ItensTab" component={ItensScreen}
+        options={{ tabBarLabel: 'Itens', tabBarIcon: ({ color, size }) => <List size={size - 2} color={color} /> }} />
+      <Tab.Screen name="NovoTab" component={Vazia}
         options={({ navigation }) => ({
           tabBarLabel: () => null,
           tabBarButton: () => (
-            <TouchableOpacity
-              activeOpacity={0.85}
-              onPress={() => (navigation as any).navigate('AdicionarItem', {})}
-              style={styles.centerFab}
-            >
-              <View style={styles.fabInner}>
-                <Plus size={26} color="#0F172A" strokeWidth={2.8} />
-              </View>
-            </TouchableOpacity>
+            <Pressable onPress={() => navigation.getParent()?.navigate('ItemForm', {})} style={estilos.central}
+                       accessibilityRole="button" accessibilityLabel="Novo item">
+              <View style={estilos.circulo}><Plus size={26} color="#0F172A" strokeWidth={2.8} /></View>
+            </Pressable>
           ),
-        })}
-      />
-
-      <Tab.Screen
-        name="TarefasTab"
-        component={TarefasScreen}
-        options={{
-          tabBarLabel: 'Tarefas',
-          tabBarIcon: ({ color, size }) => (
-            <CheckSquare size={size - 2} color={color} strokeWidth={2.2} />
-          ),
-        }}
-      />
-
-      <Tab.Screen
-        name="PerfilTab"
-        component={PerfilScreen}
-        options={{
-          tabBarLabel: 'Perfil',
-          tabBarIcon: ({ color, size }) => (
-            <User size={size - 2} color={color} strokeWidth={2.2} />
-          ),
-        }}
-      />
+        })} />
+      <Tab.Screen name="HistoricoTab" component={HistoricoScreen}
+        options={{ tabBarLabel: 'Histórico', tabBarIcon: ({ color, size }) => <History size={size - 2} color={color} /> }} />
+      <Tab.Screen name="PerfilTab" component={PerfilScreen}
+        options={{ tabBarLabel: 'Perfil', tabBarIcon: ({ color, size }) => <User size={size - 2} color={color} /> }} />
     </Tab.Navigator>
   );
 }
 
-const styles = StyleSheet.create({
-  tabBar: {
-    backgroundColor: '#111827',
-    borderTopColor: '#1F2937',
-    borderTopWidth: 1,
-    height: 64,
-    paddingBottom: 8,
-    paddingTop: 6,
-  },
-  tabLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  centerFab: {
-    top: -16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: 60,
-  },
-  fabInner: {
-    width: 52,
-    height: 52,
-    borderRadius: radius.full,
-    backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 8,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 6,
-  },
+const estilos = StyleSheet.create({
+  barra: { backgroundColor: '#111827', borderTopColor: '#1F2937', borderTopWidth: 1, paddingTop: 6 },
+  rotulo: { fontSize: 11, fontWeight: '600' },
+  central: { top: -14, alignItems: 'center', justifyContent: 'center', width: 64 },
+  circulo: { width: 52, height: 52, borderRadius: radius.full, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center', elevation: 6 },
 });

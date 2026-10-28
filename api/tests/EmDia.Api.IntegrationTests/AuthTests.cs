@@ -150,6 +150,36 @@ public class AuthTests(IntegrationTestFactory f)
         (await c.RefreshAsync(novo)).StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 
+    [Fact(DisplayName = "App mobile (DV17) · refresh no corpo, rotação e reuso detectado; o navegador nunca recebe o refresh no corpo")]
+    public async Task AppMobile_RefreshNoCorpo()
+    {
+        var c = await ApiCliente.CriarAsync(f);
+        var http = ApiCliente.NovoHttp(f);
+        http.DefaultRequestHeaders.Add("X-Cliente", "mobile");
+
+        var login = await http.PostAsJsonAsync("/api/v1/auth/login", new { email = c.Email, senha = ApiCliente.Senha });
+        var json = await ApiCliente.Json(login);
+        var refresh1 = json["refreshToken"]!.GetValue<string>();
+        login.Headers.Contains("Set-Cookie").Should().BeFalse();
+
+        var req = new HttpRequestMessage(HttpMethod.Post, "/api/v1/auth/refresh");
+        req.Headers.Add("X-Refresh-Token", refresh1);
+        var renovado = await http.SendAsync(req);
+        renovado.StatusCode.Should().Be(HttpStatusCode.OK);
+        (await ApiCliente.Json(renovado))["refreshToken"]!.GetValue<string>().Should().NotBe(refresh1);
+
+        var reuso = new HttpRequestMessage(HttpMethod.Post, "/api/v1/auth/refresh");
+        reuso.Headers.Add("X-Refresh-Token", refresh1);
+        (await http.SendAsync(reuso)).StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+
+        // Sem o cabeçalho X-Cliente, o cabeçalho X-Refresh-Token é ignorado e o corpo não traz o refresh
+        var web = await c.EntrarAsync();
+        (await ApiCliente.Json(web)).AsObject().Should().NotContainKey("refreshToken");
+        var semCookie = new HttpRequestMessage(HttpMethod.Post, "/api/v1/auth/refresh");
+        semCookie.Headers.Add("X-Refresh-Token", refresh1);
+        (await c.Http.SendAsync(semCookie)).StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
     [Fact(DisplayName = "CT12 · Logout → 204; refresh revogado; cookie apagado")]
     public async Task CT12_Logout()
     {

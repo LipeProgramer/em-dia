@@ -52,7 +52,7 @@ em-dia/
 └── docker-compose.yml  PostgreSQL local (porta 5433)
 ```
 
-> A pasta `mobile/` (React Native) é um extra que não faz parte da Entrega 2 e não foi atualizada para o contrato atual da API (ver `docs/desvios.md`, DV15).
+> A pasta `mobile/` traz o app em React Native + Expo (extra), que roda no **Expo Go** e usa a mesma API. Como rodar no celular: [`mobile/README.md`](mobile/README.md).
 
 ## Como executar (desenvolvimento local)
 
@@ -131,4 +131,5 @@ npx vitest run
 | [`docs/desvios.md`](docs/desvios.md) | Decisões que se afastam ou complementam a Entrega 2 |
 | [`docs/testes.md`](docs/testes.md) | Resultado de cada caso de teste (U01–U15, CT01–CT51) e cobertura |
 | [`docs/bugs.md`](docs/bugs.md) | Bugs encontrados, causas e correções |
+| [`docs/Em_Dia_Entrega3_Relatorio_Final.pdf`](docs/Em_Dia_Entrega3_Relatorio_Final.pdf) | Relatório da Entrega 3 (também em `.md` e `.html`) |
 | `/swagger` | Documentação interativa da API |

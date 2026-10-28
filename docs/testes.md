@@ -8,8 +8,9 @@
 | Nível | Projeto / ferramenta | Testes | Resultado |
 |---|---|---|---|
 | Unitário (regras do Domain) | `EmDia.Domain.Tests` · xUnit | 49 (U01–U15 + 34 complementares) | ✅ 49/49 |
-| Integração da API | `EmDia.Api.IntegrationTests` · xUnit + WebApplicationFactory + PostgreSQL | 50 (CT01–CT46 + 4 extras de E08–E10, E13, E22/E24, E25) | ✅ 50/50 |
+| Integração da API | `EmDia.Api.IntegrationTests` · xUnit + WebApplicationFactory + PostgreSQL | 51 (CT01–CT46 + extras de E08–E10, E13, E22/E24, E25 e sessão do app mobile) | ✅ 51/51 |
 | Frontend | `web/src/test` · Vitest + Testing Library | 17 (CT47–CT51 + validações) | ✅ 17/17 |
+| App mobile | `mobile/src/test` · Vitest | 11 (validações, datas e tema) | ✅ 11/11 |
 | Integração front–API | Roteiro manual (navegador) | Fluxos F1–F4 | ✅ 4/4 |
 
 - **Cobertura do `EmDia.Domain`:** 97,3% das linhas, 89,5% dos ramos (critério: ≥ 80%). Comando:

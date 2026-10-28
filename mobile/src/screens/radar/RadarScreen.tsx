@@ -1,176 +1,69 @@
-import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  RefreshControl,
-  TouchableOpacity,
-} from 'react-native';
+import React, { useState } from 'react';
+import { Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Target, ChevronRight, PlusCircle } from 'lucide-react-native';
-import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
-import type { CompositeScreenProps } from '@react-navigation/native';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import type {
-  MainTabParamList,
-  RootStackParamList,
-} from '../../navigation/types';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Crosshair } from 'lucide-react-native';
+import type { RootStackParamList } from '../../navigation/types';
+import { radarApi } from '../../api/services';
+import { useAuth } from '../../context/AuthContext';
+import { Button } from '../../components/Button';
+import { RadarChart, ItemLinha } from '../../components/RadarChart';
+import { Carregando, ErroTela, Vazio, estilos, useCarregar } from '../../components/ui';
 import { colors, radius, spacing, typography } from '../../theme';
-import { Header } from '../../components/Header';
-import { RadarDonut } from '../../components/RadarDonut';
-import { ItemCard } from '../../components/ItemCard';
-import { EmptyState } from '../../components/EmptyState';
-import { useRadar } from '../../context/RadarContext';
 
-type Props = CompositeScreenProps<
-  BottomTabScreenProps<MainTabParamList, 'RadarTab'>,
-  NativeStackScreenProps<RootStackParamList>
->;
+/** T06 · Radar (tela principal) e T07 · Modo foco: só os 3 itens mais urgentes (E12 · RN02–RN04). */
+export function RadarScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { usuario } = useAuth();
+  const [foco, setFoco] = useState<boolean | undefined>(undefined); // indefinido = preferência do usuário
+  const radar = useCarregar(() => radarApi.obter(foco), [foco]);
+  const abrir = (id: string) => navigation.navigate('ItemDetail', { itemId: id });
 
-export function RadarScreen({ navigation }: Props) {
-  const { itens, counts, refreshing, carregarDados } = useRadar();
-
-  // Próximos vencimentos ordenados por urgência (atrasados primeiro, depois próximos)
-  const proximosItens = [...itens]
-    .sort((a, b) => a.diasRestantes - b.diasRestantes)
-    .slice(0, 5);
-
+  const d = radar.dados;
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-      {/* Header com avatar e notificações */}
-      <Header
-        onPressNotifications={() => navigation.navigate('Notificacoes')}
-        onPressProfile={() => navigation.navigate('MainTabs', { screen: 'PerfilTab' })}
-      />
-
-      <ScrollView
-        contentContainerStyle={styles.container}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={carregarDados}
-            tintColor={colors.primary}
-            colors={[colors.primary]}
-          />
-        }
-      >
-        {/* Gráfico do Radar (Donut) */}
-        <RadarDonut
-          atrasados={counts.atrasados}
-          hoje={counts.hoje}
-          proximos={counts.proximos}
-          emDia={counts.emDia}
-        />
-
-        {/* Card de Acesso Rápido ao Modo Foco */}
-        <TouchableOpacity
-          activeOpacity={0.8}
-          onPress={() => navigation.navigate('ModoFoco')}
-          style={styles.focusCard}
-        >
-          <View style={styles.focusIconWrapper}>
-            <Target size={22} color={colors.primary} strokeWidth={2.2} />
+    <SafeAreaView style={estilos.tela} edges={['top']}>
+      <ScrollView contentContainerStyle={estilos.conteudo}
+                  refreshControl={<RefreshControl refreshing={false} onRefresh={radar.recarregar} tintColor={colors.primary} />}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', paddingTop: spacing.md }}>
+          <View style={{ flex: 1 }}>
+            <Text style={[typography.h1, { color: colors.textPrimary }]} accessibilityRole="header">Seu radar</Text>
+            {d && (
+              <Text style={estilos.textoApoio}>
+                {d.resumo.vencidos} vencido(s) · {d.resumo.atencao} em atenção · {d.resumo.emDia} em dia
+              </Text>
+            )}
           </View>
-          <View style={styles.focusTextContainer}>
-            <Text style={styles.focusTitle}>Modo Foco Anti-Procrastinação</Text>
-            <Text style={styles.focusSubtitle}>
-              Foque apenas nos 3 itens mais urgentes agora sem sobrecarga.
-            </Text>
-          </View>
-          <ChevronRight size={18} color={colors.textMuted} />
-        </TouchableOpacity>
-
-        {/* Seção Próximos Vencimentos */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Próximos vencimentos</Text>
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={() => navigation.navigate('TarefasTab')}
-          >
-            <Text style={styles.sectionLink}>Ver todos</Text>
-          </TouchableOpacity>
+          {d && (
+            <Pressable onPress={() => setFoco(!d.modoFoco)} accessibilityRole="switch" accessibilityState={{ checked: d.modoFoco }}
+                       style={{ flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 44, paddingHorizontal: spacing.md,
+                         borderRadius: radius.full, borderWidth: 1.5, borderColor: colors.primary,
+                         backgroundColor: d.modoFoco ? colors.primary : 'transparent' }}>
+              <Crosshair size={16} color={d.modoFoco ? '#0F172A' : colors.primary} />
+              <Text style={{ color: d.modoFoco ? '#0F172A' : colors.primary, fontWeight: '700' }}>Modo foco</Text>
+            </Pressable>
+          )}
         </View>
 
-        {/* Lista de Itens */}
-        {proximosItens.length === 0 ? (
-          <EmptyState
-            title="Nenhum vencimento no radar"
-            description="Tudo calmo por aqui! Que tal cadastrar seu primeiro compromisso para não esquecer?"
-            actionTitle="Adicionar Vencimento"
-            onAction={() => navigation.navigate('AdicionarItem', {})}
-          />
-        ) : (
-          proximosItens.map((item) => (
-            <ItemCard
-              key={item.id}
-              item={item}
-              onPress={() => navigation.navigate('ItemDetail', { itemId: item.id, item })}
-            />
-          ))
+        {radar.carregando && !d && <Carregando />}
+        {radar.erro != null && <ErroTela erro={radar.erro} tentarDeNovo={radar.recarregar} />}
+
+        {d && d.itens.length === 0 && (
+          <Vazio titulo="Nenhum prazo por aqui ainda." texto={`Que tal fazer o check-up, ${usuario?.nome}?`}
+                 acao={<Button title="Fazer o check-up" onPress={() => navigation.navigate('Checkup')} />} />
+        )}
+
+        {d && d.itens.length > 0 && (
+          <>
+            {d.modoFoco && <Text style={[estilos.textoApoio, { color: colors.primary }]}>Modo foco: só os 3 itens mais urgentes. Um de cada vez.</Text>}
+            <RadarChart itens={d.itens} aoTocar={abrir} />
+            {d.itens.some((i) => i.status !== 'EmDia') && <Text style={estilos.subtitulo}>Precisa de atenção</Text>}
+            {d.itens.filter((i) => i.status !== 'EmDia').map((i) => <ItemLinha key={i.id} item={i} aoTocar={() => abrir(i.id)} />)}
+            {d.itens.some((i) => i.status === 'EmDia') && <Text style={estilos.subtitulo}>Em dia</Text>}
+            {d.itens.filter((i) => i.status === 'EmDia').map((i) => <ItemLinha key={i.id} item={i} aoTocar={() => abrir(i.id)} />)}
+          </>
         )}
       </ScrollView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  container: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.xxxl,
-  },
-  focusCard: {
-    backgroundColor: 'rgba(0, 200, 150, 0.08)',
-    borderWidth: 1.2,
-    borderColor: 'rgba(0, 200, 150, 0.3)',
-    borderRadius: radius.lg,
-    padding: spacing.md + 2,
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.xl,
-  },
-  focusIconWrapper: {
-    width: 40,
-    height: 40,
-    borderRadius: radius.md,
-    backgroundColor: 'rgba(0, 200, 150, 0.15)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: spacing.md,
-  },
-  focusTextContainer: {
-    flex: 1,
-    paddingRight: spacing.sm,
-  },
-  focusTitle: {
-    ...typography.bodyBold,
-    color: colors.primary,
-    fontSize: 14,
-  },
-  focusSubtitle: {
-    ...typography.caption,
-    color: colors.textMuted,
-    marginTop: 2,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.md,
-  },
-  sectionTitle: {
-    ...typography.h3,
-    color: colors.textPrimary,
-    fontWeight: '700',
-  },
-  sectionLink: {
-    ...typography.caption,
-    color: colors.primary,
-    fontWeight: '700',
-  },
-});

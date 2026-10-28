@@ -1,193 +1,75 @@
-import { api, setAccessToken } from './client';
+import { api } from './client';
 import type {
-  AlterarNomeRequest,
-  AtualizarKmRequest,
-  AtualizarPreferenciasRequest,
-  CategoriaResponse,
-  CheckupResponse,
-  ConcluirItemRequest,
-  CriarItemRequest,
-  CriarVeiculoRequest,
-  EditarItemRequest,
-  EditarVeiculoRequest,
-  ExecutarCheckupRequest,
-  HistoricoResponse,
-  ItemResponse,
-  LoginRequest,
-  LoginResponse,
-  ModeloItemResponse,
-  PreferenciasResponse,
-  RadarResponse,
-  RegistrarRequest,
-  UsuarioResponse,
-  VeiculoResponse,
+  AtualizarKmResponse, Categoria, CheckupRequest, CheckupResponse, ConcluirRequest, ConcluirResponse,
+  HistoricoItem, ItemDetalhe, ItemResumo, Modelo, Pergunta, Preferencias, RadarResponse, SalvarItemRequest,
+  StatusItem, TipoVeiculo, UsuarioLogado, Usuario, Veiculo,
 } from './types';
 
-// ── Auth API ──────────────────────────────────────────────────────────────────
+// Uma função por endpoint da API (E01–E25 · spec §3.3) — mesmo contrato do front web.
+
+export interface LoginMobile {
+  accessToken: string;
+  expiraEm: string;
+  usuario: UsuarioLogado;
+  refreshToken: string;
+}
+
 export const authApi = {
-  registrar: async (req: RegistrarRequest): Promise<UsuarioResponse> => {
-    const { data } = await api.post<UsuarioResponse>('/auth/registrar', req);
-    return data;
-  },
-
-  login: async (req: LoginRequest): Promise<LoginResponse> => {
-    const { data } = await api.post<LoginResponse>('/auth/login', req);
-    await setAccessToken(data.accessToken);
-    return data;
-  },
-
-  logout: async (): Promise<void> => {
-    try {
-      await api.post('/auth/logout');
-    } catch {
-      // Ignora falhas de rede no logout
-    } finally {
-      await setAccessToken(null);
-    }
-  },
-
-  getMe: async (): Promise<UsuarioResponse> => {
-    const { data } = await api.get<UsuarioResponse>('/usuarios/me');
-    return data;
-  },
-
-  alterarNome: async (req: AlterarNomeRequest): Promise<UsuarioResponse> => {
-    const { data } = await api.patch<UsuarioResponse>('/usuarios/me', req);
-    return data;
-  },
-
-  excluirConta: async (): Promise<void> => {
-    await api.delete('/usuarios/me');
-    await setAccessToken(null);
-  },
+  registrar: (dados: { nome: string; email: string; senha: string }) =>
+    api.post<{ id: string; nome: string; email: string }>('/auth/registrar', dados).then((r) => r.data),
+  login: (dados: { email: string; senha: string }) => api.post<LoginMobile>('/auth/login', dados).then((r) => r.data),
+  logout: (refreshToken: string | null) =>
+    api.post('/auth/logout', null, { headers: refreshToken ? { 'X-Refresh-Token': refreshToken } : {} }),
 };
 
-// ── Radar API ─────────────────────────────────────────────────────────────────
+export const usuariosApi = {
+  me: () => api.get<Usuario>('/usuarios/me').then((r) => r.data),
+  atualizarPreferencias: (p: Preferencias) => api.put<Preferencias>('/usuarios/me/preferencias', p).then((r) => r.data),
+  excluirConta: (senha: string) => api.delete('/usuarios/me', { data: { senha } }),
+};
+
+export const catalogoApi = {
+  categorias: () => api.get<Categoria[]>('/categorias').then((r) => r.data),
+  modelos: (categoriaId?: number) => api.get<Modelo[]>('/modelos', { params: { categoriaId } }).then((r) => r.data),
+  perguntas: () => api.get<Pergunta[]>('/checkup/perguntas').then((r) => r.data),
+  fazerCheckup: (dados: CheckupRequest) => api.post<CheckupResponse>('/checkup', dados).then((r) => r.data),
+};
+
 export const radarApi = {
-  obter: async (): Promise<RadarResponse> => {
-    const { data } = await api.get<RadarResponse>('/radar');
-    return data;
-  },
+  obter: (foco?: boolean) => api.get<RadarResponse>('/radar', { params: { foco } }).then((r) => r.data),
 };
 
-// ── Check-up API ──────────────────────────────────────────────────────────────
-export const checkupApi = {
-  obterAtual: async (): Promise<CheckupResponse | null> => {
-    try {
-      const res = await api.get<CheckupResponse>('/checkup/atual');
-      if (res.status === 204) return null;
-      return res.data;
-    } catch {
-      return null;
-    }
-  },
-
-  executar: async (req: ExecutarCheckupRequest): Promise<CheckupResponse> => {
-    const { data } = await api.post<CheckupResponse>('/checkup', req);
-    return data;
-  },
-};
-
-// ── Itens API ─────────────────────────────────────────────────────────────────
 export const itensApi = {
-  listar: async (categoriaId?: number): Promise<ItemResponse[]> => {
-    const params = categoriaId ? { categoriaId } : {};
-    const { data } = await api.get<ItemResponse[]>('/itens', { params });
-    return data;
-  },
-
-  obterPorId: async (id: string): Promise<ItemResponse> => {
-    const { data } = await api.get<ItemResponse>(`/itens/${id}`);
-    return data;
-  },
-
-  criar: async (req: CriarItemRequest): Promise<ItemResponse> => {
-    const { data } = await api.post<ItemResponse>('/itens', req);
-    return data;
-  },
-
-  editar: async (id: string, req: EditarItemRequest): Promise<ItemResponse> => {
-    const { data } = await api.put<ItemResponse>(`/itens/${id}`, req);
-    return data;
-  },
-
-  excluir: async (id: string): Promise<void> => {
-    await api.delete(`/itens/${id}`);
-  },
-
-  concluir: async (id: string, req: ConcluirItemRequest): Promise<void> => {
-    await api.post(`/itens/${id}/concluir`, req);
-  },
-
-  obterHistorico: async (id: string): Promise<HistoricoResponse[]> => {
-    const { data } = await api.get<HistoricoResponse[]>(`/itens/${id}/historico`);
-    return data;
-  },
+  listar: (filtros: { categoriaId?: number; status?: StatusItem }) =>
+    api.get<ItemResumo[]>('/itens', { params: filtros }).then((r) => r.data),
+  obter: (id: string) => api.get<ItemDetalhe>(`/itens/${id}`).then((r) => r.data),
+  criar: (dados: SalvarItemRequest) => api.post<ItemDetalhe>('/itens', dados).then((r) => r.data),
+  editar: (id: string, dados: SalvarItemRequest) => api.put<ItemDetalhe>(`/itens/${id}`, dados).then((r) => r.data),
+  excluir: (id: string) => api.delete(`/itens/${id}`),
+  concluir: (id: string, dados: ConcluirRequest) =>
+    api.post<ConcluirResponse>(`/itens/${id}/concluir`, dados).then((r) => r.data),
+  marcarPasso: (id: string, passoId: string, concluido: boolean) =>
+    api.patch<{ passoId: string; concluido: boolean; progressoPassos: number }>(
+      `/itens/${id}/passos/${passoId}`, { concluido }).then((r) => r.data),
 };
 
-// ── Passos API ────────────────────────────────────────────────────────────────
-export const passosApi = {
-  marcarPasso: async (itemId: string, passoId: string, concluido: boolean): Promise<void> => {
-    await api.put(`/itens/${itemId}/passos/${passoId}`, { concluido });
-  },
-};
+export interface VeiculoForm {
+  apelido: string;
+  tipo: TipoVeiculo;
+  kmAtual: number;
+  mediaKmMes: number;
+}
 
-// ── Categorias & Modelos API ──────────────────────────────────────────────────
-export const categoriasApi = {
-  listar: async (): Promise<CategoriaResponse[]> => {
-    const { data } = await api.get<CategoriaResponse[]>('/categorias');
-    return data;
-  },
-};
-
-export const modelosApi = {
-  listar: async (categoriaId?: number): Promise<ModeloItemResponse[]> => {
-    const params = categoriaId ? { categoriaId } : {};
-    const { data } = await api.get<ModeloItemResponse[]>('/modelos-item', { params });
-    return data;
-  },
-};
-
-// ── Veículos API ──────────────────────────────────────────────────────────────
 export const veiculosApi = {
-  listar: async (): Promise<VeiculoResponse[]> => {
-    const { data } = await api.get<VeiculoResponse[]>('/veiculos');
-    return data;
-  },
-
-  obterPorId: async (id: string): Promise<VeiculoResponse> => {
-    const { data } = await api.get<VeiculoResponse>(`/veiculos/${id}`);
-    return data;
-  },
-
-  criar: async (req: CriarVeiculoRequest): Promise<VeiculoResponse> => {
-    const { data } = await api.post<VeiculoResponse>('/veiculos', req);
-    return data;
-  },
-
-  editar: async (id: string, req: EditarVeiculoRequest): Promise<VeiculoResponse> => {
-    const { data } = await api.put<VeiculoResponse>(`/veiculos/${id}`, req);
-    return data;
-  },
-
-  excluir: async (id: string): Promise<void> => {
-    await api.delete(`/veiculos/${id}`);
-  },
-
-  atualizarKm: async (id: string, req: AtualizarKmRequest): Promise<void> => {
-    await api.patch(`/veiculos/${id}/km`, req);
-  },
+  listar: () => api.get<Veiculo[]>('/veiculos').then((r) => r.data),
+  criar: (dados: VeiculoForm) => api.post<Veiculo>('/veiculos', dados).then((r) => r.data),
+  editar: (id: string, dados: Omit<VeiculoForm, 'kmAtual'>) => api.put<Veiculo>(`/veiculos/${id}`, dados).then((r) => r.data),
+  atualizarKm: (id: string, kmAtual: number) =>
+    api.patch<AtualizarKmResponse>(`/veiculos/${id}/km`, { kmAtual }).then((r) => r.data),
+  excluir: (id: string) => api.delete(`/veiculos/${id}`),
 };
 
-// ── Preferências de Notificação API ──────────────────────────────────────────
-export const preferenciasApi = {
-  obter: async (): Promise<PreferenciasResponse> => {
-    const { data } = await api.get<PreferenciasResponse>('/preferencias-aviso');
-    return data;
-  },
-
-  atualizar: async (req: AtualizarPreferenciasRequest): Promise<PreferenciasResponse> => {
-    const { data } = await api.put<PreferenciasResponse>('/preferencias-aviso', req);
-    return data;
-  },
+export const historicoApi = {
+  listar: (filtros: { itemId?: string; de?: string; ate?: string }) =>
+    api.get<HistoricoItem[]>('/historico', { params: filtros }).then((r) => r.data),
 };

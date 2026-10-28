@@ -1,96 +1,83 @@
-# Em Dia — Aplicativo Mobile Nativo (React Native + Expo + TypeScript)
+# Em Dia — App mobile (React Native + Expo)
 
-Aplicativo mobile oficial do **Em Dia** — Radar de vencimentos e lembretes inteligentes desenvolvido especialmente para adultos com TDAH, foco e rotinas com sobrecarga cognitiva.
+App do **Em Dia** para Android e iPhone, feito com **Expo SDK 58** para rodar no **Expo Go**. Usa a mesma API e as
+mesmas regras do front web (Entrega 2): check-up, Radar com modo foco, itens com passos, concluir, histórico, perfil e
+veículos.
 
----
+## Como rodar no celular com o Expo Go
 
-## 📱 Visão Geral do App
+O celular e o computador precisam estar **na mesma rede Wi-Fi**.
 
-O aplicativo foi construído de raiz em **React Native + Expo SDK 58 + TypeScript**, utilizando arquitetura nativa com design system personalizado inspirado no board de alta fidelidade:
+### 1. Suba o banco e a API escutando na rede local
 
-- **Paleta de Alto Contraste:**
-  - Primária: `#00C896` (Esmeralda / Menta)
-  - Alerta / Hoje: `#F59E0B` (Âmbar)
-  - Sucesso: `#10B981` (Verde)
-  - Erro / Atrasados: `#EF4444` (Vermelho)
-  - Superfícies Dark: `#111827`, `#1F2937`, `#374151`
-- **Ícones Profissionais:** 100% vetorizados via `lucide-react-native` (zero emojis como ícones).
-- **Radar Visual:** Gráfico Donut dinâmico (`react-native-svg`) com fatias por anéis de urgência e contagem centralizada.
-- **Modo Foco Anti-Procrastinação:** Exibe exclusivamente os 3 itens prioritários para resolução sem sobrecarga sensorial.
-- **Navegação Mobile Nativa:**
-  - Barra de abas inferior (`@react-navigation/bottom-tabs`) com botão central flutuante (+)
-  - Pilha nativa (`@react-navigation/native-stack`) para detalhes, edição, check-up e modais.
-- **Integração Real:** Conectado à API .NET 10 (`EmDia.Api`) e PostgreSQL com persistência de token via `@react-native-async-storage/async-storage`.
+```powershell
+docker compose up -d                       # na raiz do repositório
+cd api
+dotnet run --project src/EmDia.Api --launch-profile celular
+```
 
----
+O perfil `celular` faz a API escutar em `http://0.0.0.0:5196` (todas as interfaces). Na primeira vez, o Windows pode
+perguntar se o .NET pode receber conexões: permita em **redes privadas**. A chave do JWT precisa estar configurada
+(veja o README principal).
 
-## 🚀 Como Executar o Aplicativo
+### 2. Inicie o app
 
-### Pré-requisitos
-1. **API .NET e PostgreSQL:**
-   Certifique-se de que a API está rodando (`dotnet run` na porta `5196`) e o Docker PostgreSQL ativo na porta `5433`.
+```powershell
+cd mobile
+npm install
+npx expo start
+```
 
-2. **Node.js:** Versão 18+ (recomendado Node 20 ou 24).
+Abra o **Expo Go** no celular (Play Store ou App Store) e leia o QR Code do terminal.
 
-### Passo a Passo
+O app descobre sozinho o IP do computador (o mesmo do servidor Metro) e chama a API em `http://<IP>:5196/api/v1`.
+O endereço usado aparece no fim da tela **Perfil**. Para usar outro endereço, defina a variável antes de iniciar:
 
-1. Acesse a pasta `mobile`:
-   ```bash
-   cd mobile
-   ```
+```powershell
+$env:EXPO_PUBLIC_API_URL = "http://192.168.0.10:5196/api/v1"
+npx expo start
+```
 
-2. Instale as dependências (já instaladas):
-   ```bash
-   npm install --legacy-peer-deps
-   ```
+Se o celular não conseguir falar com a API, a mensagem de erro mostra o endereço que ele tentou. Confira se a API está
+no perfil `celular`, se os dois aparelhos estão no mesmo Wi-Fi e se o firewall do Windows liberou a porta 5196.
 
-3. Inicie o servidor Metro / Expo:
-   ```bash
-   npm start
-   ```
+## Sessão no app (DV17)
 
-4. **Para testar:**
-   - **No seu celular físico (Android ou iPhone):** Instale o aplicativo **Expo Go** pela Google Play Store ou App Store e aponte a câmera para o QR Code exibido no terminal.
-   - **No Emulador Android:** Pressione `a` no terminal (ou execute `npm run android`). O app se conectará automaticamente à API via `http://10.0.2.2:5196/api/v1`.
-   - **No Simulador iOS (macOS):** Pressione `i` no terminal (ou execute `npm run ios`).
+O app manda o cabeçalho `X-Cliente: mobile`. Assim a API devolve o token de renovação no corpo, e o app o guarda no
+**SecureStore** do aparelho (não há cookies de navegador no app nativo). O token de acesso fica só em memória, e em 401
+o app renova a sessão uma vez e repete a requisição, como no front web.
 
----
+## Telas
 
-## 🧪 Testes e Verificação
+| Spec | Tela no app |
+|---|---|
+| T01, T02 | Entrar, Criar conta |
+| T03–T05 | Check-up (perguntas → completar dados → resultado) |
+| T06, T07 | Radar (aba) com o botão **Modo foco** |
+| T08 | Itens (aba) com filtros por área e status |
+| T09, T11 | Novo item (botão **+**) a partir de um modelo ou do zero; Editar |
+| T10, T12 | Detalhe do item, com a janela **Concluir** |
+| T13 | Histórico (aba) |
+| T14 | Perfil (aba): preferências, refazer check-up, veículos, sair, excluir conta |
+| T15 | Meus veículos |
 
-- **Testes Unitários:**
-  ```bash
-  npm test
-  ```
-- **Verificação Estática de Tipos (TypeScript):**
-  ```bash
-  npm run typecheck
-  ```
+## Verificação
 
----
+```powershell
+npx tsc --noEmit        # tipos
+npm test                # testes (Vitest)
+npx expo-doctor         # dependências compatíveis com o SDK
+```
 
-## 📂 Arquitetura de Pastas
+## Estrutura
 
 ```
-mobile/
-├── src/
-│   ├── api/             # Cliente Axios com interceptors e serviços REST
-│   ├── theme/           # Tokens (colors, typography, spacing, radius)
-│   ├── components/      # Botões, Inputs, Cards, Donut SVG, Badges, Abas
-│   ├── context/         # AuthContext (JWT + AsyncStorage) e RadarContext
-│   ├── navigation/      # RootNavigator e MainTabNavigator com abas e FAB
-│   ├── screens/
-│   │   ├── auth/        # WelcomeScreen, LoginScreen, RegisterScreen
-│   │   ├── radar/       # RadarScreen (Donut, resumo de hoje, atalhos)
-│   │   ├── tarefas/     # TarefasScreen e ItemDetailScreen
-│   │   ├── carteira/    # CarteiraScreen com filtros por categoria
-│   │   ├── adicionar/   # AdicionarItemScreen com sugestões e categorias
-│   │   ├── foco/        # ModoFocoScreen (3 itens essenciais para TDAH)
-│   │   ├── notificacoes/# NotificacoesScreen (Lembretes e Sistema)
-│   │   ├── perfil/      # PerfilScreen, Preferências e Sobre
-│   │   ├── veiculos/    # VeiculosScreen (Odômetro e gerenciamento de km)
-│   │   └── checkup/     # CheckupScreen (Onboarding de vencimentos)
-│   └── test/            # Suíte de testes unitários do design system e regras
-├── app.json             # Metadados do Expo (bundle com.emdia.app)
-└── package.json
+mobile/src/
+├── api/          client.ts (axios + renovação + SecureStore), services.ts (E01–E25), types.ts
+├── components/   Button, Input, FilterPills, RadarChart (SVG), ui.tsx (StatusBadge, Tela, Janela…)
+├── context/      AuthContext (sessão)
+├── navigation/   RootNavigator (portão do check-up), MainTabNavigator (Radar · Itens · + · Histórico · Perfil)
+├── screens/      auth, checkup, radar, itens, historico, perfil, veiculos
+├── utils/        formato.ts (datas dd/mm/aaaa), validacao.ts (mesmas mensagens da spec §6.5)
+└── test/         testes de validação e do tema
 ```
