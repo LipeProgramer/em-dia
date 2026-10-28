@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Em Dia · Entrega 3 – Documentação Técnica da Solução e Resultados dos Testes</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+
+    @page {
+      size: A4;
+      margin: 18mm 16mm 18mm 16mm;
+      @bottom-right {
+        content: counter(page);
+      }
+    }
+
+    @page :first {
+      margin: 0;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #1f2836;
+      font-size: 10pt;
+      line-height: 1.55;
+      background: #ffffff;
+    }
+
+    /* ── CAPA (ESTILO IDÊNTICO À ENTREGA 2) ────────────────────────────────── */
+    .cover {
+      width: 100vw;
+      height: 100vh;
+      page-break-after: always;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      background: #0a3b38;
+      color: #ffffff;
+      padding: 60px 50px 0 50px;
+    }
+
+    .cover-header {
+      font-size: 11pt;
+      font-weight: 700;
+      color: #9ed3cc;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 70px;
+    }
+
+    .cover-title {
+      font-size: 48pt;
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1.05;
+      margin-bottom: 15px;
+      letter-spacing: -1px;
+    }
+
+    .cover-subtitle {
+      font-size: 19pt;
+      font-weight: 400;
+      color: #cde9e6;
+      margin-bottom: 50px;
+      line-height: 1.3;
+    }
+
+    .cover-badge {
+      display: inline-block;
+      font-size: 16pt;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 8px;
+    }
+
+    .cover-discipline {
+      font-size: 12.5pt;
+      color: #cde9e6;
+      margin-bottom: auto;
+      line-height: 1.4;
+    }
+
+    .cover-footer-band {
+      margin-left: -50px;
+      margin-right: -50px;
+      background: #0f756e;
+      padding: 40px 50px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .cover-team-label {
+      font-size: 11pt;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+    }
+
+    .cover-member {
+      font-size: 12pt;
+      color: #ffffff;
+      font-weight: 500;
+    }
+
+    .cover-member strong {
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .cover-location {
+      font-size: 11pt;
+      color: #cde9e6;
+      margin-top: 15px;
+      font-weight: 500;
+    }
+
+    /* ── PÁGINAS DE CONTEÚDO ──────────────────────────────────────────────── */
+    .page {
+      padding-top: 10px;
+      page-break-after: always;
+    }
+
+    .page:last-child {
+      page-break-after: auto;
+    }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 9pt;
+      color: #6b7280;
+      border-bottom: 1px solid #d1d4db;
+      padding-bottom: 6px;
+      margin-bottom: 22px;
+    }
+
+    .page-title {
+      font-weight: 600;
+    }
+
+    /* ── TIPOGRAFIA E SEÇÕES ──────────────────────────────────────────────── */
+    h1 {
+      color: #0f756e;
+      font-size: 19pt;
+      font-weight: 800;
+      margin-bottom: 14px;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    h2 {
+      color: #1f2836;
+      font-size: 13.5pt;
+      font-weight: 700;
+      margin-top: 20px;
+      margin-bottom: 10px;
+      letter-spacing: -0.3px;
+      border-left: 3.5px solid #0f756e;
+      padding-left: 8px;
+    }
+
+    h3 {
+      color: #0f756e;
+      font-size: 11.5pt;
+      font-weight: 700;
+      margin-top: 14px;
+      margin-bottom: 6px;
+    }
+
+    p {
+      margin-bottom: 10px;
+      text-align: justify;
+    }
+
+    ul, ol {
+      margin-left: 20px;
+      margin-bottom: 12px;
+    }
+
+    li {
+      margin-bottom: 4px;
+    }
+
+    strong {
+      color: #0f2c29;
+      font-weight: 600;
+    }
+
+    /* ── CAIXAS DE DESTAQUE / CALLOUTS ─────────────────────────────────────── */
+    .callout {
+      background: #e6f4f2;
+      border-left: 4px solid #0f756e;
+      border-radius: 6px;
+      padding: 12px 16px;
+      margin: 14px 0;
+      font-size: 9.5pt;
+    }
+
+    .callout-title {
+      font-weight: 700;
+      color: #0f756e;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .callout-amber {
+      background: #fffbeb;
+      border-left-color: #d97706;
+      color: #92400e;
+    }
+
+    .callout-amber .callout-title {
+      color: #b45309;
+    }
+
+    /* ── TABELAS (PADRÃO ENTREGA 2) ────────────────────────────────────────── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0;
+      font-size: 9pt;
+      background: #ffffff;
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    th {
+      background: #0f756e;
+      color: #ffffff;
+      font-weight: 700;
+      text-align: left;
+      padding: 8px 10px;
+      border: 1px solid #0d655f;
+      font-size: 9pt;
+      letter-spacing: 0.2px;
+    }
+
+    td {
+      padding: 7px 10px;
+      border: 1px solid #e2e8f0;
+      vertical-align: middle;
+    }
+
+    tr:nth-child(even) {
+      background: #f8fafc;
+    }
+
+    /* ── BADGES ───────────────────────────────────────────────────────────── */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 7px;
+      border-radius: 12px;
+      font-size: 8pt;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .badge-success {
+      background: #dcfce7;
+      color: #166534;
+      border: 1px solid #bbf7d0;
+    }
+
+    .badge-warning {
+      background: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fde68a;
+    }
+
+    .badge-danger {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fecaca;
+    }
+
+    .badge-neutral {
+      background: #f1f5f9;
+      color: #475569;
+      border: 1px solid #e2e8f0;
+    }
+
+    .badge-method {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 7.5pt;
+      padding: 2px 5px;
+      border-radius: 4px;
+    }
+
+    .method-get { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+    .method-post { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+    .method-put { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+    .method-patch { background: #f3e8ff; color: #7e22ce; border: 1px solid #e9d5ff; }
+    .method-delete { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      background: #f1f5f9;
+      color: #0f756e;
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-size: 8.5pt;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin: 12px 0;
+    }
+
+    .card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 12px;
+    }
+
+    .card h4 {
+      color: #0f756e;
+      font-size: 10pt;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* ── DIAGRAMA ARQUITETURA ─────────────────────────────────────────────── */
+    .arch-diagram {
+      background: #f8fafc;
+      border: 1.5px dashed #0f756e;
+      border-radius: 8px;
+      padding: 16px;
+      margin: 15px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .arch-layer {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 8px 12px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    }
+
+    .arch-layer-title {
+      font-weight: 700;
+      font-size: 9.5pt;
+      color: #0f756e;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .arch-layer-desc {
+      font-size: 8.5pt;
+      color: #64748b;
+      margin-top: 2px;
+    }
+    .tabela-compacta td { padding: 3.5px 8px; }
+    .tabela-compacta { margin: 8px 0; }
+  </style>
+</head>
+<body>
+
+  <!-- CAPA -->
+  <div class="cover">
+    <div class="cover-header">ENGENHARIA DE SOFTWARE · UNICV – CENTRO UNIVERSITÁRIO CIDADE VERDE</div>
+    <div class="cover-title">Em Dia</div>
+    <div class="cover-subtitle">Radar de vencimentos para adultos com TDAH</div>
+    <div class="cover-badge">Entrega 3 – Documentação Técnica da Solução e Resultados dos Testes</div>
+    <div class="cover-discipline">Trabalho Multidisciplinar · UX – Experiência do Usuário + Tópicos Especiais</div>
+    <div class="cover-footer-band">
+      <div class="cover-team-label">INTEGRANTES</div>
+      <div class="cover-member"><strong>Felipe Moreira dos Santos</strong> &nbsp;·&nbsp; RA 443777-2026</div>
+      <div class="cover-member"><strong>Felipe Nadab Goldberg Barbosa</strong> &nbsp;·&nbsp; RA 156888-2023</div>
+      <div class="cover-location">Maringá/PR · Outubro de 2026</div>
+    </div>
+  </div>
+
+  <!-- SUMÁRIO -->
+  <div class="page">
+    <div class="page-header"><span class="page-title">Em Dia · Entrega 3 – Relatório Técnico</span><span>Sumário</span></div>
+    <h1>Sumário</h1>
+    <table>
+      <thead><tr><th style="width:12%">Seção</th><th>Conteúdo</th></tr></thead>
+      <tbody>
+        <tr><td><strong>1.</strong></td><td>Introdução e visão geral da solução</td></tr>
+        <tr><td><strong>2.</strong></td><td>Arquitetura implementada e tecnologias</td></tr>
+        <tr><td><strong>3.</strong></td><td>Banco de dados</td></tr>
+        <tr><td><strong>4.</strong></td><td>API (E01 a E25)</td></tr>
+        <tr><td><strong>5.</strong></td><td>Regras de negócio (RN01 a RN15)</td></tr>
+        <tr><td><strong>6.</strong></td><td>Rotina diária de avisos</td></tr>
+        <tr><td><strong>7.</strong></td><td>Frontend web e app mobile</td></tr>
+        <tr><td><strong>8.</strong></td><td>Autenticação, segurança e LGPD</td></tr>
+        <tr><td><strong>9.</strong></td><td>Resultados dos testes</td></tr>
+        <tr><td><strong>10.</strong></td><td>Desvios e bugs</td></tr>
+        <tr><td><strong>11.</strong></td><td>Conclusão e próximos passos</td></tr>
+      </tbody>
+    </table>
+    <div class="callout">
+      <div class="callout-title">Sobre este documento</div>
+      Esta é a terceira entrega do trabalho multidisciplinar. Ela descreve a solução construída a partir da especificação
+      técnica da Entrega 2 — arquitetura, banco, API, regras, telas e segurança — e registra os resultados dos testes,
+      os desvios e os bugs encontrados.
+    </div>
+    <table>
+      <thead><tr><th>Integrante</th><th>RA</th><th>Responsabilidade principal</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Felipe Moreira dos Santos</strong></td><td>443777-2026</td><td>API .NET, banco de dados, autenticação, rotina de avisos, testes da API</td></tr>
+        <tr><td><strong>Felipe Nadab Goldberg Barbosa</strong></td><td>156888-2023</td><td>Frontend React, app mobile, metáforas e acessibilidade, testes do front e de usabilidade</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 1. INTRODUÇÃO -->
+  <div class="page">
+    <div class="page-header"><span class="page-title">Em Dia · Entrega 3 – Relatório Técnico</span><span>1. Introdução</span></div>
+    <h1>1. Introdução e visão geral da solução</h1>
+    <p>O <strong>Em Dia</strong> reúne os prazos da vida prática de adultos com TDAH — documentos, veículo, casa, saúde, finanças e garantias — e avisa antes do vencimento, com tempo visível, passos pequenos e avisos que insistem. Esta entrega implementa a solução especificada na <strong>Entrega 2</strong>, seguindo o contrato da API, o modelo de dados, as regras de negócio, a segurança e as telas daquele documento. As diferenças estão registradas na seção 10.</p>
+    <div class="grid-2">
+      <div class="card"><h4>Radar em 4 anéis (RN03)</h4><p style="font-size:8.5pt">Centro = vencido; anel 1 = até 30 dias; anel 2 = 31 a 90; anel externo = mais de 90. Seis fatias, uma por área. Cada ponto tem forma, cor e texto próprios.</p></div>
+      <div class="card"><h4>Modo foco (RN04)</h4><p style="font-size:8.5pt">Só os 3 itens mais urgentes: vencidos primeiro (os mais atrasados antes), depois os de menor prazo.</p></div>
+      <div class="card"><h4>Check-up</h4><p style="font-size:8.5pt">8 perguntas sim/não, uma por tela; depois datas, km e veículo; por fim o resultado por área ("4 de 6 áreas em dia"). Não duplica itens ao ser refeito (RN10).</p></div>
+      <div class="card"><h4>Quatro tipos de vencimento (RN01)</h4><p style="font-size:8.5pt">Data única, recorrente por tempo, uso ou tempo (km ou dias, o que vier primeiro) e garantia (compra + fabricante + 90 dias).</p></div>
+      <div class="card"><h4>Concluir e renovar (RN05–RN07)</h4><p style="font-size:8.5pt">Histórico, novo prazo, passos desmarcados e mensagem positiva; passos pendentes pedem confirmação; a km do veículo nunca diminui.</p></div>
+      <div class="card"><h4>Avisos e LGPD</h4><p style="font-size:8.5pt">Rotina diária às 8h com aviso antecipado e reavisos limitados (RN08/RN09). Exclusão da conta e de todos os dados com confirmação de senha (RF18).</p></div>
+    </div>
+    <div class="callout">
+      <div class="callout-title">Onde está cada parte</div>
+      API e testes em <code>api/</code>; front web em <code>web/</code>; app mobile (Expo) em <code>mobile/</code>; desvios, bugs e resultado de cada teste em <code>docs/</code>. Documentação interativa da API em <code>/swagger</code>.
+    </div>
+  </div>
+
+  <!-- 2. ARQUITETURA -->
+  <div class="page">
+    <div class="page-header"><span class="page-title">Em Dia · Entrega 3 – Relatório Técnico</span><span>2. Arquitetura</span></div>
+    <h1>2. Arquitetura implementada e tecnologias</h1>
+    <p>Aplicação em duas partes, como na Entrega 2: <strong>frontend React (SPA)</strong> e <strong>API ASP.NET Core</strong> em camadas baseadas em Clean Architecture. Um <strong>app mobile em React Native/Expo</strong> (extra) usa a mesma API. <strong>Regra de dependência:</strong> Api → Application → Domain; Infrastructure → Application e Domain — por isso as regras de vencimento são testadas sem banco e sem API.</p>
+    <div class="arch-diagram">
+      <div class="arch-layer"><div class="arch-layer-title"><span>Front web (React + TypeScript) · App mobile (Expo)</span><span>HTTPS + JSON · Bearer JWT</span></div><div class="arch-layer-desc">Telas T01–T15, React Router, TanStack Query, React Hook Form + Zod, axios</div></div>
+      <div class="arch-layer"><div class="arch-layer-title"><span>EmDia.Api</span><span>entrada HTTP</span></div><div class="arch-layer-desc">Controllers (um por recurso), middleware de erros (ProblemDetails), JWT, CORS, rate limit, Swagger, cabeçalhos de segurança</div></div>
+      <div class="arch-layer"><div class="arch-layer-title"><span>EmDia.Application</span><span>casos de uso</span></div><div class="arch-layer-desc">DTOs, services, validators (FluentValidation), interfaces de repositórios e serviços</div></div>
+      <div class="arch-layer"><div class="arch-layer-title"><span>EmDia.Domain</span><span>regras RN01–RN15</span></div><div class="arch-layer-desc">Entidades com comportamento, enums e exceções; não depende de nenhuma outra camada</div></div>
+      <div class="arch-layer"><div class="arch-layer-title"><span>EmDia.Infrastructure</span><span>implementa as interfaces</span></div><div class="arch-layer-desc">EF Core + PostgreSQL (migrations, seed), repositórios, JWT/BCrypt, MailKit, rotina de avisos (BackgroundService)</div></div>
+    </div>
+    <table>
+      <thead><tr><th style="width:28%">Parte</th><th>Tecnologia</th></tr></thead>
+      <tbody>
+        <tr><td>API</td><td>.NET 10 (LTS) · ASP.NET Core Web API</td></tr>
+        <tr><td>Dados</td><td>Entity Framework Core 10 + Npgsql 10 · PostgreSQL 17</td></tr>
+        <tr><td>Validação</td><td>FluentValidation (API) · Zod (front e app)</td></tr>
+        <tr><td>Segurança</td><td>JWT Bearer (HS256) · BCrypt (custo 12) · Rate Limiter do ASP.NET Core</td></tr>
+        <tr><td>Documentação</td><td>Swagger / OpenAPI em <code>/swagger</code></td></tr>
+        <tr><td>E-mail</td><td>MailKit (SMTP)</td></tr>
+        <tr><td>Frontend</td><td>React 19 · TypeScript · Vite · React Router · TanStack Query · React Hook Form · Zod · axios</td></tr>
+        <tr><td>App mobile</td><td>React Native · Expo SDK 58 (Expo Go) · React Navigation · expo-secure-store</td></tr>
+        <tr><td>Testes</td><td>xUnit · WebApplicationFactory · Testcontainers (PostgreSQL) · Vitest · Testing Library</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 3. BANCO -->
+  <div class="page">
+    <div class="page-header"><span class="page-title">Em Dia · Entrega 3 – Relatório Técnico</span><span>3. Banco de dados</span></div>
+    <h1>3. Banco de dados</h1>
+    <p>PostgreSQL criado e versionado por migrations do EF Core (<code>CriacaoInicial</code> e <code>AjustesEntrega2</code>). São <strong>12 tabelas</strong> em quatro grupos, com nomes em português no formato <code>snake_case</code>.</p>
+    <table>
+      <thead><tr><th style="width:22%">Grupo</th><th>Tabelas</th></tr></thead>
+      <tbody>
+        <tr><td>Conta</td><td><code>usuarios</code>, <code>preferencias_aviso</code>, <code>refresh_tokens</code>, <code>checkups</code></td></tr>
+        <tr><td>Catálogo</td><td><code>categorias</code> (6 áreas fixas), <code>modelos_item</code>, <code>passos_modelo</code></td></tr>
+        <tr><td>Vencimentos</td><td><code>itens</code>, <code>passos</code>, <code>historicos</code>, <code>avisos</code></td></tr>
+        <tr><td>Veículos</td><td><code>veiculos</code></td></tr>
+      </tbody>
+    </table>
+    <ul>
+      <li><strong>Chaves:</strong> uuid geradas pela API (<code>categorias</code> usa smallint). Todas as chaves estrangeiras do DER estão no banco: excluir um usuário apaga em <strong>cascata</strong> todos os seus dados; categorias, modelos e veículos com itens ficam protegidos.</li>
+      <li><strong>CHECKs:</strong> km ≥ 0; média de 1 a 20.000; intervalos &gt; 0; antecedência de 0 a 365; reavisos de 0 a 5; intervalo de reaviso de 1 a 7; valor gasto ≥ 0; campos obrigatórios por tipo de vencimento.</li>
+      <li><strong>Unicidade:</strong> e-mail; categoria; modelo por categoria; apelido do veículo por usuário; passo por (item, ordem); aviso por (item, vencimento, número); hash do refresh token.</li>
+      <li><strong>Índices:</strong> <code>itens (usuario_id, situacao, proximo_vencimento_data)</code> para o Radar e a rotina de avisos; <code>avisos (item_id, vencimento_referencia)</code>; índices em todas as chaves estrangeiras.</li>
+      <li><strong>Status calculado:</strong> Vencido, Atenção, Em dia e Encerrado <strong>não são gravados</strong>; são calculados na leitura, porque dependem da data de hoje e da km atual.</li>
+      <li><strong>Dados iniciais:</strong> 6 categorias e 10 modelos prontos com passos (troca de óleo, IPVA, licenciamento, CNH, passaporte, filtro do purificador, vacina do pet, consulta de rotina, declaração do IR, garantia de eletrônico).</li>
+    </ul>
+  </div>
+
+  <!-- 4. API -->
+  <div class="page">
+    <div class="page-header"><span class="page-title">Em Dia · Entrega 3 – Relatório Técnico</span><span>4. API</span></div>
+    <h1>4. API (E01 a E25)</h1>
+    <p>Base <code>/api/v1</code>, JSON em camelCase, enums como texto, datas ISO 8601 e erros no formato ProblemDetails (RFC 9457). Toda rota exige autenticação, exceto registrar, login e refresh. Recursos de outra pessoa respondem 404.</p>
+    <table class="tabela-compacta">
+      <thead><tr><th style="width:8%">#</th><th style="width:11%">Método</th><th style="width:38%">Rota</th><th>Objetivo</th></tr></thead>
+      <tbody>
+        <tr><td>E01</td><td><span class="badge-method method-post">POST</span></td><td><code>/auth/registrar</code></td><td>Criar conta</td></tr>
+        <tr><td>E02</td><td><span class="badge-method method-post">POST</span></td><td><code>/auth/login</code></td><td>Entrar (5 tentativas/min por IP)</td></tr>
+        <tr><td>E03</td><td><span class="badge-method method-post">POST</span></td><td><code>/auth/refresh</code></td><td>Renovar o token de acesso</td></tr>
+        <tr><td>E04</td><td><span class="badge-method method-post">POST</span></td><td><code>/auth/logout</code></td><td>Sair</td></tr>
+        <tr><td>E05</td><td><span class="badge-method method-get">GET</span></td><td><code>/usuarios/me</code></td><td>Conta e preferências</td></tr>
+        <tr><td>E06</td><td><span class="badge-method method-put">PUT</span></td><td><code>/usuarios/me/preferencias</code></td><td>Alterar preferências de aviso</td></tr>
+        <tr><td>E07</td><td><span class="badge-method method-delete">DELETE</span></td><td><code>/usuarios/me</code></td><td>Excluir conta e todos os dados (exige senha)</td></tr>
+        <tr><td>E08</td><td><span class="badge-method method-get">GET</span></td><td><code>/categorias</code></td><td>Listar categorias</td></tr>
+        <tr><td>E09</td><td><span class="badge-method method-get">GET</span></td><td><code>/modelos</code></td><td>Listar modelos prontos</td></tr>
+        <tr><td>E10</td><td><span class="badge-method method-get">GET</span></td><td><code>/checkup/perguntas</code></td><td>Perguntas do check-up</td></tr>
+        <tr><td>E11</td><td><span class="badge-method method-post">POST</span></td><td><code>/checkup</code></td><td>Fazer o check-up e criar os itens (uma transação)</td></tr>
+        <tr><td>E12</td><td><span class="badge-method method-get">GET</span></td><td><code>/radar?foco=</code></td><td>Radar e modo foco</td></tr>
+        <tr><td>E13</td><td><span class="badge-method method-get">GET</span></td><td><code>/itens</code></td><td>Listar itens (filtros: categoria, status)</td></tr>
+        <tr><td>E14</td><td><span class="badge-method method-get">GET</span></td><td><code>/itens/{id}</code></td><td>Detalhe com passos e histórico recente</td></tr>
+        <tr><td>E15</td><td><span class="badge-method method-post">POST</span></td><td><code>/itens</code></td><td>Criar item</td></tr>
+        <tr><td>E16</td><td><span class="badge-method method-put">PUT</span></td><td><code>/itens/{id}</code></td><td>Editar item</td></tr>
+        <tr><td>E17</td><td><span class="badge-method method-delete">DELETE</span></td><td><code>/itens/{id}</code></td><td>Excluir item</td></tr>
+        <tr><td>E18</td><td><span class="badge-method method-post">POST</span></td><td><code>/itens/{id}/concluir</code></td><td>Concluir e renovar</td></tr>
+        <tr><td>E19</td><td><span class="badge-method method-patch">PATCH</span></td><td><code>/itens/{id}/passos/{passoId}</code></td><td>Marcar ou desmarcar passo</td></tr>
+        <tr><td>E20</td><td><span class="badge-method method-get">GET</span></td><td><code>/veiculos</code></td><td>Listar veículos</td></tr>
+        <tr><td>E21</td><td><span class="badge-method method-post">POST</span></td><td><code>/veiculos</code></td><td>Cadastrar veículo</td></tr>
+        <tr><td>E22</td><td><span class="badge-method method-put">PUT</span></td><td><code>/veiculos/{id}</code></td><td>Editar veículo</td></tr>
+        <tr><td>E23</td><td><span class="badge-method method-patch">PATCH</span></td><td><code>/veiculos/{id}/km</code></td><td>Atualizar a quilometragem</td></tr>
+        <tr><td>E24</td><td><span class="badge-method method-delete">DELETE</span></td><td><code>/veiculos/{id}</code></td><td>Excluir veículo (bloqueado se houver itens)</td></tr>
+        <tr><td>E25</td><td><span class="badge-method method-get">GET</span></td><td><code>/historico</code></td><td>Listar conclusões (filtros: item, de, até)</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:9pt">Códigos: 200/201/204; 400 com <code>errors</code> por campo; 401; 404; 409 (e-mail ou apelido repetido, veículo com itens); 422 com <code>code</code> (ex.: <code>PASSOS_PENDENTES</code>); 429; 500 com mensagem genérica.</p>
+  </div>
+
+  <!-- 5. REGRAS -->
+  <div class="page">
+    <div class="page-header"><span class="page-title">Em Dia · Entrega 3 – Relatório Técnico</span><span>5. Regras de negócio</span></div>
+    <h1>5. Regras de negócio (RN01 a RN15)</h1>
+    <p>Todas ficam na camada Domain (<code>Item</code>, <code>Veiculo</code>, <code>RadarDomain</code>, <code>AvisoDomain</code>, <code>CheckupDomain</code>).</p>
+    <table>
+      <thead><tr><th style="width:13%">Código</th><th>Implementação</th></tr></thead>
+      <tbody>
+        <tr><td>RN01</td><td>Grava o prazo por tempo e a km alvo; a data estimada pela km é calculada na leitura: (km que falta ÷ média) × 30 dias, valendo o que vier primeiro.</td></tr>
+        <tr><td>RN02</td><td>Vencido se a data passou ou a km foi atingida; Atenção dentro da antecedência; Em dia nos demais casos.</td></tr>
+        <tr><td>RN03</td><td>Centro, até 30 dias, 31 a 90 dias, mais de 90 dias.</td></tr>
+        <tr><td>RN04</td><td>Modo foco: 3 itens mais urgentes.</td></tr>
+        <tr><td>RN05</td><td>Concluir: histórico, nova base, novo prazo e passos desmarcados; data única encerra ou recebe nova validade; garantia encerra.</td></tr>
+        <tr><td>RN06</td><td>Passos pendentes sem confirmação → <code>PASSOS_PENDENTES</code> (422).</td></tr>
+        <tr><td>RN07</td><td>A km do veículo nunca diminui; concluir com km maior atualiza o veículo.</td></tr>
+        <tr><td>RN08 / RN09</td><td>Aviso antecipado e reavisos a cada intervalo, até o máximo por ciclo; o ciclo recomeça a cada novo vencimento.</td></tr>
+        <tr><td>RN10</td><td>O check-up não duplica item do mesmo modelo e veículo.</td></tr>
+        <tr><td>RN11</td><td>Resultado do check-up por status e por área.</td></tr>
+        <tr><td>RN12</td><td>Repositórios filtram pelo dono; recurso alheio → 404.</td></tr>
+        <tr><td>RN13</td><td>Veículo com itens não pode ser excluído (409).</td></tr>
+        <tr><td>RN14</td><td>Passos do modelo copiados ao criar o item (editáveis).</td></tr>
+        <tr><td>RN15</td><td>Mensagens positivas, ex.: "Boa! Próxima vez: 95.200 km ou 15/10/2027, o que vier primeiro."</td></tr>
+      </tbody>
+    </table>
+
+    <h1 style="margin-top:22px">6. Rotina diária de avisos</h1>
+    <ul>
+      <li><code>AvisosWorker</code> (BackgroundService) dispara a rotina às <strong>8h de America/Sao_Paulo</strong>.</li>
+      <li>Para cada usuário com e-mail ativado, envia o aviso antecipado (número 0) quando o item entra em Atenção ou Vencido e, sem conclusão, reavisos a cada <code>intervalo_reaviso_dias</code>, até <code>max_reavisos</code> por ciclo.</li>
+      <li>Cada envio fica em <code>avisos</code>, único por (item, vencimento, número): rodar duas vezes no dia não duplica e-mails; uma falha de envio é refeita no dia seguinte.</li>
+      <li>O e-mail é curto, positivo e traz o próximo passo pequeno. Sem SMTP configurado, as mensagens só vão para o log.</li>
+    </ul>
+  </div>
+
+  <!-- 7. FRONT E APP -->
+  <div class="page">
+    <div class="page-header"><span class="page-title">Em Dia · Entrega 3 – Relatório Técnico</span><span>7. Frontend e app</span></div>
+    <h1>7. Frontend web e app mobile</h1>
+    <h2>7.1 Telas (T01–T15) e navegação</h2>
+    <p>Entrar, criar conta, check-up (perguntas, completar dados, resultado), Radar, modo foco, itens, novo item, detalhe, editar, concluir (janela), histórico, perfil e veículos — nas rotas da spec §5.1. Menu inferior no celular (lateral no computador): <strong>Radar · Itens · + Novo · Histórico · Perfil</strong>. Rotas privadas levam ao login, e o <strong>portão do check-up</strong> leva ao check-up enquanto ele não for feito.</p>
+    <h2>7.2 Integração com a API</h2>
+    <p>Cliente axios com o token de acesso só em memória; em 401, uma tentativa de <code>/auth/refresh</code> e a requisição é repetida; se falhar, volta ao login. TanStack Query guarda Radar e itens e recarrega depois de cada ação. Marcar passo usa atualização otimista. Erros 400 vão para os campos; 422 <code>PASSOS_PENDENTES</code> vira a pergunta "Concluir mesmo assim?".</p>
+    <h2>7.3 Acessibilidade (RNF02 / RNF03)</h2>
+    <ul>
+      <li>Status sempre com <strong>cor + símbolo + texto</strong>; pontos do Radar com forma diferente por status e descrição para leitores de tela.</li>
+      <li>Áreas de toque de 44 px; uma pergunta por tela no check-up, toda feita só com Tab e Enter.</li>
+      <li>Mensagens de erro abaixo do campo, ligadas por <code>aria-describedby</code>, e foco no primeiro campo inválido.</li>
+    </ul>
+    <h2>7.4 App mobile (Expo Go)</h2>
+    <p>O app em <code>mobile/</code> usa a mesma API e as mesmas validações. No <strong>Expo Go</strong>, descobre sozinho o IP do computador pela rede Wi-Fi (o mesmo do servidor Metro) e chama a API em <code>http://&lt;IP&gt;:5196</code>. Como o app nativo não tem cookies de navegador, o token de renovação vai no corpo da resposta e fica no <strong>SecureStore</strong> do aparelho (DV17).</p>
+    <div class="callout">
+      <div class="callout-title">Fluxos verificados (F1–F4)</div>
+      Primeiro acesso (cadastro → check-up → resultado → Radar), concluir item com passo pendente, criar item a partir de modelo e atualizar a quilometragem — executados com a API e o front rodando juntos, também na largura de celular.
+    </div>
+  </div>
+
+  <!-- 8. SEGURANÇA -->
+  <div class="page">
+    <div class="page-header"><span class="page-title">Em Dia · Entrega 3 – Relatório Técnico</span><span>8. Segurança</span></div>
+    <h1>8. Autenticação, segurança e LGPD</h1>
+    <table>
+      <thead><tr><th style="width:26%">Risco</th><th>Medida</th></tr></thead>
+      <tbody>
+        <tr><td>Força bruta</td><td>5 tentativas de login por minuto por IP (429) e bloqueio da conta por 15 minutos após 5 falhas.</td></tr>
+        <tr><td>Senhas</td><td>Mínimo de 8 caracteres com letra e número; BCrypt custo 12.</td></tr>
+        <tr><td>Descoberta de contas</td><td>Login com mensagem genérica.</td></tr>
+        <tr><td>Dados de outra pessoa</td><td>Id do usuário só a partir do token; consultas filtradas; 404 para recursos alheios.</td></tr>
+        <tr><td>Sessão</td><td>JWT de 15 minutos (HS256, 30 s de tolerância); refresh de 7 dias com rotação; reuso revoga todos os tokens do usuário.</td></tr>
+        <tr><td>XSS / CSRF</td><td>Token de acesso fora do localStorage; refresh em cookie HttpOnly, Secure, SameSite=Strict, Path=/api/v1/auth; Content-Security-Policy.</td></tr>
+        <tr><td>Interceptação</td><td>HTTPS com HSTS fora do desenvolvimento.</td></tr>
+        <tr><td>CORS</td><td>Só a origem do frontend configurada.</td></tr>
+        <tr><td>Entrada maliciosa ou enorme</td><td>Validação de tamanho e formato em todos os campos; corpo limitado a 64 KB.</td></tr>
+        <tr><td>Vazamento por erro ou log</td><td>ProblemDetails sem stack trace; logs sem senha, token ou hash.</td></tr>
+        <tr><td>Segredos</td><td>Chave do JWT e senha do SMTP fora do código (user-secrets e variáveis de ambiente).</td></tr>
+        <tr><td>LGPD</td><td>Só os dados necessários; nada de saúde ou TDAH é guardado; exclusão da conta e de todos os dados (E07).</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 9. TESTES -->
+  <div class="page">
+    <div class="page-header"><span class="page-title">Em Dia · Entrega 3 – Relatório Técnico</span><span>9. Testes</span></div>
+    <h1>9. Resultados dos testes</h1>
+    <p>"Hoje" é fixado em <strong>15/10/2026</strong> pela interface <code>IRelogio</code> nos testes de unidade e de integração; os testes de integração usam um PostgreSQL descartável.</p>
+    <table>
+      <thead><tr><th>Nível</th><th>Ferramenta</th><th>Testes</th><th>Resultado</th></tr></thead>
+      <tbody>
+        <tr><td>Unitário (Domain)</td><td>xUnit</td><td>49 (U01–U15 + 34 complementares)</td><td><span class="badge badge-success">49/49</span></td></tr>
+        <tr><td>Integração da API</td><td>xUnit + WebApplicationFactory + PostgreSQL</td><td>51 (CT01–CT46 + extras)</td><td><span class="badge badge-success">51/51</span></td></tr>
+        <tr><td>Frontend web</td><td>Vitest + Testing Library</td><td>17 (CT47–CT51 + validações)</td><td><span class="badge badge-success">17/17</span></td></tr>
+        <tr><td>App mobile</td><td>Vitest</td><td>11 (validações e datas)</td><td><span class="badge badge-success">11/11</span></td></tr>
+        <tr><td><strong>Total</strong></td><td></td><td><strong>128</strong></td><td><span class="badge badge-success">128/128</span></td></tr>
+      </tbody>
+    </table>
+    <div class="grid-2">
+      <div class="card"><h4>Critérios de aceite (§6.6)</h4><p style="font-size:8.5pt">U01–U15 e casos de prioridade alta aprovados; cobertura do <code>EmDia.Domain</code> de <strong>97,3%</strong> das linhas (mínimo 80%); fluxos F1–F4 sem erro; CT08 e CT44 aprovados.</p></div>
+      <div class="card"><h4>Destaques</h4><p style="font-size:8.5pt">U02 (km vem primeiro → Atenção em 21/10/2026), U13 (avisos em D, D+3 e D+6), CT11 (reuso de refresh revoga tudo), CT42 (exclusão da conta apaga tudo), CT51 (check-up só com teclado).</p></div>
+    </div>
+    <p style="font-size:9pt">O resultado de cada caso (U01–U15, CT01–CT51) está em <code>docs/testes.md</code>. O CI do GitHub roda os testes unitários, de integração (Testcontainers) e do front a cada push.</p>
+  </div>
+
+  <!-- 10. DESVIOS E BUGS -->
+  <div class="page">
+    <div class="page-header"><span class="page-title">Em Dia · Entrega 3 – Relatório Técnico</span><span>10. Desvios e bugs</span></div>
+    <h1>10. Desvios e bugs</h1>
+    <h2>10.1 Principais desvios (lista completa em docs/desvios.md)</h2>
+    <table>
+      <thead><tr><th style="width:12%">Código</th><th>Desvio e motivo</th></tr></thead>
+      <tbody>
+        <tr><td>DV03</td><td>Campo opcional <code>novaDataVencimento</code> no E18, para renovar itens de data única (RN05).</td></tr>
+        <tr><td>DV09</td><td>A pergunta "Você tem carro ou moto?" (<code>TEM_CARRO</code>) cobre carro e moto, porque <code>codigo_checkup</code> é uma única coluna.</td></tr>
+        <tr><td>DV10</td><td>4 modelos complementares aos exemplos da §2.7, para cobrir as 6 áreas e as 8 perguntas.</td></tr>
+        <tr><td>DV11</td><td>Respostas com alguns campos a mais que os exemplos da §3.4 (nenhum removido).</td></tr>
+        <tr><td>DV12</td><td>Refazer o check-up reaproveita o veículo de mesmo apelido (CT17).</td></tr>
+        <tr><td>DV17</td><td>No app nativo, o refresh token vai no corpo e fica no SecureStore; o navegador continua só com cookie.</td></tr>
+      </tbody>
+    </table>
+    <h2>10.2 Bugs corrigidos (detalhes em docs/bugs.md)</h2>
+    <ul>
+      <li>Data por km calculada com o relógio do servidor e gravada no banco (RN01).</li>
+      <li>Exclusão da conta sem apagar os dados — faltavam chaves estrangeiras do DER.</li>
+      <li>Concluir item respondia 500 (histórico tratado como registro existente).</li>
+      <li>Erro 400 sem o campo <code>errors</code>; contador de falhas de login sem zerar após o bloqueio.</li>
+      <li>Foco inicial do check-up, destaque do resultado na área errada e observação em branco no histórico.</li>
+      <li>App mobile chamando rotas que não existem na API e com bibliotecas fora da versão do Expo Go.</li>
+    </ul>
+
+    <h1 style="margin-top:22px">11. Conclusão e próximos passos</h1>
+    <p>A solução implementa o que a Entrega 2 especificou — contrato da API, modelo de dados, regras de negócio, segurança e telas — com <strong>128 testes automatizados aprovados</strong> e cobertura de 97% nas regras de negócio. As duas metáforas (Radar e Check-up) orientam as telas, e a acessibilidade foi verificada por testes (status com texto e símbolo, uso só com teclado).</p>
+    <p><strong>Próximos passos:</strong> testes de usabilidade com usuários e métricas de UX; publicação da API e do front com HTTPS e um servidor SMTP; e uma versão instalável do app mobile (build com EAS), sem depender do Expo Go.</p>
+  </div>
+
+</body>
+</html>

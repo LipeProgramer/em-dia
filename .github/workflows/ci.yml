@@ -8,7 +8,7 @@ on:
 
 jobs:
   api-build-test:
-    name: API — Build & Testes Unitários
+    name: API — Build, testes unitários e de integração
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -25,14 +25,23 @@ jobs:
       - name: Restore dependências
         run: dotnet restore
 
-      - name: Build (sem warnings relevantes)
+      - name: Build
         run: dotnet build --no-restore --configuration Release
 
-      - name: Testes unitários (Domain)
+      - name: Testes unitários (Domain) com cobertura
         run: >
           dotnet test tests/EmDia.Domain.Tests
           --no-build --configuration Release
+          --collect:"XPlat Code Coverage"
           --logger "trx;LogFileName=domain-tests.trx"
+          --results-directory ./TestResults
+
+      # Testcontainers sobe um PostgreSQL descartável (o runner do GitHub já tem Docker)
+      - name: Testes de integração (API + PostgreSQL)
+        run: >
+          dotnet test tests/EmDia.Api.IntegrationTests
+          --no-build --configuration Release
+          --logger "trx;LogFileName=integration-tests.trx"
           --results-directory ./TestResults
 
       - name: Upload resultados de teste
@@ -43,7 +52,7 @@ jobs:
           path: api/TestResults/
 
   frontend-build-test:
-    name: Frontend — Build & Testes
+    name: Frontend — Build e testes
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -55,7 +64,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
           cache: "npm"
           cache-dependency-path: web/package-lock.json
 
@@ -66,4 +75,33 @@ jobs:
         run: npm run build
 
       - name: Testes (Vitest)
-        run: npm test -- --reporter=verbose --run
+        run: npx vitest run --reporter=verbose
+
+  mobile-check:
+    name: App mobile — Tipos, testes e Expo Doctor
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Tipos (TypeScript)
+        run: npx tsc --noEmit
+
+      - name: Testes (Vitest)
+        run: npx vitest run
+
+      - name: Dependências compatíveis com o SDK
+        run: npx expo-doctor

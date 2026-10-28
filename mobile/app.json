@@ -1,0 +1,29 @@
+{
+  "expo": {
+    "name": "Em Dia",
+    "slug": "em-dia",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "emdia",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#111827",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.emdia.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#111827",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "package": "com.emdia.app",
+      "predictiveBackGestureEnabled": true
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}

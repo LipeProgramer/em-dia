@@ -1,3 +1,4 @@
+# PostgreSQL local para desenvolvimento (porta 5433 para não conflitar com um PostgreSQL já instalado).
 services:
   db:
     image: postgres:17
@@ -5,7 +6,7 @@ services:
       POSTGRES_USER: emdia
       POSTGRES_PASSWORD: emdia_dev
       POSTGRES_DB: emdia
-    ports: ["5432:5432"]
+    ports: ["5433:5432"]
     volumes: [pgdata:/var/lib/postgresql/data]
 volumes:
   pgdata:
