@@ -11,8 +11,8 @@ body {
   font-family: var(--font-family, system-ui, -apple-system, sans-serif);
   font-size: var(--font-size-md, 1rem);
   line-height: 1.5;
-  color: var(--color-text-primary, #1a1a2e);
-  background-color: var(--color-bg, #f8f9fa);
+  color: var(--color-text-primary, #ffffff);
+  background-color: var(--color-bg, #111827);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -32,6 +32,6 @@ textarea {
 
 /* Foco acessível */
 :focus-visible {
-  outline: 3px solid #0f756e;
+  outline: 3px solid var(--color-primary, #00c896);
   outline-offset: 2px;
 }

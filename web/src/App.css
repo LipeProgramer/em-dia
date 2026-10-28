@@ -49,12 +49,12 @@
 
 /* Header */
 .app-header {
-  background: var(--color-surface, #ffffff);
-  border-bottom: 1px solid #e5e7eb;
+  background: var(--color-surface, #1f2937);
+  border-bottom: 1px solid var(--color-border, #374151);
   position: sticky;
   top: 0;
   z-index: 50;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
 }
 
 .header-inner {
@@ -80,12 +80,12 @@
   gap: 8px;
   font-weight: 700;
   font-size: 1.25rem;
-  color: #0f756e;
+  color: var(--color-primary, #00c896);
 }
 
 .brand-badge {
-  background: #e6fffa;
-  color: #0f756e;
+  background: var(--color-primary-muted, rgba(0, 200, 150, 0.15));
+  color: var(--color-primary, #00c896);
   font-size: 0.75rem;
   font-weight: 600;
   padding: 2px 8px;
@@ -106,19 +106,19 @@
   border-radius: var(--radius-md, 8px);
   font-size: 0.95rem;
   font-weight: 500;
-  color: var(--color-text-secondary, #5f6368);
+  color: var(--color-text-muted, #9ca3af);
   min-height: var(--touch-target, 44px);
   transition: background-color 0.2s, color 0.2s;
 }
 
 .nav-link:hover {
-  background-color: #f1f5f9;
-  color: var(--color-text-primary, #1a1a2e);
+  background-color: var(--color-surface-elevated, #283548);
+  color: var(--color-text-primary, #ffffff);
 }
 
 .nav-link-active {
-  background-color: #e6fffa;
-  color: #0f756e;
+  background-color: var(--color-primary-muted, rgba(0, 200, 150, 0.15));
+  color: var(--color-primary, #00c896);
   font-weight: 600;
 }
 
@@ -869,8 +869,9 @@
 .btn-toggle {
   padding: 8px 18px;
   border-radius: 20px;
-  border: 1px solid #cbd5e1;
-  background: #ffffff;
+  border: 1px solid var(--color-border, #374151);
+  background: var(--color-surface, #1f2937);
+  color: var(--color-text-primary, #ffffff);
   cursor: pointer;
   font-weight: 600;
   min-height: var(--touch-target, 44px);
@@ -1022,12 +1023,12 @@
 }
 
 .chip-modelo {
-  background: #ffffff;
-  border: 1px solid #99f6e4;
+  background: var(--color-surface, #1f2937);
+  border: 1px solid var(--color-border, #374151);
   border-radius: 16px;
   padding: 6px 14px;
   font-size: 0.85rem;
-  color: #0f756e;
+  color: var(--color-primary, #00c896);
   cursor: pointer;
   min-height: var(--touch-target, 44px);
 }
