@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Pressable, Switch, Text, View } from 'react-native';
+import { Switch, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../../navigation/types';
 import type { CheckupRequest, CheckupResponse, Modelo, Pergunta } from '../../api/types';
@@ -12,7 +12,7 @@ import { Alerta, CampoData, Carregando, ErroTela, Escolha, Progresso, StatusBadg
 import { colors, spacing, typography } from '../../theme';
 import { inteiro, validarData, validarVeiculo, type Erros } from '../../utils/validacao';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'Checkup'>;
+type Props = NativeStackScreenProps<RootStackParamList, 'Checkup' | 'PrimeiroCheckup'>;
 
 const CATEGORIA_VEICULO = 1;
 const rotuloData: Record<Modelo['tipoVencimento'], string> = {
@@ -112,7 +112,8 @@ export function CheckupScreen({ navigation }: Props) {
         })}
         <Button title="Ver meu radar" fullWidth onPress={() => {
           if (usuario?.precisaCheckup) atualizarUsuario({ precisaCheckup: false }); // o portão abre o Radar
-          else navigation.goBack();
+          else if (navigation.canGoBack()) navigation.goBack();
+          else navigation.navigate('MainTabs', { screen: 'RadarTab' });
         }} />
       </Tela>
     );
@@ -147,7 +148,7 @@ export function CheckupScreen({ navigation }: Props) {
       }),
     };
     setErros(e);
-    setErroApi(null);
+    setErroApi(Object.keys(e).length ? 'Confira os campos destacados em vermelho acima.' : null);
     if (Object.keys(e).length) return;
 
     setEnviando(true);
@@ -192,11 +193,10 @@ export function CheckupScreen({ navigation }: Props) {
         const d = dadosDe(m.id);
         return (
           <View key={m.id} style={estilos.cartao}>
-            <Pressable style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 44 }}
-                       onPress={() => mudarItem(m.id, { incluir: !d.incluir })} accessibilityRole="switch" accessibilityState={{ checked: d.incluir }}>
-              <Text style={estilos.subtitulo}>{m.nome}</Text>
-              <Switch value={d.incluir} onValueChange={(v) => mudarItem(m.id, { incluir: v })} />
-            </Pressable>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 44 }}>
+              <Text style={[estilos.subtitulo, { flex: 1 }]}>{m.nome}</Text>
+              <Switch value={d.incluir} onValueChange={(v) => mudarItem(m.id, { incluir: v })} accessibilityLabel={`Incluir ${m.nome}`} />
+            </View>
             {d.incluir && (
               <>
                 <CampoData label={rotuloData[m.tipoVencimento]} valor={d.data} aoMudar={(t) => mudarItem(m.id, { data: t })}

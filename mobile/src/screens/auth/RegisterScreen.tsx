@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, Switch, Text, View } from 'react-native';
+import { Pressable, Switch, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../../navigation/types';
 import { colors } from '../../theme';
@@ -25,7 +25,7 @@ export function RegisterScreen({ navigation }: Props) {
   const enviar = async () => {
     const e = errosDe(cadastroSchema.safeParse(form));
     setErros(e);
-    setErroApi(null);
+    setErroApi(Object.keys(e).length ? 'Confira os campos destacados em vermelho acima.' : null);
     if (Object.keys(e).length) return;
     setEnviando(true);
     try {
@@ -40,8 +40,7 @@ export function RegisterScreen({ navigation }: Props) {
   };
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <Tela titulo="Criar conta" voltar>
+    <Tela titulo="Criar conta" voltar>
         <Text style={estilos.textoApoio}>Leva menos de um minuto.</Text>
         <Input label="Como quer ser chamado?" value={form.nome} onChangeText={campo('nome')} error={erros.nome} />
         <Input label="E-mail" value={form.email} onChangeText={campo('email')} keyboardType="email-address"
@@ -59,7 +58,6 @@ export function RegisterScreen({ navigation }: Props) {
         <Pressable onPress={() => navigation.navigate('Login')} style={{ minHeight: 44, justifyContent: 'center' }}>
           <Text style={{ color: colors.primary, textAlign: 'center' }}>Já tem conta? Entrar</Text>
         </Pressable>
-      </Tela>
-    </KeyboardAvoidingView>
+    </Tela>
   );
 }

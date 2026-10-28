@@ -24,7 +24,7 @@ function VeiculoForm({ veiculo, aoSalvar }: { veiculo?: Veiculo; aoSalvar: () =>
   const salvar = async () => {
     const e = validarVeiculo(form, !veiculo);
     setErros(e);
-    setErroApi(null);
+    setErroApi(Object.keys(e).length ? 'Confira os campos destacados em vermelho acima.' : null);
     if (Object.keys(e).length) return;
     setSalvando(true);
     try {
@@ -122,7 +122,7 @@ export function VeiculosScreen() {
 
   return (
     <Tela titulo="Veículos" voltar
-          acao={<Button title="Cadastrar" size="sm" icon={<Plus size={16} color="#0F172A" />} onPress={() => setJanela({ tipo: 'novo' })} />}>
+          acao={<Button title="Cadastrar" size="sm" fullWidth={false} icon={<Plus size={16} color="#0F172A" />} onPress={() => setJanela({ tipo: 'novo' })} />}>
       {lista.carregando && !lista.dados && <Carregando />}
       {lista.erro != null && <ErroTela erro={lista.erro} tentarDeNovo={lista.recarregar} />}
       {lista.dados?.length === 0 && <Vazio titulo="Nenhum veículo cadastrado." texto="Cadastre para acompanhar trocas por quilometragem." />}
@@ -134,11 +134,11 @@ export function VeiculosScreen() {
             <Text style={estilos.textoApoio}>{v.quantidadeItens} item(ns)</Text>
           </View>
           <Text style={estilos.textoApoio}>{km(v.kmAtual)} · média de {km(v.mediaKmMes)}/mês</Text>
-          <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm }}>
-            <Button title="Atualizar km" size="sm" variant="outline" icon={<Gauge size={16} color={colors.primary} />}
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.sm }}>
+            <Button title="Atualizar km" size="sm" variant="outline" fullWidth={false} icon={<Gauge size={16} color={colors.primary} />}
                     onPress={() => setJanela({ tipo: 'km', veiculo: v })} />
-            <Button title="Editar" size="sm" variant="ghost" onPress={() => setJanela({ tipo: 'editar', veiculo: v })} />
-            <Button title="Excluir" size="sm" variant="ghost" textStyle={{ color: colors.error }} onPress={() => setJanela({ tipo: 'excluir', veiculo: v })} />
+            <Button title="Editar" size="sm" variant="ghost" fullWidth={false} onPress={() => setJanela({ tipo: 'editar', veiculo: v })} />
+            <Button title="Excluir" size="sm" variant="ghost" fullWidth={false} textStyle={{ color: colors.error }} onPress={() => setJanela({ tipo: 'excluir', veiculo: v })} />
           </View>
         </View>
       ))}

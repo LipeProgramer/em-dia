@@ -34,7 +34,8 @@ export function RootNavigator() {
           <Stack.Screen name="Register" component={RegisterScreen} />
         </>
       ) : usuario.precisaCheckup ? (
-        <Stack.Screen name="Checkup" component={CheckupScreen} />
+        // Nome diferente do "Checkup" do app: ao concluir, o portão abre e a navegação vai para o Radar
+        <Stack.Screen name="PrimeiroCheckup" component={CheckupScreen} />
       ) : (
         <>
           <Stack.Screen name="MainTabs" component={MainTabNavigator} />

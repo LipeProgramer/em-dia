@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, Text } from 'react-native';
+import { Pressable, Text } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../../navigation/types';
 import { colors } from '../../theme';
@@ -37,8 +37,7 @@ export function LoginScreen({ navigation }: Props) {
   };
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <Tela titulo="Entrar" voltar>
+    <Tela titulo="Entrar" voltar>
         <Text style={estilos.textoApoio}>Seus prazos, sem sustos.</Text>
         <Input label="E-mail" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none"
                autoComplete="email" error={erros.email} />
@@ -48,7 +47,6 @@ export function LoginScreen({ navigation }: Props) {
         <Pressable onPress={() => navigation.navigate('Register')} style={{ minHeight: 44, justifyContent: 'center' }}>
           <Text style={{ color: colors.primary, textAlign: 'center' }}>Ainda não tem conta? Criar conta</Text>
         </Pressable>
-      </Tela>
-    </KeyboardAvoidingView>
+    </Tela>
   );
 }

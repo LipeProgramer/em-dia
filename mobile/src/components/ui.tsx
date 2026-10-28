@@ -1,5 +1,5 @@
 import React, { useCallback, useState, type ReactNode } from 'react';
-import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, View, type ViewStyle } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { AlertCircle, AlertTriangle, ArrowLeft, CheckCircle2, Minus, X } from 'lucide-react-native';
@@ -41,8 +41,10 @@ export function Tela({ titulo, voltar, acao, children, rolar = true }: {
   rolar?: boolean;
 }) {
   const navigation = useNavigation();
+  // O teclado sobe a tela (iOS) e fecha ao arrastar; no iPhone o teclado numérico não tem botão de fechar
   const corpo = rolar
-    ? <ScrollView contentContainerStyle={estilos.conteudo} keyboardShouldPersistTaps="handled">{children}</ScrollView>
+    ? <ScrollView contentContainerStyle={estilos.conteudo} keyboardShouldPersistTaps="handled"
+                  keyboardDismissMode="on-drag" automaticallyAdjustKeyboardInsets>{children}</ScrollView>
     : <View style={[estilos.conteudo, { flex: 1 }]}>{children}</View>;
   return (
     <SafeAreaView style={estilos.tela} edges={['top']}>
@@ -55,7 +57,9 @@ export function Tela({ titulo, voltar, acao, children, rolar = true }: {
         <Text style={estilos.titulo} accessibilityRole="header" numberOfLines={2}>{titulo}</Text>
         {acao}
       </View>
-      {corpo}
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        {corpo}
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -142,7 +146,7 @@ export function Janela({ aberta, titulo, aoFechar, children }: {
 }) {
   return (
     <Modal visible={aberta} transparent animationType="slide" onRequestClose={aoFechar}>
-      <View style={estilos.fundoJanela}>
+      <KeyboardAvoidingView style={estilos.fundoJanela} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={estilos.janela}>
           <View style={estilos.janelaTopo}>
             <Text style={estilos.janelaTitulo} accessibilityRole="header">{titulo}</Text>
@@ -150,9 +154,9 @@ export function Janela({ aberta, titulo, aoFechar, children }: {
               <X size={22} color={colors.textPrimary} />
             </Pressable>
           </View>
-          <ScrollView keyboardShouldPersistTaps="handled">{children}</ScrollView>
+          <ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">{children}</ScrollView>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

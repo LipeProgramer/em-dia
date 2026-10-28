@@ -39,10 +39,20 @@ export const onSessaoExpirada = (callback: (() => void) | null) => {
   aoPerderSessao = callback;
 };
 
-export const guardarRefresh = (valor: string | null) =>
-  valor ? SecureStore.setItemAsync(CHAVE_REFRESH, valor) : SecureStore.deleteItemAsync(CHAVE_REFRESH);
+// Na web (usada só para testes) não há SecureStore: o token de renovação fica em memória
+let refreshWeb: string | null = null;
 
-export const lerRefresh = () => SecureStore.getItemAsync(CHAVE_REFRESH);
+export const guardarRefresh = async (valor: string | null) => {
+  if (Platform.OS === 'web') {
+    refreshWeb = valor;
+    return;
+  }
+  if (valor) await SecureStore.setItemAsync(CHAVE_REFRESH, valor);
+  else await SecureStore.deleteItemAsync(CHAVE_REFRESH);
+};
+
+export const lerRefresh = async () =>
+  Platform.OS === 'web' ? refreshWeb : SecureStore.getItemAsync(CHAVE_REFRESH);
 
 export const api = axios.create({
   baseURL: API_URL,

@@ -7,7 +7,8 @@ export type RootStackParamList = {
   Register: undefined;
 
   // Com sessão
-  Checkup: undefined;                         // T03 → T04 → T05
+  PrimeiroCheckup: undefined;                 // T03 → T04 → T05 no primeiro acesso (portão)
+  Checkup: undefined;                         // refazer o check-up pelo Perfil ou pelo Radar
   MainTabs: NavigatorScreenParams<MainTabParamList>;
   ItemDetail: { itemId: string };             // T10 (+ T12 em janela)
   ItemForm: { itemId?: string };              // T09 (novo) e T11 (editar)
