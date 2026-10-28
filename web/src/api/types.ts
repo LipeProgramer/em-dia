@@ -96,7 +96,9 @@ export interface CheckupResponse {
   itensCriados: number;
   resumo: ResumoStatus;
   areasEmDia: number;
-  areas: { categoriaId: number; categoria: string; status: StatusItem; quantidadeItens: number }[];
+  areasSemItens: number;
+  /** status nulo = nenhum item cadastrado na área */
+  areas: { categoriaId: number; categoria: string; status: StatusItem | null; quantidadeItens: number }[];
   destaques: { itemId: string; nome: string; categoriaId: number; status: StatusItem; textoPrazo: string }[];
 }
 

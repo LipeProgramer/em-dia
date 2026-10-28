@@ -43,6 +43,16 @@ public static class SeedData
     private static readonly Guid IdPassaporte      = new("a7000000-0000-0000-0000-000000000008");
     private static readonly Guid IdConsultaRotina  = new("a7000000-0000-0000-0000-000000000009");
     private static readonly Guid IdDeclaracaoIr    = new("a7000000-0000-0000-0000-000000000010");
+    // Check-up por área: mais perguntas em cada uma das 6 áreas
+    private static readonly Guid IdSeguroVeiculo   = new("a7000000-0000-0000-0000-000000000011");
+    private static readonly Guid IdCertificado     = new("a7000000-0000-0000-0000-000000000012");
+    private static readonly Guid IdAluguel         = new("a7000000-0000-0000-0000-000000000013");
+    private static readonly Guid IdArCondicionado  = new("a7000000-0000-0000-0000-000000000014");
+    private static readonly Guid IdDentista        = new("a7000000-0000-0000-0000-000000000015");
+    private static readonly Guid IdExameVista      = new("a7000000-0000-0000-0000-000000000016");
+    private static readonly Guid IdIptu            = new("a7000000-0000-0000-0000-000000000017");
+    private static readonly Guid IdSeguroVida      = new("a7000000-0000-0000-0000-000000000018");
+    private static readonly Guid IdGarantiaEletrod = new("a7000000-0000-0000-0000-000000000019");
 
     /// <summary>Modelos complementares aos exemplos da spec §2.7, para cobrir as 6 áreas e as 8 perguntas.</summary>
     private static object Modelo(Guid id, short categoria, string nome, TipoVencimento tipo, int? dias,
@@ -150,7 +160,28 @@ public static class SeedData
             Modelo(IdLicenciamento, 1, "Licenciamento", TipoVencimento.RecorrentePorTempo, 365, 30, "TEM_CARRO"),
             Modelo(IdPassaporte, 2, "Passaporte", TipoVencimento.DataUnica, null, 90, "TEM_PASSAPORTE"),
             Modelo(IdConsultaRotina, 4, "Consulta de rotina", TipoVencimento.RecorrentePorTempo, 365, 30, "CONSULTA_ROTINA"),
-            Modelo(IdDeclaracaoIr, 5, "Declaração do Imposto de Renda", TipoVencimento.RecorrentePorTempo, 365, 30, "DECLARA_IR")
+            Modelo(IdDeclaracaoIr, 5, "Declaração do Imposto de Renda", TipoVencimento.RecorrentePorTempo, 365, 30, "DECLARA_IR"),
+            Modelo(IdSeguroVeiculo, 1, "Seguro do veículo", TipoVencimento.RecorrentePorTempo, 365, 30, "TEM_SEGURO_AUTO"),
+            Modelo(IdCertificado, 2, "Certificado digital", TipoVencimento.DataUnica, null, 30, "TEM_CERTIFICADO"),
+            Modelo(IdAluguel, 3, "Contrato de aluguel", TipoVencimento.DataUnica, null, 60, "MORA_ALUGUEL"),
+            Modelo(IdArCondicionado, 3, "Limpeza do ar-condicionado", TipoVencimento.RecorrentePorTempo, 180, 15, "TEM_AR_CONDICIONADO"),
+            Modelo(IdDentista, 4, "Dentista", TipoVencimento.RecorrentePorTempo, 180, 15, "VAI_DENTISTA"),
+            Modelo(IdExameVista, 4, "Exame de vista", TipoVencimento.RecorrentePorTempo, 365, 30, "USA_OCULOS"),
+            Modelo(IdIptu, 5, "IPTU", TipoVencimento.RecorrentePorTempo, 365, 30, "PAGA_IPTU"),
+            Modelo(IdSeguroVida, 5, "Seguro de vida", TipoVencimento.RecorrentePorTempo, 365, 30, "TEM_SEGURO_VIDA"),
+            new
+            {
+                Id = IdGarantiaEletrod,
+                CategoriaId = (short)6,
+                Nome = "Garantia de eletrodoméstico",
+                TipoVencimento = TipoVencimento.Calculado,
+                IntervaloDias = (int?)null,
+                IntervaloKm = (int?)null,
+                GarantiaFabricanteMeses = (short?)12,
+                AntecedenciaDias = (short)15,
+                CodigoCheckup = "COMPROU_ELETRODOMESTICO",
+                Ativo = true
+            }
         );
     }
 
@@ -183,7 +214,23 @@ public static class SeedData
             new { Id = new Guid("b1000000-0000-0000-0000-000000000016"), ModeloItemId = IdPassaporte,     Ordem = (short)2, Descricao = "Pagar a taxa" },
             new { Id = new Guid("b1000000-0000-0000-0000-000000000017"), ModeloItemId = IdConsultaRotina, Ordem = (short)1, Descricao = "Agendar a consulta" },
             new { Id = new Guid("b1000000-0000-0000-0000-000000000018"), ModeloItemId = IdDeclaracaoIr,   Ordem = (short)1, Descricao = "Juntar os comprovantes" },
-            new { Id = new Guid("b1000000-0000-0000-0000-000000000019"), ModeloItemId = IdDeclaracaoIr,   Ordem = (short)2, Descricao = "Enviar a declaração" }
+            new { Id = new Guid("b1000000-0000-0000-0000-000000000019"), ModeloItemId = IdDeclaracaoIr,   Ordem = (short)2, Descricao = "Enviar a declaração" },
+            // Modelos do check-up por área
+            new { Id = new Guid("b1000000-0000-0000-0000-000000000020"), ModeloItemId = IdSeguroVeiculo, Ordem = (short)1, Descricao = "Pedir cotações" },
+            new { Id = new Guid("b1000000-0000-0000-0000-000000000021"), ModeloItemId = IdSeguroVeiculo, Ordem = (short)2, Descricao = "Renovar a apólice" },
+            new { Id = new Guid("b1000000-0000-0000-0000-000000000022"), ModeloItemId = IdCertificado, Ordem = (short)1, Descricao = "Agendar a validação" },
+            new { Id = new Guid("b1000000-0000-0000-0000-000000000023"), ModeloItemId = IdCertificado, Ordem = (short)2, Descricao = "Emitir o novo certificado" },
+            new { Id = new Guid("b1000000-0000-0000-0000-000000000024"), ModeloItemId = IdAluguel, Ordem = (short)1, Descricao = "Conversar com o proprietário" },
+            new { Id = new Guid("b1000000-0000-0000-0000-000000000025"), ModeloItemId = IdAluguel, Ordem = (short)2, Descricao = "Assinar a renovação" },
+            new { Id = new Guid("b1000000-0000-0000-0000-000000000026"), ModeloItemId = IdArCondicionado, Ordem = (short)1, Descricao = "Agendar o técnico" },
+            new { Id = new Guid("b1000000-0000-0000-0000-000000000027"), ModeloItemId = IdDentista, Ordem = (short)1, Descricao = "Agendar a consulta" },
+            new { Id = new Guid("b1000000-0000-0000-0000-000000000028"), ModeloItemId = IdExameVista, Ordem = (short)1, Descricao = "Agendar o oftalmologista" },
+            new { Id = new Guid("b1000000-0000-0000-0000-000000000029"), ModeloItemId = IdIptu, Ordem = (short)1, Descricao = "Emitir o boleto" },
+            new { Id = new Guid("b1000000-0000-0000-0000-000000000030"), ModeloItemId = IdIptu, Ordem = (short)2, Descricao = "Pagar ou parcelar" },
+            new { Id = new Guid("b1000000-0000-0000-0000-000000000031"), ModeloItemId = IdSeguroVida, Ordem = (short)1, Descricao = "Conferir a cobertura" },
+            new { Id = new Guid("b1000000-0000-0000-0000-000000000032"), ModeloItemId = IdSeguroVida, Ordem = (short)2, Descricao = "Renovar" },
+            new { Id = new Guid("b1000000-0000-0000-0000-000000000033"), ModeloItemId = IdGarantiaEletrod, Ordem = (short)1, Descricao = "Testar o aparelho" },
+            new { Id = new Guid("b1000000-0000-0000-0000-000000000034"), ModeloItemId = IdGarantiaEletrod, Ordem = (short)2, Descricao = "Separar a nota fiscal" }
         );
     }
 }

@@ -9,7 +9,8 @@ import { useAuth } from '../../context/AuthContext';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
 import { Alerta, CampoData, Carregando, ErroTela, Escolha, Progresso, StatusBadge, Tela, estilos } from '../../components/ui';
-import { colors, spacing, typography } from '../../theme';
+import { colors, radius, spacing, typography } from '../../theme';
+import { nomesCategorias } from '../../utils/formato';
 import { inteiro, validarData, validarVeiculo, type Erros } from '../../utils/validacao';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Checkup' | 'PrimeiroCheckup'>;
@@ -62,27 +63,54 @@ export function CheckupScreen({ navigation }: Props) {
   if (etapa === 'perguntas') {
     const total = perguntas.length;
     const p = perguntas[indice];
+    const areas = [...new Set(perguntas.map((x) => x.categoriaId))];
+    const posicaoArea = areas.indexOf(p.categoriaId);
+    const nomeArea = nomesCategorias[p.categoriaId] ?? 'Área';
+    const irPara = (proximo: number) => {
+      if (proximo >= total) setEtapa('dados');
+      else setIndice(proximo);
+    };
+    const definir = (codigos: string[], r: boolean | null) => setRespostas((atual) => {
+      const novo = { ...atual };
+      for (const c of codigos) {
+        if (r === null) delete novo[c];
+        else novo[c] = r;
+      }
+      return novo;
+    });
     const responder = (r: boolean | null) => {
-      setRespostas((atual) => {
-        const novo = { ...atual };
-        if (r === null) delete novo[p.codigo];
-        else novo[p.codigo] = r;
-        return novo;
-      });
-      if (indice + 1 >= total) setEtapa('dados');
-      else setIndice(indice + 1);
+      definir([p.codigo], r);
+      irPara(indice + 1);
+    };
+    // Pula o resto da área: as perguntas que faltam ficam sem resposta
+    const pularArea = () => {
+      definir(perguntas.filter((x, i) => i >= indice && x.categoriaId === p.categoriaId).map((x) => x.codigo), null);
+      const proxima = perguntas.findIndex((x, i) => i > indice && x.categoriaId !== p.categoriaId);
+      irPara(proxima === -1 ? total : proxima);
     };
     return (
       <Tela titulo="Check-up" voltar={!usuario?.precisaCheckup}>
-        <Text style={estilos.textoApoio}>Pergunta {indice + 1} de {total}</Text>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }} accessibilityLabel="Áreas do check-up">
+          {areas.map((id, i) => (
+            <View key={id} style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.full, borderWidth: 1,
+              borderColor: i <= posicaoArea ? colors.primary : colors.border, backgroundColor: i === posicaoArea ? colors.primary : 'transparent' }}>
+              <Text style={{ fontSize: 12, fontWeight: '700', color: i === posicaoArea ? '#0F172A' : i < posicaoArea ? colors.primary : colors.textMuted }}>
+                {i < posicaoArea ? '\u2713 ' : ''}{nomesCategorias[id]}
+              </Text>
+            </View>
+          ))}
+        </View>
+        <Text style={estilos.textoApoio}>Área {posicaoArea + 1} de {areas.length} · Pergunta {indice + 1} de {total}</Text>
         <Progresso valor={(indice + 1) / total} />
-        <View style={{ paddingVertical: spacing.huge, gap: spacing.sm }}>
+        <View style={{ paddingVertical: spacing.xxxl, gap: spacing.sm }}>
+          <Text style={{ color: colors.primary, fontWeight: '800', textAlign: 'center', letterSpacing: 1 }}>{nomeArea.toUpperCase()}</Text>
           <Text style={[typography.h1, { color: colors.textPrimary, textAlign: 'center' }]} accessibilityRole="header">{p.texto}</Text>
           {!!p.ajuda && <Text style={[estilos.textoApoio, { textAlign: 'center' }]}>{p.ajuda}</Text>}
         </View>
         <Button title="Sim" onPress={() => responder(true)} fullWidth size="lg" />
         <Button title="Não" variant="outline" onPress={() => responder(false)} fullWidth size="lg" />
         <Button title="Pular esta pergunta" variant="ghost" onPress={() => responder(null)} fullWidth />
+        <Button title={`Pular a área ${nomeArea}`} variant="ghost" onPress={pularArea} fullWidth />
         {indice > 0 && <Button title="Pergunta anterior" variant="ghost" onPress={() => setIndice(indice - 1)} fullWidth />}
         <Text style={[estilos.textoApoio, { textAlign: 'center' }]}>Você pode ajustar tudo depois.</Text>
       </Tela>
@@ -93,24 +121,44 @@ export function CheckupScreen({ navigation }: Props) {
   if (etapa === 'resultado' && resultado) {
     return (
       <Tela titulo="Resultado do check-up">
-        <Text style={[typography.h2, { color: colors.primary }]}>{resultado.areasEmDia} de {resultado.areas.length} áreas em dia</Text>
-        <Text style={estilos.textoApoio}>{resultado.itensCriados} prazo(s) adicionados ao seu Radar.</Text>
+        {resultado.areasSemItens === resultado.areas.length ? (
+          <>
+            <Text style={[typography.h2, { color: colors.primary }]}>Seu Radar ainda está vazio</Text>
+            <Text style={estilos.textoApoio}>
+              Você não marcou nada no check-up, então ainda não sabemos se algum prazo precisa de atenção.
+              Que tal refazer ou adicionar o primeiro item?
+            </Text>
+          </>
+        ) : (
+          <>
+            <Text style={[typography.h2, { color: colors.primary }]}>{resultado.areasEmDia} de {resultado.areas.length} áreas em dia</Text>
+            <Text style={estilos.textoApoio}>
+              {resultado.itensCriados} prazo(s) adicionados ao seu Radar.
+              {resultado.areasSemItens > 0 ? ` ${resultado.areasSemItens} área(s) ainda sem nada cadastrado.` : ''}
+            </Text>
+          </>
+        )}
         {resultado.areas.map((a) => {
           const destaque = resultado.destaques.find((d) => d.categoriaId === a.categoriaId);
           return (
-            <View key={a.categoriaId} style={estilos.cartao}>
+            <View key={a.categoriaId} style={[estilos.cartao, a.status === null && { borderStyle: 'dashed' }]}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Text style={estilos.subtitulo}>{a.categoria}</Text>
-                <StatusBadge status={a.status} />
+                {a.status ? <StatusBadge status={a.status} /> : (
+                  <View style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.full, borderWidth: 1, borderStyle: 'dashed', borderColor: colors.borderLight }}
+                        accessibilityLabel="Status: sem itens">
+                    <Text style={{ color: colors.textMuted, fontSize: 12, fontWeight: '700' }}>Sem itens</Text>
+                  </View>
+                )}
               </View>
               <Text style={estilos.textoApoio}>
-                {a.quantidadeItens === 0 ? 'Nada cadastrado por aqui.'
+                {a.quantidadeItens === 0 ? 'Nada cadastrado por aqui ainda.'
                   : destaque ? `${destaque.nome}: ${destaque.textoPrazo}` : `${a.quantidadeItens} item(ns) acompanhados`}
               </Text>
             </View>
           );
         })}
-        <Button title="Ver meu radar" fullWidth onPress={() => {
+        <Button title={resultado.areasSemItens === resultado.areas.length ? 'Ir para o Radar' : 'Ver meu radar'} fullWidth onPress={() => {
           if (usuario?.precisaCheckup) atualizarUsuario({ precisaCheckup: false }); // o portão abre o Radar
           else if (navigation.canGoBack()) navigation.goBack();
           else navigation.navigate('MainTabs', { screen: 'RadarTab' });
@@ -189,10 +237,13 @@ export function CheckupScreen({ navigation }: Props) {
         </View>
       )}
 
-      {modelos.map((m) => {
+      {modelos.map((m, i) => {
         const d = dadosDe(m.id);
+        const novaArea = i === 0 || modelos[i - 1].categoriaId !== m.categoriaId;
         return (
-          <View key={m.id} style={estilos.cartao}>
+          <View key={m.id} style={{ gap: spacing.sm }}>
+          {novaArea && <Text style={[typography.h3, { color: colors.primary, marginTop: spacing.sm }]}>{nomesCategorias[m.categoriaId]}</Text>}
+          <View style={estilos.cartao}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 44 }}>
               <Text style={[estilos.subtitulo, { flex: 1 }]}>{m.nome}</Text>
               <Switch value={d.incluir} onValueChange={(v) => mudarItem(m.id, { incluir: v })} accessibilityLabel={`Incluir ${m.nome}`} />
@@ -207,6 +258,7 @@ export function CheckupScreen({ navigation }: Props) {
                 )}
               </>
             )}
+          </View>
           </View>
         );
       })}

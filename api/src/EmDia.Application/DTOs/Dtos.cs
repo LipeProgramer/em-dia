@@ -95,7 +95,8 @@ namespace EmDia.Application.DTOs.Checkup
 
     public record ResumoStatus(int Vencidos, int Atencao, int EmDia);
 
-    public record AreaCheckup(short CategoriaId, string Categoria, StatusItem Status, int QuantidadeItens);
+    /// <summary>Situação de uma área; Status nulo = nenhum item cadastrado nela.</summary>
+    public record AreaCheckup(short CategoriaId, string Categoria, StatusItem? Status, int QuantidadeItens);
 
     public record DestaqueCheckup(Guid ItemId, string Nome, short CategoriaId, StatusItem Status, string TextoPrazo);
 
@@ -104,6 +105,7 @@ namespace EmDia.Application.DTOs.Checkup
         int ItensCriados,
         ResumoStatus Resumo,
         int AreasEmDia,
+        int AreasSemItens,
         IReadOnlyList<AreaCheckup> Areas,
         IReadOnlyList<DestaqueCheckup> Destaques);
 }

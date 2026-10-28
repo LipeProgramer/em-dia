@@ -39,10 +39,19 @@ A tabela de dados iniciais (§2.7) cita `TEM_CARRO / TEM_MOTO` para os modelos d
 única coluna `varchar(30)`. Para não mudar o modelo de dados, os modelos de veículo usam `TEM_CARRO`, cuja pergunta é
 **"Você tem carro ou moto?"**; o tipo (Carro/Moto) é escolhido no cadastro do veículo.
 
-### DV10 — Modelos complementares nos dados iniciais
-A §2.7 lista "exemplos". Para cobrir as 6 áreas do Radar e as 8 perguntas do wireframe ("Pergunta 2 de 8"), foram
-adicionados: Licenciamento (Veículo), Passaporte (Documentos), Consulta de rotina (Saúde) e Declaração do Imposto de
-Renda (Finanças). Todos os intervalos são sugestões editáveis; o sistema não faz recomendações de saúde.
+### DV10 — Check-up por área, com modelos complementares
+A §2.7 lista "exemplos". O check-up foi organizado **por área**, na ordem do Radar (Veículo → Documentos → Casa →
+Saúde → Finanças → Garantias), com uma trilha das áreas, a área atual em destaque e a opção "Pular a área".
+São **17 perguntas** e **19 modelos** prontos; além dos exemplos da §2.7, foram adicionados: Licenciamento e Seguro do
+veículo; Passaporte e Certificado digital; Contrato de aluguel e Limpeza do ar-condicionado; Consulta de rotina, Dentista
+e Exame de vista; Declaração do Imposto de Renda, IPTU e Seguro de vida; Garantia de eletrodoméstico.
+Todos os intervalos são sugestões editáveis; o sistema não faz recomendações de saúde.
+
+### DV18 — Área sem itens não conta como "em dia" (RN11)
+A spec não diz como tratar uma área sem nenhum item no resultado do check-up. Antes ela contava como "em dia", e pular
+todas as perguntas mostrava "6 de 6 áreas em dia". Agora uma área sem itens fica **sem status** ("Sem itens"), não entra
+na conta de áreas em dia, e a resposta do E11 traz `areasSemItens`. Se todas as áreas estiverem vazias, o resultado diz
+que o Radar ainda está vazio e oferece adicionar o primeiro item.
 
 ### DV11 — Campos extras nas respostas
 As respostas seguem os exemplos da §3.4 e trazem alguns campos a mais, úteis ao front:

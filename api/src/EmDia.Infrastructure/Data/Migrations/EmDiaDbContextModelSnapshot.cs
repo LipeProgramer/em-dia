@@ -536,6 +536,103 @@ namespace EmDia.Infrastructure.Data.Migrations
                             IntervaloDias = 365,
                             Nome = "Declaração do Imposto de Renda",
                             TipoVencimento = (short)2
+                        },
+                        new
+                        {
+                            Id = new Guid("a7000000-0000-0000-0000-000000000011"),
+                            AntecedenciaDias = (short)30,
+                            Ativo = true,
+                            CategoriaId = (short)1,
+                            CodigoCheckup = "TEM_SEGURO_AUTO",
+                            IntervaloDias = 365,
+                            Nome = "Seguro do veículo",
+                            TipoVencimento = (short)2
+                        },
+                        new
+                        {
+                            Id = new Guid("a7000000-0000-0000-0000-000000000012"),
+                            AntecedenciaDias = (short)30,
+                            Ativo = true,
+                            CategoriaId = (short)2,
+                            CodigoCheckup = "TEM_CERTIFICADO",
+                            Nome = "Certificado digital",
+                            TipoVencimento = (short)1
+                        },
+                        new
+                        {
+                            Id = new Guid("a7000000-0000-0000-0000-000000000013"),
+                            AntecedenciaDias = (short)60,
+                            Ativo = true,
+                            CategoriaId = (short)3,
+                            CodigoCheckup = "MORA_ALUGUEL",
+                            Nome = "Contrato de aluguel",
+                            TipoVencimento = (short)1
+                        },
+                        new
+                        {
+                            Id = new Guid("a7000000-0000-0000-0000-000000000014"),
+                            AntecedenciaDias = (short)15,
+                            Ativo = true,
+                            CategoriaId = (short)3,
+                            CodigoCheckup = "TEM_AR_CONDICIONADO",
+                            IntervaloDias = 180,
+                            Nome = "Limpeza do ar-condicionado",
+                            TipoVencimento = (short)2
+                        },
+                        new
+                        {
+                            Id = new Guid("a7000000-0000-0000-0000-000000000015"),
+                            AntecedenciaDias = (short)15,
+                            Ativo = true,
+                            CategoriaId = (short)4,
+                            CodigoCheckup = "VAI_DENTISTA",
+                            IntervaloDias = 180,
+                            Nome = "Dentista",
+                            TipoVencimento = (short)2
+                        },
+                        new
+                        {
+                            Id = new Guid("a7000000-0000-0000-0000-000000000016"),
+                            AntecedenciaDias = (short)30,
+                            Ativo = true,
+                            CategoriaId = (short)4,
+                            CodigoCheckup = "USA_OCULOS",
+                            IntervaloDias = 365,
+                            Nome = "Exame de vista",
+                            TipoVencimento = (short)2
+                        },
+                        new
+                        {
+                            Id = new Guid("a7000000-0000-0000-0000-000000000017"),
+                            AntecedenciaDias = (short)30,
+                            Ativo = true,
+                            CategoriaId = (short)5,
+                            CodigoCheckup = "PAGA_IPTU",
+                            IntervaloDias = 365,
+                            Nome = "IPTU",
+                            TipoVencimento = (short)2
+                        },
+                        new
+                        {
+                            Id = new Guid("a7000000-0000-0000-0000-000000000018"),
+                            AntecedenciaDias = (short)30,
+                            Ativo = true,
+                            CategoriaId = (short)5,
+                            CodigoCheckup = "TEM_SEGURO_VIDA",
+                            IntervaloDias = 365,
+                            Nome = "Seguro de vida",
+                            TipoVencimento = (short)2
+                        },
+                        new
+                        {
+                            Id = new Guid("a7000000-0000-0000-0000-000000000019"),
+                            AntecedenciaDias = (short)15,
+                            Ativo = true,
+                            CategoriaId = (short)6,
+                            CodigoCheckup = "COMPROU_ELETRODOMESTICO",
+                            GarantiaFabricanteMeses = (short)12,
+                            Nome = "Garantia de eletrodoméstico",
+                            TipoVencimento = (short)4
                         });
                 });
 
@@ -738,6 +835,111 @@ namespace EmDia.Infrastructure.Data.Migrations
                             Id = new Guid("b1000000-0000-0000-0000-000000000019"),
                             Descricao = "Enviar a declaração",
                             ModeloItemId = new Guid("a7000000-0000-0000-0000-000000000010"),
+                            Ordem = (short)2
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-000000000020"),
+                            Descricao = "Pedir cotações",
+                            ModeloItemId = new Guid("a7000000-0000-0000-0000-000000000011"),
+                            Ordem = (short)1
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-000000000021"),
+                            Descricao = "Renovar a apólice",
+                            ModeloItemId = new Guid("a7000000-0000-0000-0000-000000000011"),
+                            Ordem = (short)2
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-000000000022"),
+                            Descricao = "Agendar a validação",
+                            ModeloItemId = new Guid("a7000000-0000-0000-0000-000000000012"),
+                            Ordem = (short)1
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-000000000023"),
+                            Descricao = "Emitir o novo certificado",
+                            ModeloItemId = new Guid("a7000000-0000-0000-0000-000000000012"),
+                            Ordem = (short)2
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-000000000024"),
+                            Descricao = "Conversar com o proprietário",
+                            ModeloItemId = new Guid("a7000000-0000-0000-0000-000000000013"),
+                            Ordem = (short)1
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-000000000025"),
+                            Descricao = "Assinar a renovação",
+                            ModeloItemId = new Guid("a7000000-0000-0000-0000-000000000013"),
+                            Ordem = (short)2
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-000000000026"),
+                            Descricao = "Agendar o técnico",
+                            ModeloItemId = new Guid("a7000000-0000-0000-0000-000000000014"),
+                            Ordem = (short)1
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-000000000027"),
+                            Descricao = "Agendar a consulta",
+                            ModeloItemId = new Guid("a7000000-0000-0000-0000-000000000015"),
+                            Ordem = (short)1
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-000000000028"),
+                            Descricao = "Agendar o oftalmologista",
+                            ModeloItemId = new Guid("a7000000-0000-0000-0000-000000000016"),
+                            Ordem = (short)1
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-000000000029"),
+                            Descricao = "Emitir o boleto",
+                            ModeloItemId = new Guid("a7000000-0000-0000-0000-000000000017"),
+                            Ordem = (short)1
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-000000000030"),
+                            Descricao = "Pagar ou parcelar",
+                            ModeloItemId = new Guid("a7000000-0000-0000-0000-000000000017"),
+                            Ordem = (short)2
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-000000000031"),
+                            Descricao = "Conferir a cobertura",
+                            ModeloItemId = new Guid("a7000000-0000-0000-0000-000000000018"),
+                            Ordem = (short)1
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-000000000032"),
+                            Descricao = "Renovar",
+                            ModeloItemId = new Guid("a7000000-0000-0000-0000-000000000018"),
+                            Ordem = (short)2
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-000000000033"),
+                            Descricao = "Testar o aparelho",
+                            ModeloItemId = new Guid("a7000000-0000-0000-0000-000000000019"),
+                            Ordem = (short)1
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-000000000034"),
+                            Descricao = "Separar a nota fiscal",
+                            ModeloItemId = new Guid("a7000000-0000-0000-0000-000000000019"),
                             Ordem = (short)2
                         });
                 });

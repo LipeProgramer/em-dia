@@ -180,6 +180,7 @@ public class CheckupService(
             criados,
             new ResumoStatus(resultado.Vencidos, resultado.Atencao, resultado.EmDia),
             resultado.AreasEmDia,
+            resultado.AreasSemItens,
             resultado.Areas.Select(a => new AreaCheckup(a.CategoriaId, nomes[a.CategoriaId], a.Status, a.QuantidadeItens)).ToList(),
             destaques);
     }

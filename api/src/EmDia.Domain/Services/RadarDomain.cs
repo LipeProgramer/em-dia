@@ -37,7 +37,8 @@ public static class RadarDomain
 
     /// <summary>
     /// RN11: conta itens por status e por categoria (ex.: "4 de 6 áreas em dia").
-    /// A situação de uma área é o pior status dos itens dela; área sem itens conta como em dia.
+    /// A situação de uma área é o pior status dos itens dela. Área sem nenhum item fica sem status
+    /// (não conta como "em dia": pular todas as perguntas não pode dizer que está tudo em dia).
     /// </summary>
     public static ResultadoCheckup GerarResultado(
         IEnumerable<Item> itens, IEnumerable<short> categorias, DateOnly hoje, Func<Item, Veiculo?> veiculoDo)
@@ -50,7 +51,8 @@ public static class RadarDomain
             .Select(c =>
             {
                 var statuses = ativos.Where(x => x.Item.CategoriaId == c).Select(x => x.Status).ToList();
-                var pior = statuses.Contains(StatusItem.Vencido) ? StatusItem.Vencido
+                StatusItem? pior = statuses.Count == 0 ? null
+                         : statuses.Contains(StatusItem.Vencido) ? StatusItem.Vencido
                          : statuses.Contains(StatusItem.Atencao) ? StatusItem.Atencao
                          : StatusItem.EmDia;
                 return new StatusPorCategoria(c, pior, statuses.Count);
@@ -67,7 +69,12 @@ public static class RadarDomain
 
 public record ResultadoCheckup(int Vencidos, int Atencao, int EmDia, IReadOnlyList<StatusPorCategoria> Areas)
 {
+    /// <summary>Áreas com itens e todos em dia.</summary>
     public int AreasEmDia => Areas.Count(a => a.Status == StatusItem.EmDia);
+
+    /// <summary>Áreas ainda sem nenhum item cadastrado.</summary>
+    public int AreasSemItens => Areas.Count(a => a.Status is null);
 }
 
-public record StatusPorCategoria(short CategoriaId, StatusItem Status, int QuantidadeItens);
+/// <summary>Situação de uma área no check-up; <see cref="Status"/> nulo = nenhum item cadastrado.</summary>
+public record StatusPorCategoria(short CategoriaId, StatusItem? Status, int QuantidadeItens);

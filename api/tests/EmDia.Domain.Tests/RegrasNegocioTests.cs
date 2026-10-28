@@ -255,6 +255,15 @@ public class RegrasNegocioTests
         CheckupDomain.ItemJaExiste([ipva], modeloIpva, outroVeiculo.Id).Should().BeFalse();
     }
 
+    [Fact(DisplayName = "RN11 · Pular todas as perguntas → nenhuma área em dia (todas sem itens)")]
+    public void ResultadoCheckup_SemNada()
+    {
+        var r = RadarDomain.GerarResultado([], [1, 2, 3, 4, 5, 6], Hoje, _ => null);
+
+        r.AreasEmDia.Should().Be(0);
+        r.AreasSemItens.Should().Be(6);
+    }
+
     // ── Regras complementares ─────────────────────────────────────────────────
 
     [Fact(DisplayName = "RN05 · Concluir uso ou tempo atualiza a km do veículo (RN07) e recalcula")]
@@ -333,7 +342,7 @@ public class RegrasNegocioTests
         usuario.EstaBloqueado(Agora.AddMinutes(16)).Should().BeFalse();
     }
 
-    [Fact(DisplayName = "RN11 · Resultado do check-up: áreas sem itens contam como em dia")]
+    [Fact(DisplayName = "RN11 · Resultado do check-up: área sem itens fica sem status e não conta como em dia")]
     public void ResultadoCheckup()
     {
         var itens = new[]
@@ -346,6 +355,8 @@ public class RegrasNegocioTests
 
         r.Vencidos.Should().Be(1);
         r.Atencao.Should().Be(1);
-        r.AreasEmDia.Should().Be(4);
+        r.AreasEmDia.Should().Be(0);
+        r.AreasSemItens.Should().Be(4);
+        r.Areas.Single(a => a.CategoriaId == 1).Status.Should().BeNull();
     }
 }

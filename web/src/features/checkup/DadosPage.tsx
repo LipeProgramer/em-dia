@@ -8,7 +8,7 @@ import { mensagemDeErro, problema } from '../../api/client.ts';
 import { catalogoApi } from '../../api/endpoints.ts';
 import type { CheckupRequest, Modelo } from '../../api/types.ts';
 import { Alerta, Button, Field, PageHeader } from '../../components/ui.tsx';
-import { hojeIso } from '../../utils/formato.ts';
+import { categorias, hojeIso } from '../../utils/formato.ts';
 import { useSession } from '../auth/useSession.tsx';
 import { msg } from '../itens/schemas.ts';
 import { useCheckup } from './CheckupContext.tsx';
@@ -130,7 +130,7 @@ export function DadosPage() {
   return (
     <main className="checkup" id="conteudo">
       <PageHeader titulo="Completar dados" />
-      <p className="texto-apoio">Só o necessário para calcular os prazos. Os intervalos são sugestões e você pode mudar depois.</p>
+      <p className="texto-apoio">Só o necessário para calcular os prazos, área por área. Os intervalos são sugestões e você pode mudar depois.</p>
 
       <form onSubmit={enviar} noValidate className="form">
         {modelos.length === 0 && (
@@ -155,10 +155,10 @@ export function DadosPage() {
           </fieldset>
         )}
 
-        {escolhidas.map((p) => (
-          <fieldset className="grupo" key={p.codigo}>
-            <legend>{p.texto.replace('?', '')}</legend>
-            {p.modelos.map((m) => {
+        {[...new Set(escolhidas.map((p) => p.categoriaId))].map((area) => (
+          <fieldset className="grupo" key={area}>
+            <legend>{categorias[area]?.nome}</legend>
+            {escolhidas.filter((p) => p.categoriaId === area).flatMap((p) => p.modelos).map((m) => {
               const incluir = itensValores?.[m.id]?.incluir ?? true;
               const erroItem = errors.itens?.[m.id];
               return (
