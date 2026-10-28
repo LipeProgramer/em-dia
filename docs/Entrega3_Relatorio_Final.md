@@ -39,8 +39,8 @@ O que foi entregue:
 - **Radar em 4 anéis (RN03):** centro = vencido; anel 1 = até 30 dias; anel 2 = 31 a 90 dias; anel externo = mais de
   90 dias. Seis fatias, uma por área. Cada ponto tem forma, cor e texto próprios.
 - **Modo foco (RN04):** só os 3 itens mais urgentes — vencidos primeiro (os mais atrasados antes), depois os de menor prazo.
-- **Check-up:** 8 perguntas sim/não, uma por tela; depois, datas, km e veículo; por fim, o resultado por área
-  ("4 de 6 áreas em dia"). Não duplica itens ao ser refeito (RN10).
+- **Check-up:** 17 perguntas sim/não organizadas por área (Veículo, Documentos, Casa, Saúde, Finanças e Garantias), uma por tela, com a opção de pular a área; depois, datas, km e veículo; por fim, o resultado por área
+  ("4 de 6 áreas em dia"). Área sem itens aparece como "Sem itens" e não conta como em dia. Não duplica itens ao ser refeito (RN10).
 - **Itens com 4 tipos de vencimento (RN01):** data única, recorrente por tempo, uso ou tempo (km ou dias, o que vier
   primeiro) e garantia (compra + garantia do fabricante + 90 dias). Passos pequenos com caixa de marcar.
 - **Concluir e renovar (RN05–RN07):** histórico, novo prazo, passos desmarcados e mensagem positiva; passos pendentes
@@ -82,7 +82,7 @@ vencimento são testadas sem banco e sem API.
 
 ## 3. Banco de dados
 
-PostgreSQL criado e versionado por migrations do EF Core (`CriacaoInicial` e `AjustesEntrega2`). São **12 tabelas**
+PostgreSQL criado e versionado por migrations do EF Core (`CriacaoInicial`, `AjustesEntrega2` e `CheckupPorArea`). São **12 tabelas**
 em quatro grupos, com nomes em português no formato `snake_case`:
 
 | Grupo | Tabelas |
@@ -101,8 +101,8 @@ em quatro grupos, com nomes em português no formato `snake_case`:
 - **Índices:** `itens (usuario_id, situacao, proximo_vencimento_data)` para o Radar e a rotina de avisos;
   `avisos (item_id, vencimento_referencia)`; índices em todas as chaves estrangeiras.
 - **Status calculado:** o status (Vencido, Atenção, Em dia, Encerrado) **não é gravado**; é calculado na leitura.
-- **Dados iniciais:** 6 categorias e 10 modelos prontos com passos (troca de óleo, IPVA, licenciamento, CNH, passaporte,
-  filtro do purificador, vacina do pet, consulta de rotina, declaração do IR, garantia de eletrônico).
+- **Dados iniciais:** 6 categorias e 19 modelos prontos com passos, ligados às 17 perguntas do check-up (troca de óleo, IPVA, CNH,
+  passaporte, aluguel, filtro do purificador, dentista, vacina do pet, declaração do IR, IPTU, garantias e outros).
 
 ---
 
@@ -159,7 +159,7 @@ Todas ficam na camada Domain (`Item`, `Veiculo`, `RadarDomain`, `AvisoDomain`, `
 | RN07 | `Veiculo.AtualizarKm`: a km nunca diminui; concluir com km maior atualiza o veículo |
 | RN08/RN09 | `AvisoDomain.VerificarAviso`: aviso antecipado e reavisos a cada intervalo, até o máximo por ciclo |
 | RN10 | `CheckupDomain.ItemJaExiste`: não duplica item do mesmo modelo e veículo |
-| RN11 | `RadarDomain.GerarResultado`: contagem por status e por área |
+| RN11 | `RadarDomain.GerarResultado`: contagem por status e por área; área sem itens fica sem status |
 | RN12 | Repositórios filtram pelo dono; recurso alheio → 404 |
 | RN13 | Veículo com itens não pode ser excluído (409) |
 | RN14 | Passos do modelo copiados ao criar o item (editáveis) |
@@ -233,11 +233,11 @@ navegador, o token de renovação vai no corpo da resposta e fica no **SecureSto
 
 | Nível | Ferramenta | Testes | Resultado |
 |---|---|---|---|
-| Unitário (Domain) | xUnit | 49 (U01–U15 + 34 complementares) | ✅ 49/49 |
-| Integração da API | xUnit + WebApplicationFactory + PostgreSQL | 51 (CT01–CT46 + extras) | ✅ 51/51 |
+| Unitário (Domain) | xUnit | 50 (U01–U15 + 35 complementares) | ✅ 50/50 |
+| Integração da API | xUnit + WebApplicationFactory + PostgreSQL | 52 (CT01–CT46 + extras) | ✅ 52/52 |
 | Frontend web | Vitest + Testing Library | 17 (CT47–CT51 + validações) | ✅ 17/17 |
 | App mobile | Vitest | 11 (validações e datas) | ✅ 11/11 |
-| **Total** | | **128** | **✅ 128/128** |
+| **Total** | | **130** | **✅ 130/130** |
 
 - **Cobertura do `EmDia.Domain`:** 97,3% das linhas e 89,5% dos ramos (critério: ≥ 80%).
 - **Fluxos F1–F4** executados de ponta a ponta com a API e o front rodando juntos: primeiro acesso, concluir item com
@@ -253,8 +253,9 @@ Principais desvios (lista completa em `docs/desvios.md`):
 
 - **DV03:** campo opcional `novaDataVencimento` no E18, para renovar itens de data única (RN05).
 - **DV09:** a pergunta "Você tem carro ou moto?" (`TEM_CARRO`) cobre carro e moto, porque `codigo_checkup` é uma única coluna.
-- **DV10:** 4 modelos complementares aos exemplos da §2.7, para cobrir as 6 áreas e as 8 perguntas.
+- **DV10:** check-up por área, com 17 perguntas e modelos complementares aos exemplos da §2.7.
 - **DV11:** respostas com alguns campos a mais que os exemplos (nenhum removido).
+- **DV18:** área sem itens não conta como "em dia"; pular o check-up todo mostra o Radar vazio.
 - **DV12:** refazer o check-up reaproveita o veículo de mesmo apelido.
 - **DV17:** no app nativo, o refresh token vai no corpo e fica no SecureStore (o navegador continua só com cookie).
 
@@ -268,7 +269,7 @@ e o app mobile, que usava rotas que não existem na API.
 ## 11. Conclusão e próximos passos
 
 A solução implementa o que a Entrega 2 especificou — contrato da API, modelo de dados, regras de negócio, segurança e
-telas — com 128 testes automatizados aprovados e cobertura de 97% nas regras de negócio. As duas metáforas (Radar e
+telas — com 130 testes automatizados aprovados e cobertura de 97% nas regras de negócio. As duas metáforas (Radar e
 Check-up) orientam as telas, e a acessibilidade foi verificada por testes (status com texto e símbolo, uso só com teclado).
 
 Próximos passos: testes de usabilidade com usuários e métricas de UX; publicação da API e do front com HTTPS e um

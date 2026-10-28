@@ -33,7 +33,8 @@ describe('Check-up (T03)', () => {
 
     // Pergunta 1: o foco começa no título; Tab leva ao "Sim"
     expect(await screen.findByRole('heading', { name: 'Você tem carro ou moto?' })).toHaveFocus();
-    expect(screen.getByText('Pergunta 1 de 3')).toBeInTheDocument();
+    expect(screen.getByText(/Pergunta 1 de 3/)).toBeInTheDocument();
+    expect(screen.getByRole('list', { name: 'Áreas do check-up' })).toBeInTheDocument();
     await user.tab();
     expect(screen.getByRole('button', { name: 'Sim' })).toHaveFocus();
     await user.keyboard('{Enter}');

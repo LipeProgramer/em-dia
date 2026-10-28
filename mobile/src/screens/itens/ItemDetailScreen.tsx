@@ -182,8 +182,8 @@ export function ItemDetailScreen({ route, navigation }: Props) {
       </View>
 
       <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-        {!encerrado && <Button title="Editar" variant="outline" onPress={() => navigation.navigate('ItemForm', { itemId: i.id })} style={{ flex: 1 }} />}
-        <Button title="Excluir" variant="danger" onPress={() => setExcluindo(true)} style={{ flex: 1 }} />
+        {!encerrado && <Button title="Editar" variant="outline" fullWidth={false} onPress={() => navigation.navigate('ItemForm', { itemId: i.id })} style={{ flex: 1 }} />}
+        <Button title="Excluir" variant="danger" fullWidth={false} onPress={() => setExcluindo(true)} style={{ flex: 1 }} />
       </View>
 
       <ConcluirJanela key={concluindo ? 'aberta' : 'fechada'} item={i} aberta={concluindo}

@@ -134,7 +134,7 @@ public static class ServiceCollectionExtensions
             .Configure<IConfiguration>((o, config) => o.AddPolicy(PoliticaCors, p => p
                 .WithOrigins(config.GetSection("Cors:Origens").Get<string[]>() ?? [])
                 .WithMethods("GET", "POST", "PUT", "PATCH", "DELETE")
-                .WithHeaders("Authorization", "Content-Type")
+                .WithHeaders("Authorization", "Content-Type", "X-Cliente", "X-Refresh-Token")
                 .AllowCredentials()));
         return services;
     }

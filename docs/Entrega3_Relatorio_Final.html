@@ -441,7 +441,7 @@
     <div class="grid-2">
       <div class="card"><h4>Radar em 4 anéis (RN03)</h4><p style="font-size:8.5pt">Centro = vencido; anel 1 = até 30 dias; anel 2 = 31 a 90; anel externo = mais de 90. Seis fatias, uma por área. Cada ponto tem forma, cor e texto próprios.</p></div>
       <div class="card"><h4>Modo foco (RN04)</h4><p style="font-size:8.5pt">Só os 3 itens mais urgentes: vencidos primeiro (os mais atrasados antes), depois os de menor prazo.</p></div>
-      <div class="card"><h4>Check-up</h4><p style="font-size:8.5pt">8 perguntas sim/não, uma por tela; depois datas, km e veículo; por fim o resultado por área ("4 de 6 áreas em dia"). Não duplica itens ao ser refeito (RN10).</p></div>
+      <div class="card"><h4>Check-up</h4><p style="font-size:8.5pt">17 perguntas sim/não organizadas por área (Veículo, Documentos, Casa, Saúde, Finanças e Garantias), uma por tela, com a opção de pular a área; depois datas, km e veículo; por fim o resultado por área ("4 de 6 áreas em dia"). Área sem itens aparece como "Sem itens" e não conta como em dia. Não duplica itens ao ser refeito (RN10).</p></div>
       <div class="card"><h4>Quatro tipos de vencimento (RN01)</h4><p style="font-size:8.5pt">Data única, recorrente por tempo, uso ou tempo (km ou dias, o que vier primeiro) e garantia (compra + fabricante + 90 dias).</p></div>
       <div class="card"><h4>Concluir e renovar (RN05–RN07)</h4><p style="font-size:8.5pt">Histórico, novo prazo, passos desmarcados e mensagem positiva; passos pendentes pedem confirmação; a km do veículo nunca diminui.</p></div>
       <div class="card"><h4>Avisos e LGPD</h4><p style="font-size:8.5pt">Rotina diária às 8h com aviso antecipado e reavisos limitados (RN08/RN09). Exclusão da conta e de todos os dados com confirmação de senha (RF18).</p></div>
@@ -484,7 +484,7 @@
   <div class="page">
     <div class="page-header"><span class="page-title">Em Dia · Entrega 3 – Relatório Técnico</span><span>3. Banco de dados</span></div>
     <h1>3. Banco de dados</h1>
-    <p>PostgreSQL criado e versionado por migrations do EF Core (<code>CriacaoInicial</code> e <code>AjustesEntrega2</code>). São <strong>12 tabelas</strong> em quatro grupos, com nomes em português no formato <code>snake_case</code>.</p>
+    <p>PostgreSQL criado e versionado por migrations do EF Core (<code>CriacaoInicial</code>, <code>AjustesEntrega2</code> e <code>CheckupPorArea</code>). São <strong>12 tabelas</strong> em quatro grupos, com nomes em português no formato <code>snake_case</code>.</p>
     <table>
       <thead><tr><th style="width:22%">Grupo</th><th>Tabelas</th></tr></thead>
       <tbody>
@@ -500,7 +500,7 @@
       <li><strong>Unicidade:</strong> e-mail; categoria; modelo por categoria; apelido do veículo por usuário; passo por (item, ordem); aviso por (item, vencimento, número); hash do refresh token.</li>
       <li><strong>Índices:</strong> <code>itens (usuario_id, situacao, proximo_vencimento_data)</code> para o Radar e a rotina de avisos; <code>avisos (item_id, vencimento_referencia)</code>; índices em todas as chaves estrangeiras.</li>
       <li><strong>Status calculado:</strong> Vencido, Atenção, Em dia e Encerrado <strong>não são gravados</strong>; são calculados na leitura, porque dependem da data de hoje e da km atual.</li>
-      <li><strong>Dados iniciais:</strong> 6 categorias e 10 modelos prontos com passos (troca de óleo, IPVA, licenciamento, CNH, passaporte, filtro do purificador, vacina do pet, consulta de rotina, declaração do IR, garantia de eletrônico).</li>
+      <li><strong>Dados iniciais:</strong> 6 categorias e 19 modelos prontos com passos, ligados às 17 perguntas do check-up (troca de óleo, IPVA, CNH, passaporte, aluguel, filtro do purificador, dentista, vacina do pet, declaração do IR, IPTU, garantias e outros).</li>
     </ul>
   </div>
 
@@ -547,7 +547,7 @@
     <div class="page-header"><span class="page-title">Em Dia · Entrega 3 – Relatório Técnico</span><span>5. Regras de negócio</span></div>
     <h1>5. Regras de negócio (RN01 a RN15)</h1>
     <p>Todas ficam na camada Domain (<code>Item</code>, <code>Veiculo</code>, <code>RadarDomain</code>, <code>AvisoDomain</code>, <code>CheckupDomain</code>).</p>
-    <table>
+    <table class="tabela-compacta">
       <thead><tr><th style="width:13%">Código</th><th>Implementação</th></tr></thead>
       <tbody>
         <tr><td>RN01</td><td>Grava o prazo por tempo e a km alvo; a data estimada pela km é calculada na leitura: (km que falta ÷ média) × 30 dias, valendo o que vier primeiro.</td></tr>
@@ -559,7 +559,7 @@
         <tr><td>RN07</td><td>A km do veículo nunca diminui; concluir com km maior atualiza o veículo.</td></tr>
         <tr><td>RN08 / RN09</td><td>Aviso antecipado e reavisos a cada intervalo, até o máximo por ciclo; o ciclo recomeça a cada novo vencimento.</td></tr>
         <tr><td>RN10</td><td>O check-up não duplica item do mesmo modelo e veículo.</td></tr>
-        <tr><td>RN11</td><td>Resultado do check-up por status e por área.</td></tr>
+        <tr><td>RN11</td><td>Resultado do check-up por status e por área; área sem itens fica "Sem itens" e não conta como em dia.</td></tr>
         <tr><td>RN12</td><td>Repositórios filtram pelo dono; recurso alheio → 404.</td></tr>
         <tr><td>RN13</td><td>Veículo com itens não pode ser excluído (409).</td></tr>
         <tr><td>RN14</td><td>Passos do modelo copiados ao criar o item (editáveis).</td></tr>
@@ -629,11 +629,11 @@
     <table>
       <thead><tr><th>Nível</th><th>Ferramenta</th><th>Testes</th><th>Resultado</th></tr></thead>
       <tbody>
-        <tr><td>Unitário (Domain)</td><td>xUnit</td><td>49 (U01–U15 + 34 complementares)</td><td><span class="badge badge-success">49/49</span></td></tr>
-        <tr><td>Integração da API</td><td>xUnit + WebApplicationFactory + PostgreSQL</td><td>51 (CT01–CT46 + extras)</td><td><span class="badge badge-success">51/51</span></td></tr>
+        <tr><td>Unitário (Domain)</td><td>xUnit</td><td>50 (U01–U15 + 35 complementares)</td><td><span class="badge badge-success">50/50</span></td></tr>
+        <tr><td>Integração da API</td><td>xUnit + WebApplicationFactory + PostgreSQL</td><td>52 (CT01–CT46 + extras)</td><td><span class="badge badge-success">52/52</span></td></tr>
         <tr><td>Frontend web</td><td>Vitest + Testing Library</td><td>17 (CT47–CT51 + validações)</td><td><span class="badge badge-success">17/17</span></td></tr>
         <tr><td>App mobile</td><td>Vitest</td><td>11 (validações e datas)</td><td><span class="badge badge-success">11/11</span></td></tr>
-        <tr><td><strong>Total</strong></td><td></td><td><strong>128</strong></td><td><span class="badge badge-success">128/128</span></td></tr>
+        <tr><td><strong>Total</strong></td><td></td><td><strong>130</strong></td><td><span class="badge badge-success">130/130</span></td></tr>
       </tbody>
     </table>
     <div class="grid-2">
@@ -653,8 +653,9 @@
       <tbody>
         <tr><td>DV03</td><td>Campo opcional <code>novaDataVencimento</code> no E18, para renovar itens de data única (RN05).</td></tr>
         <tr><td>DV09</td><td>A pergunta "Você tem carro ou moto?" (<code>TEM_CARRO</code>) cobre carro e moto, porque <code>codigo_checkup</code> é uma única coluna.</td></tr>
-        <tr><td>DV10</td><td>4 modelos complementares aos exemplos da §2.7, para cobrir as 6 áreas e as 8 perguntas.</td></tr>
+        <tr><td>DV10</td><td>Check-up por área, com 17 perguntas e modelos complementares aos exemplos da §2.7.</td></tr>
         <tr><td>DV11</td><td>Respostas com alguns campos a mais que os exemplos da §3.4 (nenhum removido).</td></tr>
+        <tr><td>DV18</td><td>Área sem itens não conta como "em dia"; pular o check-up todo mostra o Radar vazio.</td></tr>
         <tr><td>DV12</td><td>Refazer o check-up reaproveita o veículo de mesmo apelido (CT17).</td></tr>
         <tr><td>DV17</td><td>No app nativo, o refresh token vai no corpo e fica no SecureStore; o navegador continua só com cookie.</td></tr>
       </tbody>
@@ -670,7 +671,7 @@
     </ul>
 
     <h1 style="margin-top:22px">11. Conclusão e próximos passos</h1>
-    <p>A solução implementa o que a Entrega 2 especificou — contrato da API, modelo de dados, regras de negócio, segurança e telas — com <strong>128 testes automatizados aprovados</strong> e cobertura de 97% nas regras de negócio. As duas metáforas (Radar e Check-up) orientam as telas, e a acessibilidade foi verificada por testes (status com texto e símbolo, uso só com teclado).</p>
+    <p>A solução implementa o que a Entrega 2 especificou — contrato da API, modelo de dados, regras de negócio, segurança e telas — com <strong>130 testes automatizados aprovados</strong> e cobertura de 97% nas regras de negócio. As duas metáforas (Radar e Check-up) orientam as telas, e a acessibilidade foi verificada por testes (status com texto e símbolo, uso só com teclado).</p>
     <p><strong>Próximos passos:</strong> testes de usabilidade com usuários e métricas de UX; publicação da API e do front com HTTPS e um servidor SMTP; e uma versão instalável do app mobile (build com EAS), sem depender do Expo Go.</p>
   </div>
 

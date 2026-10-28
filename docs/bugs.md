@@ -55,6 +55,12 @@
 - **Como apareceu:** teste de unidade complementar.
 - **Correção:** espaços em branco viram `null`, como no item. ✅
 
+## BUG-13 — Pular todo o check-up mostrava "6 de 6 áreas em dia"
+- **Como apareceu:** teste no celular: pulando todas as perguntas, o resultado dizia que tudo estava em dia.
+- **Causa raiz:** área sem nenhum item era contada como "em dia".
+- **Correção:** área sem itens fica sem status ("Sem itens") e não conta como em dia; com tudo vazio, o resultado
+  diz que o Radar ainda está vazio (DV18). Testes de unidade e de integração cobrem o caso. ✅
+
 ## BUG-12 — App mobile incompatível com a API e com o Expo Go
 - **Como apareceu:** revisão do app: chamava rotas que não existem (`/modelos-item`, `/preferencias-aviso`, `/checkup/atual`),
   usava enums numéricos e bibliotecas nativas de SDKs antigos, que o Expo Go (SDK 58) não carrega.

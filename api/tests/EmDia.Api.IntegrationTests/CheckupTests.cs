@@ -39,8 +39,10 @@ public class CheckupTests(IntegrationTestFactory f)
         (await c.Get("/api/v1/modelos?categoriaId=9")).StatusCode.Should().Be(HttpStatusCode.BadRequest);
 
         var perguntas = (await ApiCliente.Json(await c.Get("/api/v1/checkup/perguntas"))).AsArray();
-        perguntas.Should().HaveCount(8);
-        perguntas.Should().Contain(p => p!["codigo"]!.GetValue<string>() == "TEM_CARRO");
+        perguntas.Should().HaveCount(17);
+        perguntas[0]!["codigo"]!.GetValue<string>().Should().Be("TEM_CARRO");
+        perguntas.Select(p => p!["categoriaId"]!.GetValue<int>()).Should().BeInAscendingOrder("as perguntas vêm agrupadas por área");
+        perguntas.Select(p => p!["categoriaId"]!.GetValue<int>()).Distinct().Should().HaveCount(6, "todas as áreas têm perguntas");
     }
 
     [Fact(DisplayName = "CT13 · Check-up válido (TEM_CARRO e TEM_CNH) → 201; itens criados; resumo por status e área")]
@@ -58,7 +60,8 @@ public class CheckupTests(IntegrationTestFactory f)
         json["resumo"]!["atencao"]!.GetValue<int>().Should().Be(1);
         json["resumo"]!["emDia"]!.GetValue<int>().Should().Be(1);
         json["areas"]!.AsArray().Should().HaveCount(6);
-        json["areasEmDia"]!.GetValue<int>().Should().Be(5);
+        json["areasEmDia"]!.GetValue<int>().Should().Be(1, "só Documentos tem itens e todos em dia");
+        json["areasSemItens"]!.GetValue<int>().Should().Be(4);
         json["destaques"]![0]!["nome"]!.GetValue<string>().Should().Be("IPVA");
         json["destaques"]![0]!["textoPrazo"]!.GetValue<string>().Should().Be("venceu há 5 dias");
 
@@ -113,6 +116,18 @@ public class CheckupTests(IntegrationTestFactory f)
         resp.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         (await ApiCliente.Json(resp))["errors"]!["itens[0].dataBase"]![0]!.GetValue<string>()
             .Should().Be("A data não pode estar no futuro.");
+    }
+
+    [Fact(DisplayName = "RN11 · Pular tudo → nenhuma área em dia; todas sem itens")]
+    public async Task PularTudo()
+    {
+        var c = await ApiCliente.CriarAsync(f);
+        var resp = await c.Post("/api/v1/checkup", new { respostas = Array.Empty<object>() });
+
+        var json = await ApiCliente.Json(resp);
+        json["areasEmDia"]!.GetValue<int>().Should().Be(0);
+        json["areasSemItens"]!.GetValue<int>().Should().Be(6);
+        json["areas"]![0]!["status"].Should().BeNull();
     }
 
     [Fact(DisplayName = "CT17 · Mesmo check-up enviado duas vezes → a segunda vez não duplica itens (U15)")]

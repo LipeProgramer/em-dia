@@ -104,7 +104,7 @@ export function ItemFormScreen({ route, navigation }: Props) {
   const salvar = async () => {
     const e = validarItem(form);
     setErros(e);
-    setErroApi(null);
+    setErroApi(Object.keys(e).length ? 'Confira os campos destacados em vermelho acima.' : null);
     if (Object.keys(e).length) return;
     setSalvando(true);
     try {
