@@ -44,4 +44,12 @@ public class Aviso
         Sucesso = sucesso;
         Erro = erro;
     }
+
+    /// <summary>Registra o resultado do envio (uma tentativa com falha pode ser refeita depois).</summary>
+    public void RegistrarResultado(bool sucesso, string? erro, DateTimeOffset agora)
+    {
+        Sucesso = sucesso;
+        Erro = erro is { Length: > 300 } ? erro[..300] : erro;
+        EnviadoEm = agora;
+    }
 }

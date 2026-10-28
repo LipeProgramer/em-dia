@@ -17,7 +17,7 @@ namespace EmDia.Infrastructure.Data.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.4")
+                .HasAnnotation("ProductVersion", "10.0.14")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -25,7 +25,6 @@ namespace EmDia.Infrastructure.Data.Migrations
             modelBuilder.Entity("EmDia.Domain.Entities.Aviso", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
@@ -152,7 +151,6 @@ namespace EmDia.Infrastructure.Data.Migrations
             modelBuilder.Entity("EmDia.Domain.Entities.Checkup", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
@@ -187,7 +185,6 @@ namespace EmDia.Infrastructure.Data.Migrations
             modelBuilder.Entity("EmDia.Domain.Entities.Historico", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
@@ -240,7 +237,6 @@ namespace EmDia.Infrastructure.Data.Migrations
             modelBuilder.Entity("EmDia.Domain.Entities.Item", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
@@ -329,6 +325,8 @@ namespace EmDia.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CategoriaId");
+
                     b.HasIndex("ModeloItemId");
 
                     b.HasIndex("UsuarioId")
@@ -365,7 +363,6 @@ namespace EmDia.Infrastructure.Data.Migrations
             modelBuilder.Entity("EmDia.Domain.Entities.ModeloItem", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
@@ -414,6 +411,10 @@ namespace EmDia.Infrastructure.Data.Migrations
 
                     b.HasIndex("CategoriaId")
                         .HasDatabaseName("ix_modelos_categoria");
+
+                    b.HasIndex("CategoriaId", "Nome")
+                        .IsUnique()
+                        .HasDatabaseName("ix_modelos_categoria_nome");
 
                     b.ToTable("modelos_item", null, t =>
                         {
@@ -492,13 +493,55 @@ namespace EmDia.Infrastructure.Data.Migrations
                             GarantiaFabricanteMeses = (short)12,
                             Nome = "Garantia de eletrônico",
                             TipoVencimento = (short)4
+                        },
+                        new
+                        {
+                            Id = new Guid("a7000000-0000-0000-0000-000000000007"),
+                            AntecedenciaDias = (short)30,
+                            Ativo = true,
+                            CategoriaId = (short)1,
+                            CodigoCheckup = "TEM_CARRO",
+                            IntervaloDias = 365,
+                            Nome = "Licenciamento",
+                            TipoVencimento = (short)2
+                        },
+                        new
+                        {
+                            Id = new Guid("a7000000-0000-0000-0000-000000000008"),
+                            AntecedenciaDias = (short)90,
+                            Ativo = true,
+                            CategoriaId = (short)2,
+                            CodigoCheckup = "TEM_PASSAPORTE",
+                            Nome = "Passaporte",
+                            TipoVencimento = (short)1
+                        },
+                        new
+                        {
+                            Id = new Guid("a7000000-0000-0000-0000-000000000009"),
+                            AntecedenciaDias = (short)30,
+                            Ativo = true,
+                            CategoriaId = (short)4,
+                            CodigoCheckup = "CONSULTA_ROTINA",
+                            IntervaloDias = 365,
+                            Nome = "Consulta de rotina",
+                            TipoVencimento = (short)2
+                        },
+                        new
+                        {
+                            Id = new Guid("a7000000-0000-0000-0000-000000000010"),
+                            AntecedenciaDias = (short)30,
+                            Ativo = true,
+                            CategoriaId = (short)5,
+                            CodigoCheckup = "DECLARA_IR",
+                            IntervaloDias = 365,
+                            Nome = "Declaração do Imposto de Renda",
+                            TipoVencimento = (short)2
                         });
                 });
 
             modelBuilder.Entity("EmDia.Domain.Entities.Passo", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
@@ -538,7 +581,6 @@ namespace EmDia.Infrastructure.Data.Migrations
             modelBuilder.Entity("EmDia.Domain.Entities.PassoModelo", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
@@ -648,6 +690,55 @@ namespace EmDia.Infrastructure.Data.Migrations
                             Descricao = "Separar a nota fiscal",
                             ModeloItemId = new Guid("a7000000-0000-0000-0000-000000000006"),
                             Ordem = (short)2
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-000000000013"),
+                            Descricao = "Pagar a taxa",
+                            ModeloItemId = new Guid("a7000000-0000-0000-0000-000000000007"),
+                            Ordem = (short)1
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-000000000014"),
+                            Descricao = "Baixar o documento digital",
+                            ModeloItemId = new Guid("a7000000-0000-0000-0000-000000000007"),
+                            Ordem = (short)2
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-000000000015"),
+                            Descricao = "Agendar na Polícia Federal",
+                            ModeloItemId = new Guid("a7000000-0000-0000-0000-000000000008"),
+                            Ordem = (short)1
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-000000000016"),
+                            Descricao = "Pagar a taxa",
+                            ModeloItemId = new Guid("a7000000-0000-0000-0000-000000000008"),
+                            Ordem = (short)2
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-000000000017"),
+                            Descricao = "Agendar a consulta",
+                            ModeloItemId = new Guid("a7000000-0000-0000-0000-000000000009"),
+                            Ordem = (short)1
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-000000000018"),
+                            Descricao = "Juntar os comprovantes",
+                            ModeloItemId = new Guid("a7000000-0000-0000-0000-000000000010"),
+                            Ordem = (short)1
+                        },
+                        new
+                        {
+                            Id = new Guid("b1000000-0000-0000-0000-000000000019"),
+                            Descricao = "Enviar a declaração",
+                            ModeloItemId = new Guid("a7000000-0000-0000-0000-000000000010"),
+                            Ordem = (short)2
                         });
                 });
 
@@ -698,7 +789,6 @@ namespace EmDia.Infrastructure.Data.Migrations
             modelBuilder.Entity("EmDia.Domain.Entities.RefreshToken", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
@@ -739,7 +829,6 @@ namespace EmDia.Infrastructure.Data.Migrations
             modelBuilder.Entity("EmDia.Domain.Entities.Usuario", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
@@ -791,7 +880,6 @@ namespace EmDia.Infrastructure.Data.Migrations
             modelBuilder.Entity("EmDia.Domain.Entities.Veiculo", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
@@ -842,26 +930,67 @@ namespace EmDia.Infrastructure.Data.Migrations
                         });
                 });
 
-            modelBuilder.Entity("EmDia.Domain.Entities.Historico", b =>
+            modelBuilder.Entity("EmDia.Domain.Entities.Aviso", b =>
                 {
                     b.HasOne("EmDia.Domain.Entities.Item", null)
-                        .WithMany("Historicos")
+                        .WithMany()
                         .HasForeignKey("ItemId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("EmDia.Domain.Entities.Checkup", b =>
+                {
+                    b.HasOne("EmDia.Domain.Entities.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("EmDia.Domain.Entities.Historico", b =>
+                {
+                    b.HasOne("EmDia.Domain.Entities.Item", "Item")
+                        .WithMany("Historicos")
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Item");
+                });
+
             modelBuilder.Entity("EmDia.Domain.Entities.Item", b =>
                 {
+                    b.HasOne("EmDia.Domain.Entities.Categoria", null)
+                        .WithMany()
+                        .HasForeignKey("CategoriaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("EmDia.Domain.Entities.ModeloItem", null)
                         .WithMany()
                         .HasForeignKey("ModeloItemId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("EmDia.Domain.Entities.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("EmDia.Domain.Entities.Veiculo", null)
                         .WithMany()
                         .HasForeignKey("VeiculoId")
                         .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("EmDia.Domain.Entities.ModeloItem", b =>
+                {
+                    b.HasOne("EmDia.Domain.Entities.Categoria", null)
+                        .WithMany()
+                        .HasForeignKey("CategoriaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("EmDia.Domain.Entities.Passo", b =>
@@ -887,6 +1016,24 @@ namespace EmDia.Infrastructure.Data.Migrations
                     b.HasOne("EmDia.Domain.Entities.Usuario", null)
                         .WithOne("Preferencias")
                         .HasForeignKey("EmDia.Domain.Entities.PreferenciasAviso", "UsuarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("EmDia.Domain.Entities.RefreshToken", b =>
+                {
+                    b.HasOne("EmDia.Domain.Entities.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("EmDia.Domain.Entities.Veiculo", b =>
+                {
+                    b.HasOne("EmDia.Domain.Entities.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

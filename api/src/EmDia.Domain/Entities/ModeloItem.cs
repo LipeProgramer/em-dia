@@ -19,6 +19,9 @@ public class ModeloItem
     public string? CodigoCheckup { get; private set; }
     public bool Ativo { get; private set; } = true;
 
+    /// <summary>Itens por uso ou tempo precisam de um veículo (RN01).</summary>
+    public bool ExigeVeiculo => TipoVencimento == TipoVencimento.UsoOuTempo;
+
     // Navegação
     private readonly List<PassoModelo> _passos = new();
     public IReadOnlyList<PassoModelo> Passos => _passos.AsReadOnly();

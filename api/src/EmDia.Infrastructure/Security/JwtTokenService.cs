@@ -2,83 +2,54 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using EmDia.Application;
 using EmDia.Application.Interfaces;
-using EmDia.Application.Services;
 using EmDia.Domain.Entities;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 namespace EmDia.Infrastructure.Security;
 
 /// <summary>
-/// Gera access tokens JWT (15 min) e refresh tokens opacos (7 dias) — spec §4.3.
+/// Token de acesso JWT HS256 com sub, email, name, jti, iat, exp, iss e aud (spec §4.2)
+/// e token de renovação aleatório de 64 bytes guardado como hash SHA-256 (spec §4.3).
 /// </summary>
-public class JwtTokenService : ITokenService
+public class JwtTokenService(IOptions<JwtOptions> opcoes) : ITokenService
 {
-    private readonly string _chave;
-    private readonly string _emissor;
-    private readonly string _audiencia;
-    private const int AccessTokenMinutos = 15;
-    private const int RefreshTokenDias = 7;
+    private readonly JwtOptions _jwt = opcoes.Value;
 
-    public JwtTokenService(IConfiguration config)
+    public (string Token, DateTimeOffset ExpiraEm) GerarAccessToken(Usuario usuario)
     {
-        _chave = config["Jwt:Chave"]
-            ?? throw new InvalidOperationException("Jwt:Chave não configurada.");
-        _emissor = config["Jwt:Emissor"] ?? "emdia-api";
-        _audiencia = config["Jwt:Audiencia"] ?? "emdia-web";
-    }
+        // A validade do JWT é conferida com o relógio do sistema pelo JwtBearer, então a emissão usa o mesmo relógio
+        var agora = DateTimeOffset.UtcNow;
+        var expiraEm = agora.AddMinutes(_jwt.AccessTokenMinutes);
 
-    public string GerarAccessToken(Usuario usuario)
-    {
         var claims = new[]
         {
             new Claim(JwtRegisteredClaimNames.Sub, usuario.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Email, usuario.Email),
             new Claim(JwtRegisteredClaimNames.Name, usuario.Nome),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new Claim(JwtRegisteredClaimNames.Iat, agora.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64),
         };
 
-        var chaveBytes = Encoding.UTF8.GetBytes(_chave);
         var credenciais = new SigningCredentials(
-            new SymmetricSecurityKey(chaveBytes),
-            SecurityAlgorithms.HmacSha256);
+            new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwt.Key)), SecurityAlgorithms.HmacSha256);
 
         var token = new JwtSecurityToken(
-            issuer: _emissor,
-            audience: _audiencia,
+            issuer: _jwt.Issuer,
+            audience: _jwt.Audience,
             claims: claims,
-            expires: DateTime.UtcNow.AddMinutes(AccessTokenMinutos),
+            notBefore: agora.UtcDateTime,
+            expires: expiraEm.UtcDateTime,
             signingCredentials: credenciais);
 
-        return new JwtSecurityTokenHandler().WriteToken(token);
+        return (new JwtSecurityTokenHandler().WriteToken(token), expiraEm);
     }
 
-    public RefreshToken GerarRefreshToken(Guid usuarioId, DateTimeOffset agora)
-    {
-        // Token opaco de 32 bytes aleatórios
-        var tokenCru = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
-        var hash = AuthService.ComputarSHA256(tokenCru);
+    public string GerarValorRefreshToken() =>
+        Base64UrlEncoder.Encode(RandomNumberGenerator.GetBytes(64));
 
-        // Armazena o hash; retorna o objeto com TokenHash populado
-        // O valor cru é extraído pelo controller e enviado no cookie
-        return new RefreshTokenComValorCru(usuarioId, hash, tokenCru, agora, RefreshTokenDias);
-    }
-}
-
-/// <summary>
-/// Extensão de RefreshToken que carrega o valor cru para ser enviado ao cliente.
-/// Nunca persiste o valor cru — apenas o hash é salvo.
-/// </summary>
-public class RefreshTokenComValorCru : RefreshToken
-{
-    public string ValorCru { get; }
-
-    public RefreshTokenComValorCru(
-        Guid usuarioId, string hash, string valorCru,
-        DateTimeOffset agora, int diasValidade)
-        : base(usuarioId, hash, agora, diasValidade)
-    {
-        ValorCru = valorCru;
-    }
+    public string HashRefreshToken(string valor) =>
+        Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(valor)));
 }

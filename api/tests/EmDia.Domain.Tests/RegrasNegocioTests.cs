@@ -8,438 +8,344 @@ using Xunit;
 namespace EmDia.Domain.Tests;
 
 /// <summary>
-/// Testes unitários das regras de negócio do Domain.
-/// "Hoje" fixado em 15/10/2026 para todos os casos (spec §6.1 e §6.3).
+/// Testes unitários das regras de negócio (spec §6.3, U01 a U15).
+/// "Hoje" fixado em 15/10/2026 em todos os casos.
 /// </summary>
 public class RegrasNegocioTests
 {
-    // ── Data fixa para todos os testes ────────────────────────────────────────
     private static readonly DateOnly Hoje = new(2026, 10, 15);
     private static readonly DateTimeOffset Agora = new(2026, 10, 15, 12, 0, 0, TimeSpan.FromHours(-3));
+    private static readonly Guid UsuarioId = Guid.NewGuid();
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
-    private static Item CriarItemRecorrente(DateOnly dataBase, int intervaloDias, short antecedencia = 30) =>
-        new(
-            usuarioId: Guid.NewGuid(),
-            categoriaId: 1,
-            nome: "Teste Recorrente",
-            tipoVencimento: TipoVencimento.RecorrentePorTempo,
-            dataBase: dataBase,
-            dataVencimento: null,
-            intervaloDias: intervaloDias,
-            intervaloKm: null,
-            kmBase: null,
-            garantiaFabricanteMeses: null,
-            antecedenciaDias: antecedencia,
-            modeloItemId: null,
-            veiculoId: null,
-            observacao: null,
-            agora: Agora);
+    private static Veiculo Veiculo(int kmAtual, int mediaKmMes) =>
+        new(UsuarioId, "Gol", TipoVeiculo.Carro, kmAtual, mediaKmMes, Agora);
 
-    private static Item CriarItemUsoOuTempo(
-        DateOnly dataBase, int intervaloDias, int kmBase, int intervaloKm,
-        int kmAtual, int mediaKmMes, short antecedencia = 30) =>
-        new(
-            usuarioId: Guid.NewGuid(),
-            categoriaId: 1,
-            nome: "Teste UsoOuTempo",
-            tipoVencimento: TipoVencimento.UsoOuTempo,
-            dataBase: dataBase,
-            dataVencimento: null,
-            intervaloDias: intervaloDias,
-            intervaloKm: intervaloKm,
-            kmBase: kmBase,
-            garantiaFabricanteMeses: null,
-            antecedenciaDias: antecedencia,
-            modeloItemId: null,
-            veiculoId: Guid.NewGuid(),
-            observacao: null,
-            agora: Agora,
-            kmAtualVeiculo: kmAtual,
-            mediaKmMesVeiculo: mediaKmMes);
+    private static Item Recorrente(DateOnly dataBase, int intervaloDias, short antecedencia = 30) =>
+        new(UsuarioId, 3, "Filtro", TipoVencimento.RecorrentePorTempo, dataBase, null, intervaloDias,
+            null, null, null, antecedencia, null, null, null, Agora);
 
-    private static Item CriarItemDataUnica(DateOnly dataVencimento, short antecedencia = 45) =>
-        new(
-            usuarioId: Guid.NewGuid(),
-            categoriaId: 2,
-            nome: "CNH",
-            tipoVencimento: TipoVencimento.DataUnica,
-            dataBase: null,
-            dataVencimento: dataVencimento,
-            intervaloDias: null,
-            intervaloKm: null,
-            kmBase: null,
-            garantiaFabricanteMeses: null,
-            antecedenciaDias: antecedencia,
-            modeloItemId: null,
-            veiculoId: null,
-            observacao: null,
-            agora: Agora);
+    private static Item UsoOuTempo(Veiculo veiculo, DateOnly dataBase, int intervaloDias, int kmBase, int intervaloKm,
+        short antecedencia = 30) =>
+        new(UsuarioId, 1, "Troca de óleo", TipoVencimento.UsoOuTempo, dataBase, null, intervaloDias,
+            intervaloKm, kmBase, null, antecedencia, null, veiculo.Id, null, Agora);
 
-    private static Item CriarItemGarantia(DateOnly dataCompra, short mesesFabricante) =>
-        new(
-            usuarioId: Guid.NewGuid(),
-            categoriaId: 6,
-            nome: "Garantia Eletrônico",
-            tipoVencimento: TipoVencimento.Calculado,
-            dataBase: dataCompra,
-            dataVencimento: null,
-            intervaloDias: null,
-            intervaloKm: null,
-            kmBase: null,
-            garantiaFabricanteMeses: mesesFabricante,
-            antecedenciaDias: 15,
-            modeloItemId: null,
-            veiculoId: null,
-            observacao: null,
-            agora: Agora);
+    private static Item DataUnica(DateOnly vencimento, short antecedencia = 45) =>
+        new(UsuarioId, 2, "CNH", TipoVencimento.DataUnica, null, vencimento, null,
+            null, null, null, antecedencia, null, null, null, Agora);
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // U01 — RN01/RN02: Recorrente vencido
-    // Última realização 15/04/2026, intervalo 180 dias → vence 12/10/2026 → Vencido
-    // ─────────────────────────────────────────────────────────────────────────
-    [Fact]
-    public void U01_RecorrentePorTempo_Vencido()
+    private static Item Garantia(DateOnly compra, short meses) =>
+        new(UsuarioId, 6, "Garantia da TV", TipoVencimento.Calculado, compra, null, null,
+            null, null, meses, 15, null, null, null, Agora);
+
+    private static Aviso AvisoEnviado(Item item, short numero, DateOnly dia) =>
+        new(item.Id, numero == 0 ? TipoAviso.Antecipado : TipoAviso.Reaviso, CanalAviso.Email,
+            item.ProximoVencimentoData!.Value, numero,
+            new DateTimeOffset(dia.ToDateTime(new TimeOnly(8, 0)), TimeSpan.Zero), sucesso: true);
+
+    private static DateOnly DataEnvio(DateTimeOffset momento) => DateOnly.FromDateTime(momento.UtcDateTime);
+
+    // ── U01 — RN01/RN02 ───────────────────────────────────────────────────────
+
+    [Fact(DisplayName = "U01 · Recorrente: 15/04/2026 + 180 dias vence em 12/10/2026 → Vencido")]
+    public void U01_Recorrente_Vencido()
     {
-        var item = CriarItemRecorrente(new DateOnly(2026, 4, 15), 180);
+        var item = Recorrente(new DateOnly(2026, 4, 15), 180);
 
         item.ProximoVencimentoData.Should().Be(new DateOnly(2026, 10, 12));
-        item.CalcularStatus(Hoje).Should().Be(StatusItem.Vencido);
+        item.CalcularStatus(Hoje, null).Should().Be(StatusItem.Vencido);
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // U02 — RN01: UsoOuTempo — km vem primeiro → Atenção
-    // km_base 75.000 + 10.000 = 85.000; km_atual 84.500; média 2.500/mês
-    // Faltam 500 km ≈ 6 dias → vence em 21/10/2026; data por tempo: 01/05/2027
-    // km vem primeiro → Atenção
-    // ─────────────────────────────────────────────────────────────────────────
-    [Fact]
-    public void U02_UsoOuTempo_KmVemPrimeiro_Atencao()
-    {
-        var item = CriarItemUsoOuTempo(
-            dataBase: new DateOnly(2026, 5, 1),
-            intervaloDias: 365,
-            kmBase: 75_000,
-            intervaloKm: 10_000,
-            kmAtual: 84_500,
-            mediaKmMes: 2_500,
-            antecedencia: 30);
+    // ── U02 a U04 — RN01 ──────────────────────────────────────────────────────
 
+    [Fact(DisplayName = "U02 · Uso ou tempo: faltam 500 km ≈ 6 dias → vence em 21/10/2026 (km vem primeiro) → Atenção")]
+    public void U02_UsoOuTempo_KmVemPrimeiro()
+    {
+        var veiculo = Veiculo(84_500, 2_500);
+        var item = UsoOuTempo(veiculo, new DateOnly(2026, 5, 1), 365, 75_000, 10_000);
+
+        item.ProximoVencimentoData.Should().Be(new DateOnly(2027, 5, 1), "a data gravada é a do tempo");
         item.ProximoVencimentoKm.Should().Be(85_000);
-
-        // Km vem primeiro (500 km restantes ≈ 6 dias → antes de 01/05/2027)
-        item.ProximoVencimentoData.Should().BeBefore(new DateOnly(2027, 5, 1));
-
-        // Status = Atenção (dentro da antecedência de 30 dias)
-        item.CalcularStatus(Hoje, kmAtualVeiculo: 84_500).Should().Be(StatusItem.Atencao);
+        item.KmRestantes(veiculo).Should().Be(500);
+        item.DataEfetiva(Hoje, veiculo).Should().Be(new DateOnly(2026, 10, 21));
+        item.CalcularStatus(Hoje, veiculo).Should().Be(StatusItem.Atencao);
+        item.TextoPrazo(Hoje, veiculo).Should().Be("faltam 500 km");
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // U03 — RN01: UsoOuTempo — tempo vem primeiro → Em Dia
-    // km_atual 76.000; média 500/mês; km alvo 85.000 → faltam 9.000 km = 18 meses
-    // Tempo vem primeiro: 01/05/2027 → Em Dia
-    // ─────────────────────────────────────────────────────────────────────────
-    [Fact]
-    public void U03_UsoOuTempo_TempoVemPrimeiro_EmDia()
+    [Fact(DisplayName = "U03 · Uso ou tempo: tempo vem primeiro → 01/05/2027 → Em dia")]
+    public void U03_UsoOuTempo_TempoVemPrimeiro()
     {
-        var item = CriarItemUsoOuTempo(
-            dataBase: new DateOnly(2026, 5, 1),
-            intervaloDias: 365,
-            kmBase: 75_000,
-            intervaloKm: 10_000,
-            kmAtual: 76_000,
-            mediaKmMes: 500,
-            antecedencia: 30);
+        var veiculo = Veiculo(76_000, 500);
+        var item = UsoOuTempo(veiculo, new DateOnly(2026, 5, 1), 365, 75_000, 10_000);
 
-        // Tempo (01/05/2027) deve vir antes da estimativa de km (18 meses ≈ nov/2027)
-        item.ProximoVencimentoData.Should().Be(new DateOnly(2027, 5, 1));
-        item.CalcularStatus(Hoje, kmAtualVeiculo: 76_000).Should().Be(StatusItem.EmDia);
+        item.DataEfetiva(Hoje, veiculo).Should().Be(new DateOnly(2027, 5, 1));
+        item.CalcularStatus(Hoje, veiculo).Should().Be(StatusItem.EmDia);
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // U04 — RN01: Garantia calculada
-    // Compra 10/01/2026, 12 meses fabricante → 10/01/2027 + 90 dias = 10/04/2027
-    // ─────────────────────────────────────────────────────────────────────────
-    [Fact]
-    public void U04_Garantia_Calculada()
+    [Fact(DisplayName = "U04 · Garantia: compra 10/01/2026 + 12 meses + 90 dias = 10/04/2027")]
+    public void U04_Garantia()
     {
-        var item = CriarItemGarantia(new DateOnly(2026, 1, 10), 12);
+        var item = Garantia(new DateOnly(2026, 1, 10), 12);
 
         item.ProximoVencimentoData.Should().Be(new DateOnly(2027, 4, 10));
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // U05 — RN02: DataUnica — CNH vence 20/11/2026, antecedência 45 dias
-    // Hoje 15/10/2026: faltam 36 dias → Atenção
-    // ─────────────────────────────────────────────────────────────────────────
-    [Fact]
-    public void U05_DataUnica_DentroAntecedencia_Atencao()
-    {
-        var item = CriarItemDataUnica(new DateOnly(2026, 11, 20), antecedencia: 45);
+    // ── U05/U06 — RN02 ────────────────────────────────────────────────────────
 
-        int diasRestantes = item.ProximoVencimentoData!.Value.DayNumber - Hoje.DayNumber;
-        diasRestantes.Should().Be(36);
-        item.CalcularStatus(Hoje).Should().Be(StatusItem.Atencao);
+    [Fact(DisplayName = "U05 · Data única: CNH vence 20/11/2026, antecedência 45 → faltam 36 dias → Atenção")]
+    public void U05_DataUnica_Atencao()
+    {
+        var item = DataUnica(new DateOnly(2026, 11, 20), 45);
+
+        item.DiasRestantes(Hoje, null).Should().Be(36);
+        item.CalcularStatus(Hoje, null).Should().Be(StatusItem.Atencao);
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // U06 — RN02: UsoOuTempo — km atual ≥ km alvo → Vencido (km manda)
-    // km_atual 85.200 ≥ 85.000 = ProximoVencimentoKm
-    // ─────────────────────────────────────────────────────────────────────────
-    [Fact]
-    public void U06_UsoOuTempo_KmAtingida_Vencido()
+    [Fact(DisplayName = "U06 · Uso ou tempo com km atual 85.200 ≥ 85.000 e data futura → Vencido (a km manda)")]
+    public void U06_UsoOuTempo_KmAtingida()
     {
-        var item = CriarItemUsoOuTempo(
-            dataBase: new DateOnly(2026, 5, 1),
-            intervaloDias: 365,
-            kmBase: 75_000,
-            intervaloKm: 10_000,
-            kmAtual: 85_200,
-            mediaKmMes: 2_500);
+        var veiculo = Veiculo(85_200, 2_500);
+        var item = UsoOuTempo(veiculo, new DateOnly(2026, 5, 1), 365, 75_000, 10_000);
 
-        item.CalcularStatus(Hoje, kmAtualVeiculo: 85_200).Should().Be(StatusItem.Vencido);
+        item.ProximoVencimentoData.Should().BeAfter(Hoje);
+        item.CalcularStatus(Hoje, veiculo).Should().Be(StatusItem.Vencido);
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // U07 — RN03: Anéis do Radar
-    // Prazos de -3, 12, 60 e 200 dias → Centro, Anel1, Anel2, Externo
-    // ─────────────────────────────────────────────────────────────────────────
-    [Fact]
-    public void U07_AneisRadar_QuatroZonas()
-    {
-        var casos = new[]
-        {
-            (diasRelativo: -3,  anel: AnelRadar.Centro),
-            (diasRelativo:  12, anel: AnelRadar.Anel1),
-            (diasRelativo:  60, anel: AnelRadar.Anel2),
-            (diasRelativo: 200, anel: AnelRadar.Externo)
-        };
+    // ── U07 — RN03 ────────────────────────────────────────────────────────────
 
-        foreach (var (diasRelativo, anelEsperado) in casos)
-        {
-            var vencimento = Hoje.AddDays(diasRelativo);
-            var item = CriarItemDataUnica(vencimento, antecedencia: 0);
-            item.CalcularAnel(Hoje).Should().Be(anelEsperado,
-                because: $"prazo de {diasRelativo} dias deve estar no {anelEsperado}");
-        }
+    [Theory(DisplayName = "U07 · Anéis: −3, 12, 60 e 200 dias → Centro, Anel 1, Anel 2, Externo")]
+    [InlineData(-3, AnelRadar.Centro)]
+    [InlineData(12, AnelRadar.Anel1)]
+    [InlineData(60, AnelRadar.Anel2)]
+    [InlineData(200, AnelRadar.Externo)]
+    public void U07_Aneis(int dias, AnelRadar esperado)
+    {
+        var item = DataUnica(Hoje.AddDays(dias), 30);
+
+        item.CalcularAnel(Hoje, null).Should().Be(esperado);
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // U08 — RN04: Modo foco
-    // 5 itens com prazos -10, -2, 5, 20 e 100 dias → modo foco devolve -10, -2 e 5
-    // ─────────────────────────────────────────────────────────────────────────
-    [Fact]
-    public void U08_ModoFoco_3MaisUrgentes()
+    // ── U08 — RN04 ────────────────────────────────────────────────────────────
+
+    [Fact(DisplayName = "U08 · Modo foco: prazos −10, −2, 5, 20 e 100 dias → devolve −10, −2 e 5")]
+    public void U08_ModoFoco()
     {
-        var itens = new[]
-        {
-            CriarItemDataUnica(Hoje.AddDays(-10), antecedencia: 0),
-            CriarItemDataUnica(Hoje.AddDays(-2),  antecedencia: 0),
-            CriarItemDataUnica(Hoje.AddDays(5),   antecedencia: 0),
-            CriarItemDataUnica(Hoje.AddDays(20),  antecedencia: 0),
-            CriarItemDataUnica(Hoje.AddDays(100), antecedencia: 0),
-        };
+        var itens = new[] { 100, 5, -2, 20, -10 }.Select(d => DataUnica(Hoje.AddDays(d), 30)).ToList();
 
         var foco = RadarDomain.AplicarModoFoco(itens, Hoje, _ => null).ToList();
 
-        foco.Should().HaveCount(3);
-        foco[0].DiasRestantes(Hoje).Should().Be(-10);
-        foco[1].DiasRestantes(Hoje).Should().Be(-2);
-        foco[2].DiasRestantes(Hoje).Should().Be(5);
+        foco.Select(i => i.DiasRestantes(Hoje, null)).Should().Equal(-10, -2, 5);
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // U09 — RN05: Concluir recorrente (180 dias) em 15/10/2026, 2 passos marcados
-    // Esperado: histórico criado; próximo em 13/04/2027; passos desmarcados
-    // ─────────────────────────────────────────────────────────────────────────
-    [Fact]
-    public void U09_Concluir_Recorrente_RecalculaEDesmarcaPassos()
+    // ── U09 a U11 — RN05/RN06 ─────────────────────────────────────────────────
+
+    [Fact(DisplayName = "U09 · Concluir recorrente (180 dias) em 15/10/2026 → histórico; próximo 13/04/2027; passos desmarcados")]
+    public void U09_ConcluirRecorrente()
     {
-        var item = CriarItemRecorrente(new DateOnly(2026, 4, 15), 180);
-        item.AdicionarPasso("Agendar oficina");
-        item.AdicionarPasso("Levar o veículo");
+        var item = Recorrente(new DateOnly(2026, 4, 15), 180);
+        item.AdicionarPasso("Comprar refil");
+        item.AdicionarPasso("Trocar");
+        foreach (var p in item.Passos) item.MarcarPasso(p.Id, true, Agora);
 
-        // Marca os 2 passos
-        foreach (var p in item.Passos)
-            p.Marcar(true, Agora);
+        var resultado = item.Concluir(Hoje, null, 80m, null, false, null, null, Agora, Hoje);
 
-        var historico = item.Concluir(
-            dataConclusao: Hoje,
-            kmNaConclusao: null,
-            valorGasto: null,
-            observacao: null,
-            confirmarPassosPendentes: false,
-            novaDataVencimento: null,
-            agora: Agora,
-            hoje: Hoje);
-
-        historico.Should().NotBeNull();
-        item.ProximoVencimentoData.Should().Be(new DateOnly(2027, 4, 13)); // 15/10/2026 + 180 dias
-        item.Passos.Should().AllSatisfy(p => p.Concluido.Should().BeFalse());
-        item.Situacao.Should().Be(SituacaoItem.Ativo);
+        resultado.Historico.ConcluidoEm.Should().Be(Hoje);
+        resultado.Historico.VencimentoAnterior.Should().Be(new DateOnly(2026, 10, 12));
+        item.ProximoVencimentoData.Should().Be(new DateOnly(2027, 4, 13));
+        item.Historicos.Should().ContainSingle();
+        item.Passos.Should().OnlyContain(p => !p.Concluido);
+        resultado.Mensagem.Should().StartWith("Boa!");
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // U10 — RN05: Concluir DataUnica sem nova validade → Encerrado
-    // ─────────────────────────────────────────────────────────────────────────
-    [Fact]
-    public void U10_Concluir_DataUnica_SemNovaValidade_Encerrado()
+    [Fact(DisplayName = "U10 · Concluir data única sem nova validade → item Encerrado")]
+    public void U10_ConcluirDataUnica_Encerra()
     {
-        var item = CriarItemDataUnica(new DateOnly(2026, 11, 20));
+        var item = DataUnica(new DateOnly(2026, 11, 20));
 
-        item.Concluir(
-            dataConclusao: Hoje,
-            kmNaConclusao: null,
-            valorGasto: null,
-            observacao: null,
-            confirmarPassosPendentes: false,
-            novaDataVencimento: null,
-            agora: Agora,
-            hoje: Hoje);
+        item.Concluir(Hoje, null, null, null, false, null, null, Agora, Hoje);
 
         item.Situacao.Should().Be(SituacaoItem.Encerrado);
-        item.CalcularStatus(Hoje).Should().Be(StatusItem.Encerrado);
+        item.CalcularStatus(Hoje, null).Should().Be(StatusItem.Encerrado);
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // U11 — RN06: Concluir com passo pendente sem confirmar → DomainException PASSOS_PENDENTES
-    // ─────────────────────────────────────────────────────────────────────────
-    [Fact]
-    public void U11_PassosPendentes_SemConfirmacao_LancaExcecao()
+    [Fact(DisplayName = "U11 · Concluir com 1 passo pendente, sem confirmação → DomainException PASSOS_PENDENTES")]
+    public void U11_PassosPendentes()
     {
-        var item = CriarItemRecorrente(new DateOnly(2026, 4, 15), 180);
-        item.AdicionarPasso("Passo não marcado");
+        var item = Recorrente(new DateOnly(2026, 4, 15), 180);
+        item.AdicionarPasso("Comprar refil");
 
-        var acao = () => item.Concluir(
-            dataConclusao: Hoje,
-            kmNaConclusao: null,
-            valorGasto: null,
-            observacao: null,
-            confirmarPassosPendentes: false,
-            novaDataVencimento: null,
-            agora: Agora,
-            hoje: Hoje);
+        var acao = () => item.Concluir(Hoje, null, null, null, false, null, null, Agora, Hoje);
 
         acao.Should().Throw<DomainException>()
-            .Which.Code.Should().Be("PASSOS_PENDENTES");
+            .Where(e => e.Code == CodigosErro.PassosPendentes)
+            .WithMessage("Este item ainda tem 1 passo sem marcar. Quer concluir mesmo assim?");
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // U12 — RN07: Km do veículo não pode diminuir
-    // ─────────────────────────────────────────────────────────────────────────
-    [Fact]
-    public void U12_KmVeiculo_NaoPodeDiminuir()
+    // ── U12 — RN07 ────────────────────────────────────────────────────────────
+
+    [Fact(DisplayName = "U12 · Atualizar km de 84.500 para 84.000 → DomainException: km não pode diminuir")]
+    public void U12_KmNaoDiminui()
     {
-        var veiculo = new Veiculo(Guid.NewGuid(), "Gol", TipoVeiculo.Carro, 84_500, 2_500, Agora);
+        var veiculo = Veiculo(84_500, 2_500);
 
         var acao = () => veiculo.AtualizarKm(84_000, Agora);
 
         acao.Should().Throw<DomainException>()
-            .Which.Code.Should().Be("KM_INVALIDA");
+            .Where(e => e.Code == CodigosErro.KmMenor)
+            .WithMessage("A km não pode ser menor que 84.500.");
+        veiculo.KmAtual.Should().Be(84_500);
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // U13 — RN08/RN09: Rotina de avisos — envio correto e limite
-    // Item entra em Atenção no dia D; máx. 2 reavisos a cada 3 dias; sem conclusão
-    // Envia em D, D+3 e D+6; não envia em D+9
-    // ─────────────────────────────────────────────────────────────────────────
-    [Fact]
-    public void U13_Avisos_AntecipacaoEReavisos_LimiteRespeitado()
+    // ── U13/U14 — RN08/RN09 ───────────────────────────────────────────────────
+
+    [Fact(DisplayName = "U13 · Atenção no dia D; máx. 2 reavisos a cada 3 dias → envia em D, D+3 e D+6; não envia em D+9")]
+    public void U13_AvisoEReavisos()
     {
-        var vencimento = new DateOnly(2026, 10, 20);
-        var status = StatusItem.Atencao;
-        short maxReavisos = 2;
-        short intervalo = 3;
+        var item = DataUnica(Hoje.AddDays(20), 30); // entra em Atenção hoje (dia D)
+        var avisos = new List<Aviso>();
+        var diasComEnvio = new List<int>();
 
-        // Dia D: sem avisos → deve enviar antecipado (numero 0)
-        var diaD = new DateOnly(2026, 10, 15);
-        var resultD = AvisoDomain.VerificarAviso([], diaD, status, vencimento, maxReavisos, intervalo);
-        resultD.Enviar.Should().BeTrue();
-        resultD.Tipo.Should().Be(TipoAviso.Antecipado);
-        resultD.Numero.Should().Be(0);
+        for (int d = 0; d <= 12; d++)
+        {
+            var dia = Hoje.AddDays(d);
+            var decisao = AvisoDomain.VerificarAviso(avisos, dia, item.CalcularStatus(dia, null),
+                item.ProximoVencimentoData!.Value, maxReavisos: 2, intervaloReavisoDias: 3, DataEnvio);
+            if (!decisao.Enviar) continue;
+            avisos.Add(AvisoEnviado(item, decisao.Numero, dia));
+            diasComEnvio.Add(d);
+        }
 
-        // Dia D+3: antecipado enviado → deve enviar reaviso 1
-        var avisoDiaD = new Aviso(Guid.NewGuid(), TipoAviso.Antecipado, CanalAviso.Email,
-            vencimento, 0, new DateTimeOffset(diaD.ToDateTime(TimeOnly.MinValue), TimeSpan.Zero), true);
-        var resultD3 = AvisoDomain.VerificarAviso(
-            [avisoDiaD], diaD.AddDays(3), status, vencimento, maxReavisos, intervalo);
-        resultD3.Enviar.Should().BeTrue();
-        resultD3.Tipo.Should().Be(TipoAviso.Reaviso);
-        resultD3.Numero.Should().Be(1);
-
-        // Dia D+6: reavisos 0 e 1 enviados → deve enviar reaviso 2
-        var avisoD3 = new Aviso(Guid.NewGuid(), TipoAviso.Reaviso, CanalAviso.Email,
-            vencimento, 1, new DateTimeOffset(diaD.AddDays(3).ToDateTime(TimeOnly.MinValue), TimeSpan.Zero), true);
-        var resultD6 = AvisoDomain.VerificarAviso(
-            [avisoDiaD, avisoD3], diaD.AddDays(6), status, vencimento, maxReavisos, intervalo);
-        resultD6.Enviar.Should().BeTrue();
-        resultD6.Numero.Should().Be(2);
-
-        // Dia D+9: limite (maxReavisos=2) atingido → NÃO deve enviar
-        var avisoD6 = new Aviso(Guid.NewGuid(), TipoAviso.Reaviso, CanalAviso.Email,
-            vencimento, 2, new DateTimeOffset(diaD.AddDays(6).ToDateTime(TimeOnly.MinValue), TimeSpan.Zero), true);
-        var resultD9 = AvisoDomain.VerificarAviso(
-            [avisoDiaD, avisoD3, avisoD6], diaD.AddDays(9), status, vencimento, maxReavisos, intervalo);
-        resultD9.Enviar.Should().BeFalse();
+        diasComEnvio.Should().Equal(0, 3, 6);
+        avisos.Select(a => a.Numero).Should().Equal((short)0, (short)1, (short)2);
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // U14 — RN09: Item concluído após 1 reaviso → novo ciclo zera reavisos
-    // ─────────────────────────────────────────────────────────────────────────
-    [Fact]
-    public void U14_NovoVencimento_ReiniciaContadorAvisos()
+    [Fact(DisplayName = "U14 · Item concluído após 1 reaviso → novo ciclo: contagem de reavisos volta a zero")]
+    public void U14_NovoCicloAposConcluir()
     {
-        var novoVencimento = new DateOnly(2027, 4, 13);
-        var status = StatusItem.Atencao;
+        var item = Recorrente(new DateOnly(2026, 4, 30), 180, antecedencia: 200); // vence 27/10/2026
+        var avisos = new List<Aviso>
+        {
+            AvisoEnviado(item, 0, Hoje.AddDays(-3)),
+            AvisoEnviado(item, 1, Hoje)
+        };
 
-        // Com o NOVO vencimento, não existe nenhum aviso → deve enviar antecipado
-        var result = AvisoDomain.VerificarAviso(
-            [],
-            hoje: new DateOnly(2027, 3, 15),
-            status,
-            vencimentoReferencia: novoVencimento,
-            maxReavisos: 2,
-            intervaloReavisoDias: 3);
+        item.Concluir(Hoje, null, null, null, false, null, null, Agora, Hoje);
+        var decisao = AvisoDomain.VerificarAviso(avisos, Hoje, item.CalcularStatus(Hoje, null),
+            item.ProximoVencimentoData!.Value, 2, 3, DataEnvio);
 
-        result.Enviar.Should().BeTrue();
-        result.Tipo.Should().Be(TipoAviso.Antecipado);
-        result.Numero.Should().Be(0);
+        item.ProximoVencimentoData.Should().Be(new DateOnly(2027, 4, 13));
+        decisao.Enviar.Should().BeTrue();
+        decisao.Tipo.Should().Be(TipoAviso.Antecipado);
+        decisao.Numero.Should().Be(0);
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // U15 — RN10: Check-up não duplica item do mesmo modelo já existente
-    // Simula a regra: um item com modeloId X e veiculoId Y já existe → não cria outro
-    // ─────────────────────────────────────────────────────────────────────────
-    [Fact]
-    public void U15_Checkup_NaoDuplicaItemExistente()
+    // ── U15 — RN10 ────────────────────────────────────────────────────────────
+
+    [Fact(DisplayName = "U15 · Check-up com modelo IPVA já existente e ativo para o mesmo veículo → não cria duplicado")]
+    public void U15_CheckupNaoDuplica()
     {
-        var modeloId = Guid.NewGuid();
-        var veiculoId = Guid.NewGuid();
+        var modeloIpva = Guid.NewGuid();
+        var veiculo = Veiculo(50_000, 1_000);
+        var outroVeiculo = Veiculo(10_000, 1_000);
+        var ipva = new Item(UsuarioId, 1, "IPVA", TipoVencimento.RecorrentePorTempo, new DateOnly(2026, 3, 1), null,
+            365, null, null, null, 30, modeloIpva, veiculo.Id, null, Agora);
 
-        // Item existente ativo com mesmo modelo e veículo
-        var itemExistente = new Item(
-            usuarioId: Guid.NewGuid(),
-            categoriaId: 1,
-            nome: "IPVA",
-            tipoVencimento: TipoVencimento.RecorrentePorTempo,
-            dataBase: new DateOnly(2026, 1, 1),
-            dataVencimento: null,
-            intervaloDias: 365,
-            intervaloKm: null,
-            kmBase: null,
-            garantiaFabricanteMeses: null,
-            antecedenciaDias: 30,
-            modeloItemId: modeloId,
-            veiculoId: veiculoId,
-            observacao: null,
-            agora: Agora);
+        CheckupDomain.ItemJaExiste([ipva], modeloIpva, veiculo.Id).Should().BeTrue();
+        CheckupDomain.ItemJaExiste([ipva], modeloIpva, outroVeiculo.Id).Should().BeFalse();
+    }
 
-        // RN10: um item ativo com mesmo (modeloId, veiculoId) já existe → não cria
-        bool jaExiste = itemExistente.Situacao == SituacaoItem.Ativo
-                        && itemExistente.ModeloItemId == modeloId
-                        && itemExistente.VeiculoId == veiculoId;
+    // ── Regras complementares ─────────────────────────────────────────────────
 
-        jaExiste.Should().BeTrue("RN10: check-up não deve criar item duplicado");
+    [Fact(DisplayName = "RN05 · Concluir uso ou tempo atualiza a km do veículo (RN07) e recalcula")]
+    public void ConcluirUsoOuTempo_AtualizaVeiculo()
+    {
+        var veiculo = Veiculo(84_500, 2_500);
+        var item = UsoOuTempo(veiculo, new DateOnly(2025, 11, 10), 365, 75_000, 10_000);
+
+        var r = item.Concluir(Hoje, 85_200, 280m, "Oficina do João", false, null, veiculo, Agora, Hoje);
+
+        veiculo.KmAtual.Should().Be(85_200);
+        item.ProximoVencimentoKm.Should().Be(95_200);
+        item.ProximoVencimentoData.Should().Be(new DateOnly(2027, 10, 15));
+        r.Mensagem.Should().Be("Boa! Próxima vez: 95.200 km ou 15/10/2027, o que vier primeiro.");
+    }
+
+    [Fact(DisplayName = "RN05 · Concluir com km menor que a do veículo → KM_MENOR")]
+    public void ConcluirUsoOuTempo_KmMenorQueVeiculo()
+    {
+        var veiculo = Veiculo(84_500, 2_500);
+        var item = UsoOuTempo(veiculo, new DateOnly(2025, 11, 10), 365, 75_000, 10_000);
+
+        var acao = () => item.Concluir(Hoje, 80_000, null, null, false, null, veiculo, Agora, Hoje);
+
+        acao.Should().Throw<DomainException>().Where(e => e.Code == CodigosErro.KmMenor);
+    }
+
+    [Fact(DisplayName = "RN05 · Data única com nova validade continua ativa")]
+    public void ConcluirDataUnica_ComNovaValidade()
+    {
+        var item = DataUnica(new DateOnly(2026, 11, 20));
+
+        item.Concluir(Hoje, null, null, null, false, new DateOnly(2031, 11, 20), null, Agora, Hoje);
+
+        item.Situacao.Should().Be(SituacaoItem.Ativo);
+        item.ProximoVencimentoData.Should().Be(new DateOnly(2031, 11, 20));
+    }
+
+    [Fact(DisplayName = "RN02 · Item encerrado não pode ser editado")]
+    public void ItemEncerrado_NaoEdita()
+    {
+        var item = Garantia(new DateOnly(2026, 1, 10), 12);
+        item.Concluir(Hoje, null, null, null, false, null, null, Agora, Hoje);
+
+        var acao = () => item.Editar("TV", 6, TipoVencimento.Calculado, new DateOnly(2026, 1, 10), null, null, null, null, 12, 15, null, null, Agora);
+
+        acao.Should().Throw<DomainException>().Where(e => e.Code == CodigosErro.ItemEncerrado);
+    }
+
+    [Fact(DisplayName = "§2.5 · Uso ou tempo sem veículo → VEICULO_OBRIGATORIO")]
+    public void UsoOuTempo_SemVeiculo()
+    {
+        var acao = () => new Item(UsuarioId, 1, "Troca de óleo", TipoVencimento.UsoOuTempo, Hoje, null, 365,
+            10_000, 75_000, null, 30, null, null, null, Agora);
+
+        acao.Should().Throw<DomainException>().Where(e => e.Code == CodigosErro.VeiculoObrigatorio);
+    }
+
+    [Fact(DisplayName = "§2.5 · Recorrente sem intervalo → erro no campo intervaloDias")]
+    public void Recorrente_SemIntervalo()
+    {
+        var acao = () => new Item(UsuarioId, 3, "Filtro", TipoVencimento.RecorrentePorTempo, Hoje, null, null,
+            null, null, null, 30, null, null, null, Agora);
+
+        acao.Should().Throw<CampoInvalidoException>().Where(e => e.Campo == "intervaloDias");
+    }
+
+    [Fact(DisplayName = "§4.1 · 5 falhas seguidas bloqueiam a conta por 15 minutos")]
+    public void BloqueioDeLogin()
+    {
+        var usuario = new Usuario("Rodrigo", "Rodrigo@Email.com", "hash", Agora);
+        for (int i = 0; i < 5; i++) usuario.RegistrarFalhaLogin(Agora, 5, 15);
+
+        usuario.Email.Should().Be("rodrigo@email.com");
+        usuario.EstaBloqueado(Agora.AddMinutes(14)).Should().BeTrue();
+        usuario.EstaBloqueado(Agora.AddMinutes(16)).Should().BeFalse();
+    }
+
+    [Fact(DisplayName = "RN11 · Resultado do check-up: áreas sem itens contam como em dia")]
+    public void ResultadoCheckup()
+    {
+        var itens = new[]
+        {
+            Recorrente(new DateOnly(2026, 4, 15), 180),   // Casa vencido
+            DataUnica(new DateOnly(2026, 11, 20), 45),     // Documentos atenção
+        };
+
+        var r = RadarDomain.GerarResultado(itens, [1, 2, 3, 4, 5, 6], Hoje, _ => null);
+
+        r.Vencidos.Should().Be(1);
+        r.Atencao.Should().Be(1);
+        r.AreasEmDia.Should().Be(4);
     }
 }

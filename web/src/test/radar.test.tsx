@@ -1,73 +1,38 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { ModalConcluirItem } from '../features/radar/ModalConcluirItem.tsx';
-import * as services from '../api/services.ts';
-import { AnelRadar, StatusItem, type ItemRadarResponse } from '../api/types.ts';
+import { render, screen, within } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
+import type { ItemResumo } from '../api/types.ts';
+import { StatusBadge } from '../components/ui.tsx';
+import { ListaAtencao } from '../features/radar/RadarPage.tsx';
+import { RadarChart } from '../features/radar/RadarChart.tsx';
+import { Providers } from './utils.tsx';
 
-const mockItemComPassos: ItemRadarResponse = {
-  id: 'item-1',
-  nome: 'Troca de Óleo',
-  categoriaId: 1,
-  anel: AnelRadar.Centro,
-  status: StatusItem.Vencido,
-  proximoVencimentoData: '2026-10-15',
-  proximoVencimentoKm: 40000,
-  diasRestantes: -2,
-  progressoPassos: 0.5,
-  passos: [
-    { id: 'p1', ordem: 1, descricao: 'Comprar óleo', concluido: true, concluidoEm: null },
-    { id: 'p2', ordem: 2, descricao: 'Ir à oficina', concluido: false, concluidoEm: null },
-  ],
+const ipva: ItemResumo = {
+  id: 'i1', nome: 'IPVA', categoriaId: 1, tipoVencimento: 'RecorrentePorTempo', status: 'Vencido', anel: 'Centro',
+  diasRestantes: -5, kmRestantes: null, dataLimite: '2026-10-10', textoPrazo: 'venceu há 5 dias', progressoPassos: 0,
 };
 
-/**
- * CT48 — F2: Conclusão de item no Radar e verificação de passos pendentes (RN06)
- */
-describe('CT48 — Fluxo F2: Concluir Item no Radar', () => {
-  it('exibe alerta de passos pendentes e bloqueia sem confirmação explícita', async () => {
-    const onSucessoMock = vi.fn();
-    const onCloseMock = vi.fn();
+describe('Status acessível (RNF02)', () => {
+  it('CT50 · item Vencido no Radar e na lista → cor + símbolo + texto "Vencido"', () => {
+    render(<Providers><ListaAtencao titulo="Precisa de atenção" itens={[ipva]} /></Providers>);
 
-    render(
-      <ModalConcluirItem
-        item={mockItemComPassos}
-        isOpen={true}
-        onClose={onCloseMock}
-        onSucesso={onSucessoMock}
-      />
-    );
+    const link = screen.getByRole('link', { name: /IPVA/ });
+    const badge = within(link).getByText('Vencido');
+    expect(badge).toHaveClass('status-vencido');          // cor
+    expect(badge.querySelector('svg')).not.toBeNull();     // símbolo
+    expect(link).toHaveTextContent('venceu há 5 dias');    // texto do prazo
+  });
 
-    // Deve exibir o título e o alerta de passos pendentes
-    expect(screen.getByText('Concluir: Troca de Óleo')).toBeInTheDocument();
-    expect(screen.getByText(/passo\(s\) pendente\(s\)/)).toBeInTheDocument();
+  it('CT50 · o ponto no Radar tem nome, status e prazo para leitores de tela', () => {
+    render(<Providers><RadarChart itens={[ipva]} /></Providers>);
 
-    // Tenta submeter sem marcar o checkbox de confirmação
-    const btnConfirmar = screen.getByRole('button', { name: 'Confirmar Conclusão' });
-    fireEvent.click(btnConfirmar);
+    expect(screen.getByRole('link', { name: 'IPVA, Veículo: Vencido, venceu há 5 dias' })).toBeInTheDocument();
+    expect(screen.getByText('Vencido (centro)')).toBeInTheDocument(); // legenda com forma e texto
+  });
 
-    // Deve exibir mensagem de erro impedindo a conclusão
-    expect(
-      screen.getByText(/Este item ainda tem 1 passo\(s\) não marcado\(s\)/)
-    ).toBeInTheDocument();
-    expect(onSucessoMock).not.toHaveBeenCalled();
-
-    // Marca a confirmação de passos pendentes
-    const checkbox = screen.getByLabelText(
-      'Confirmar e concluir mesmo com passos pendentes'
-    );
-    fireEvent.click(checkbox);
-
-    const concluirSpy = vi
-      .spyOn(services.itensApi, 'concluir')
-      .mockResolvedValueOnce({} as never);
-
-    // Submete novamente
-    fireEvent.click(btnConfirmar);
-
-    await waitFor(() => {
-      expect(concluirSpy).toHaveBeenCalledTimes(1);
-      expect(onSucessoMock).toHaveBeenCalledTimes(1);
-      expect(onCloseMock).toHaveBeenCalledTimes(1);
-    });
+  it('cada status tem um texto próprio', () => {
+    render(<><StatusBadge status="Atencao" /><StatusBadge status="EmDia" /><StatusBadge status="Encerrado" /></>);
+    expect(screen.getByText('Atenção')).toHaveClass('status-atencao');
+    expect(screen.getByText('Em dia')).toHaveClass('status-em-dia');
+    expect(screen.getByText('Concluído')).toHaveClass('status-encerrado');
   });
 });

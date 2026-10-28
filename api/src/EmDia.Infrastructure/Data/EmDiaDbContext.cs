@@ -29,6 +29,7 @@ public class EmDiaDbContext : DbContext
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(EmDiaDbContext).Assembly);
 
         // Seed de dados iniciais
+        RelacionamentosConfiguration.Aplicar(modelBuilder);
         SeedData.Aplicar(modelBuilder);
     }
 }

@@ -4,55 +4,42 @@ using EmDia.Domain.Enums;
 namespace EmDia.Domain.Services;
 
 /// <summary>
-/// Lógica de domínio para avisos por e-mail.
-/// RN08: aviso antecipado quando o item entra em Atenção ou Vencido.
-/// RN09: reavisos com limite e intervalo configuráveis; ciclo reinicia com novo vencimento.
+/// RN08: aviso antecipado quando o item entra em Atenção ou Vencido e ainda não foi avisado naquele ciclo.
+/// RN09: reaviso a cada intervalo_reaviso_dias, até max_reavisos por ciclo.
+/// O ciclo é identificado pelo vencimento de referência e recomeça a cada novo vencimento.
 /// </summary>
 public static class AvisoDomain
 {
-    /// <summary>
-    /// RN08/RN09: determina se um aviso (ou reaviso) deve ser enviado para o item hoje.
-    /// </summary>
-    /// <param name="avisosSendados">Avisos já enviados para o vencimento atual.</param>
-    /// <param name="hoje">Data de hoje.</param>
-    /// <param name="status">Status calculado do item.</param>
-    /// <param name="vencimentoReferencia">Próximo vencimento do item.</param>
-    /// <param name="maxReavisos">Máximo de reavisos configurado pelo usuário (0 a 5).</param>
-    /// <param name="intervaloReavisoDias">Intervalo entre reavisos em dias (1 a 7).</param>
+    /// <param name="avisos">Avisos já registrados para o item (de qualquer ciclo).</param>
+    /// <param name="dataEnvio">Converte o momento de envio na data local (America/Sao_Paulo).</param>
     public static DeveAvisar VerificarAviso(
-        IEnumerable<Aviso> avisosSendados,
+        IEnumerable<Aviso> avisos,
         DateOnly hoje,
         StatusItem status,
         DateOnly vencimentoReferencia,
         short maxReavisos,
-        short intervaloReavisoDias)
+        short intervaloReavisoDias,
+        Func<DateTimeOffset, DateOnly> dataEnvio)
     {
-        // Só avisa se estiver em Atenção ou Vencido
         if (status is not (StatusItem.Atencao or StatusItem.Vencido))
             return DeveAvisar.Nao();
 
-        var avisosDoClico = avisosSendados
+        var doCiclo = avisos
             .Where(a => a.VencimentoReferencia == vencimentoReferencia && a.Sucesso)
             .OrderBy(a => a.Numero)
             .ToList();
 
-        // Aviso antecipado (numero 0) — só envia uma vez por ciclo
-        if (!avisosDoClico.Any())
+        if (doCiclo.Count == 0)
             return DeveAvisar.Sim(TipoAviso.Antecipado, 0);
 
-        // Reavisos
-        short ultimoNumero = avisosDoClico.Last().Numero;
-        if (ultimoNumero >= maxReavisos)
-            return DeveAvisar.Nao(); // limite atingido
-
-        // Verifica se já passou o intervalo desde o último aviso
-        var ultimoAviso = avisosDoClico.Last();
-        var proximoReavisoEm = ultimoAviso.EnviadoEm.UtcDateTime.Date.AddDays(intervaloReavisoDias);
-        if (hoje.ToDateTime(TimeOnly.MinValue) < proximoReavisoEm)
+        var ultimo = doCiclo[^1];
+        if (ultimo.Numero >= maxReavisos)
             return DeveAvisar.Nao();
 
-        short proximoNumero = (short)(ultimoNumero + 1);
-        return DeveAvisar.Sim(TipoAviso.Reaviso, proximoNumero);
+        if (hoje < dataEnvio(ultimo.EnviadoEm).AddDays(intervaloReavisoDias))
+            return DeveAvisar.Nao();
+
+        return DeveAvisar.Sim(TipoAviso.Reaviso, (short)(ultimo.Numero + 1));
     }
 }
 

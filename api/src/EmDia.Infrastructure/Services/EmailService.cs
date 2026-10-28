@@ -33,7 +33,7 @@ public class EmailService : IEmailService
         var usuario = _config["Email:Smtp:Usuario"];
         var senha = _config["Email:Smtp:Senha"];
         if (!string.IsNullOrEmpty(usuario))
-            await client.AuthenticateAsync(usuario, senha, ct);
+            await client.AuthenticateAsync(usuario, senha ?? string.Empty, ct);
 
         await client.SendAsync(msg, ct);
         await client.DisconnectAsync(true, ct);

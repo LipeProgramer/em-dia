@@ -3,10 +3,7 @@ using EmDia.Domain.Exceptions;
 
 namespace EmDia.Domain.Entities;
 
-/// <summary>
-/// Veículo do usuário. Usado nos vencimentos por uso/tempo (spec §2.3).
-/// RN07: a quilometragem nunca diminui.
-/// </summary>
+/// <summary>Veículo do usuário, usado nos vencimentos por quilometragem.</summary>
 public class Veiculo
 {
     public Guid Id { get; private set; }
@@ -18,36 +15,25 @@ public class Veiculo
     public DateTimeOffset KmAtualizadoEm { get; private set; }
     public DateTimeOffset CriadoEm { get; private set; }
 
-    // EF Core
     protected Veiculo() { }
 
-    public Veiculo(
-        Guid usuarioId,
-        string apelido,
-        TipoVeiculo tipo,
-        int kmAtual,
-        int mediaKmMes,
-        DateTimeOffset agora)
+    public Veiculo(Guid usuarioId, string apelido, TipoVeiculo tipo, int kmAtual, int mediaKmMes, DateTimeOffset agora)
     {
+        if (kmAtual < 0)
+            throw new CampoInvalidoException("kmAtual", "A km não pode ser menor que 0.");
         Id = Guid.NewGuid();
         UsuarioId = usuarioId;
-        Apelido = apelido;
-        Tipo = tipo;
         KmAtual = kmAtual;
-        MediaKmMes = mediaKmMes;
         KmAtualizadoEm = agora;
         CriadoEm = agora;
+        Editar(apelido, tipo, mediaKmMes);
     }
 
-    /// <summary>
-    /// RN07 — Atualiza a quilometragem. Nunca pode diminuir.
-    /// </summary>
+    /// <summary>RN07: a km de um veículo nunca diminui.</summary>
     public void AtualizarKm(int novaKm, DateTimeOffset agora)
     {
         if (novaKm < KmAtual)
-            throw new DomainException(
-                "KM_INVALIDA",
-                $"A quilometragem não pode ser menor que {KmAtual:N0} km.");
+            throw new DomainException(CodigosErro.KmMenor, $"A km não pode ser menor que {Formatos.Km(KmAtual)}.");
 
         KmAtual = novaKm;
         KmAtualizadoEm = agora;
@@ -55,7 +41,9 @@ public class Veiculo
 
     public void Editar(string apelido, TipoVeiculo tipo, int mediaKmMes)
     {
-        Apelido = apelido;
+        if (mediaKmMes is < 1 or > 20_000)
+            throw new CampoInvalidoException("mediaKmMes", "Informe uma média entre 1 e 20.000 km por mês.");
+        Apelido = apelido.Trim();
         Tipo = tipo;
         MediaKmMes = mediaKmMes;
     }

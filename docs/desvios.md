@@ -1,92 +1,89 @@
 # Desvios da Especificação
 
-Registro de toda decisão que se afasta ou complementa a Entrega 2.
-Conforme instrução do projeto: _o quê_, _por quê_ e o _commit/branch_ onde foi aplicado.
+Registro de toda decisão que se afasta ou complementa a Entrega 2: _o quê_ e _por quê_.
+
+> **Revisão de conformidade (28/10/2026).** O código da branch `main` foi comparado item a item com o PDF da
+> Entrega 2 e ajustado para segui-lo. O contrato da API (rotas, corpos e respostas de E01–E25), as regras RN01–RN15,
+> o banco (chaves estrangeiras do DER), a segurança (§4) e o frontend (telas T01–T15, Zod + React Hook Form) foram
+> reescritos onde divergiam. Os desvios antigos que deixaram de existir estão marcados como **resolvidos**.
 
 ---
 
-## DV01 — Versão do .NET: 8 → 10 (instalação manual)
+## Desvios em vigor
 
-| Campo | Valor |
-|---|---|
-| **O quê** | O projeto foi scaffolded com `net8.0`; a spec exige `.NET 10`. |
-| **Por quê** | O SDK .NET 10.0.402 não estava na PATH padrão. Foi instalado via script oficial da Microsoft em `%LOCALAPPDATA%\Microsoft\dotnet10` durante a Fase 0. Todos os `.csproj` foram atualizados para `net10.0`. |
-| **Branch** | `feature/fase-0-ambiente` |
-| **Impacto** | Nenhum nos requisitos funcionais. |
+### DV01 — .NET 10 e pacotes 10.x
+Todos os projetos usam `net10.0`, e os pacotes do ASP.NET Core / EF Core / Npgsql foram atualizados para a linha 10.x
+(antes estavam em 9.0.4 com alvo .NET 10). Sem impacto funcional.
 
----
+### DV02 — Swagger com Swashbuckle
+A spec cita "Swagger / OpenAPI". Usamos o Swashbuckle, que mantém a interface interativa em `/swagger`.
 
-## DV02 — Swagger: Swashbuckle 7.x (não o nativo do .NET 10)
+### DV03 — Campo `novaDataVencimento` no E18 (Concluir)
+A RN05 diz "Data única: se vier nova validade, é atualizada", e a validação do E18 cita `novaDataVencimento`, mas o
+corpo de exemplo não traz o campo. Ele foi incluído como **opcional** e só é usado em itens de data única.
 
-| Campo | Valor |
-|---|---|
-| **O quê** | A spec cita "Swashbuckle / OpenAPI". O .NET 9/10 introduziu o `Microsoft.AspNetCore.OpenApi` nativo, mas sem UI interativa embutida. |
-| **Por quê** | O Swashbuckle 7.x (`Swashbuckle.AspNetCore 7.3.x`) tem suporte oficial para .NET 10 e mantém a UI `/swagger` idêntica à citada na spec. A alternativa nativa exigiria Scalar UI como pacote extra. Swashbuckle foi escolhido por minimizar o delta com a especificação. |
-| **Branch** | `feature/fase-0-ambiente` |
-| **Impacto** | Nenhum nos requisitos funcionais. O endpoint `/swagger` funciona igual. |
+### DV04 — Senha do banco de desenvolvimento em `appsettings.Development.json`
+É a mesma senha do `docker-compose.yml`, só para o banco local sem dados reais. A **chave do JWT** e as credenciais de
+SMTP **não** ficam no repositório: vêm de `dotnet user-secrets` (dev) ou de variáveis de ambiente (servidor), como
+pede a spec §4.2/§4.6.
 
----
+### DV07 — TypeScript sem `enum`
+O projeto Vite usa `erasableSyntaxOnly`; os enums da API são tipos de união de strings (`'Vencido' | 'Atencao' …`).
 
-## DV03 — Campo `novaDataVencimento` no E18 (Concluir)
+### DV08 — Rotina de avisos não roda sozinha no ambiente de testes
+No ambiente `Testing`, o `AvisosWorker` não é iniciado como serviço; os testes chamam `ExecutarAgoraAsync()` com o
+relógio controlado (15/10/2026), o que deixa CT38–CT41 determinísticos.
 
-| Campo | Valor |
-|---|---|
-| **O quê** | A spec menciona `novaDataVencimento` nas validações do E18 mas não inclui no corpo de exemplo. |
-| **Por quê** | A RN05 diz "Data Única: se vier nova validade, é atualizada". O campo é necessário para esse caso. Será incluído como campo **opcional** no DTO `ConcluirItemRequest` somente quando `tipoVencimento == DataUnica`. |
-| **Branch** | A ser implementado na Fase 4. |
-| **Impacto** | Nenhum; complementa a spec em vez de contradizê-la. |
+### DV09 — Pergunta `TEM_CARRO` cobre carro e moto
+A tabela de dados iniciais (§2.7) cita `TEM_CARRO / TEM_MOTO` para os modelos de veículo, mas `codigo_checkup` é uma
+única coluna `varchar(30)`. Para não mudar o modelo de dados, os modelos de veículo usam `TEM_CARRO`, cuja pergunta é
+**"Você tem carro ou moto?"**; o tipo (Carro/Moto) é escolhido no cadastro do veículo.
 
----
+### DV10 — Modelos complementares nos dados iniciais
+A §2.7 lista "exemplos". Para cobrir as 6 áreas do Radar e as 8 perguntas do wireframe ("Pergunta 2 de 8"), foram
+adicionados: Licenciamento (Veículo), Passaporte (Documentos), Consulta de rotina (Saúde) e Declaração do Imposto de
+Renda (Finanças). Todos os intervalos são sugestões editáveis; o sistema não faz recomendações de saúde.
 
-## DV04 — Senha em `appsettings.Development.json` (desenvolvimento local)
+### DV11 — Campos extras nas respostas
+As respostas seguem os exemplos da §3.4 e trazem alguns campos a mais, úteis ao front:
+`precisaCheckup` no E05; `tipoVencimento`, `dataLimite` e `progressoPassos` no formato resumido (E12/E13);
+`areasEmDia` e `categoriaId` nos destaques do E11. Nenhum campo do exemplo foi removido ou renomeado.
 
-| Campo | Valor |
-|---|---|
-| **O quê** | A string de conexão em `appsettings.Development.json` contém a senha do banco de dev (`emdia_dev`). |
-| **Por quê** | É a mesma senha definida no `docker-compose.yml` (já existente no repo). Em dev local, sem dados reais, o risco é aceitável e facilita o onboarding. Em produção, a senha vem de variável de ambiente. |
-| **Branch** | `feature/fase-0-ambiente` |
-| **Impacto** | Zero em produção; para dev local, esperado. |
+### DV12 — Refazer o check-up com o mesmo veículo
+Para cumprir o CT17 ("mesmo check-up enviado duas vezes não duplica"), um veículo enviado no check-up com um apelido
+que o usuário já tem é reaproveitado (em vez de responder 409). O check-up também aceita `veiculoId` de um veículo já
+cadastrado, além de `veiculoRef`.
 
----
+### DV13 — Cookie `Secure` desligado só nos testes automatizados
+O cookie de refresh é sempre `HttpOnly; Secure; SameSite=Strict; Path=/api/v1/auth`. A única exceção é o ambiente
+`Testing`, porque o servidor de testes em memória usa http. (Navegadores aceitam cookies `Secure` em
+`http://localhost`, então o desenvolvimento local funciona normalmente.)
 
-## DV05 — Autenticação Npgsql 9.x com PostgreSQL 17: uso de `psql` interno para migrations
+### DV14 — Datas do JWT pelo relógio do sistema
+"Hoje" vem da interface `IRelogio` (fuso America/Sao_Paulo), como pede a §6.1. A emissão do JWT, porém, usa o relógio do
+sistema, porque é com ele que o middleware JwtBearer confere a validade; assim os testes podem fixar "hoje" em
+15/10/2026 sem invalidar os tokens.
 
-| Campo | Valor |
-|---|---|
-| **O quê** | O `dotnet ef database update` falha com `28P01` mesmo com `trust` no pg_hba. O Npgsql 9.x inicia SASL/SCRAM antes de receber a resposta do pg_hba. |
-| **Por quê** | Incompatibilidade entre Npgsql 9.x e PostgreSQL 17 no Windows com Docker. O método usado: `dotnet ef migrations script --output migration.sql` gera o SQL idempotente, que é copiado via `docker cp` e executado com `psql` dentro do container (sem rede). O banco resultante é idêntico ao que o `dotnet ef database update` produziria. |
-| **Branch** | `feature/fase-2-infrastructure` |
-| **Impacto** | Apenas o processo de apply de migrations em dev. A Api em runtime usa a mesma connection string com `SSL Mode=Disable` e funciona normalmente pois o servidor aceita a senha corretamente via conexão de aplicação. |
+### DV15 — Aplicativo `mobile/` fora do escopo
+A pasta `mobile/` (React Native/Expo) não está prevista na Entrega 2 e foi criada sobre o contrato antigo da API.
+Ela **não foi atualizada** e precisa ser adaptada às rotas atuais se for mantida.
 
----
-
-## DV06 — `docker-compose.yml` com `POSTGRES_HOST_AUTH_METHOD=md5` e `POSTGRES_INITDB_ARGS`
-
-| Campo | Valor |
-|---|---|
-| **O quê** | O `docker-compose.yml` original não tinha configurações de autenticação explícitas. |
-| **Por quê** | Para garantir compatibilidade com Npgsql 9.x em dev, foram adicionados `POSTGRES_HOST_AUTH_METHOD=md5` e `POSTGRES_INITDB_ARGS="--auth-host=md5"`. Em produção, scram-sha-256 é preferível. |
-| **Branch** | `feature/fase-2-infrastructure` |
-| **Impacto** | Apenas desenvolvimento local. |
-
----
-
-## DV07 — TypeScript 6 com `erasableSyntaxOnly` no Frontend
-
-| Campo | Valor |
-|---|---|
-| **O quê** | Enums TypeScript convencionais substituídos por objetos `as const` e union types. |
-| **Por quê** | Vite / TS 6 configurado com `erasableSyntaxOnly: true` rejeita enums com código em tempo de execução. O uso de `const StatusItem = { ... } as const` e `type StatusItem = typeof StatusItem[keyof typeof StatusItem]` garante tipos estritos sem violar o padrão de apagamento de tipos. |
-| **Branch** | `feature/fase-6-frontend` |
-| **Impacto** | Nenhum; total compatibilidade com os tipos da API .NET. |
+### DV16 — Sem SMTP configurado, e-mails só vão para o log
+Se `Email:Smtp:Host` estiver vazio, a API usa um serviço de e-mail falso que só registra as mensagens. Com o host
+configurado, usa o MailKit. A rotina diária roda às 8h (America/Sao_Paulo).
 
 ---
 
-## DV08 — Execução condicional de BackgroundService no ambiente de testes
+## Desvios resolvidos nesta revisão
 
-| Campo | Valor |
+| Antes | Situação |
 |---|---|
-| **O quê** | `AvisosWorker` registrado como Singleton e adicionado a `AddHostedService` apenas quando `!Environment.IsEnvironment("Testing")`. |
-| **Por quê** | Evita que workers autônomos em background concorram com fixtures de Testcontainers durante a execução concorrente da suíte de testes xUnit, ao mesmo tempo permitindo que testes invoquem `AvisosWorker.ExecutarAgoraAsync()` sob demanda de forma determinística. |
-| **Branch** | `feature/fase-7-avisos-worker` |
-| **Impacto** | Aumenta o determinismo e velocidade dos testes de integração. |
+| DV05 — `dotnet ef database update` falhava (Npgsql 9 + PostgreSQL 17) e as migrations eram aplicadas com `psql` | **Resolvido.** Com o Npgsql 10 o comando funciona; o `migration.sql` foi removido. |
+| DV06 — `docker-compose.yml` forçava autenticação `md5` | **Resolvido.** Voltou ao padrão (`scram-sha-256`). |
+| Rotas fora da spec (`/catalogo/*`, `/checkup/atual`, `/itens/{id}/historico`, `PATCH /usuarios/me`…) | **Resolvido.** Rotas exatamente como na §3.3 (E01–E25). |
+| E07 sem senha de confirmação | **Resolvido.** `DELETE /usuarios/me` exige `{ "senha" }` e responde 422 se estiver errada. |
+| Check-up ignorava itens de data única e de uso, sem veículos | **Resolvido.** E11 recebe respostas, veículos e itens com os dados por tipo, em uma transação. |
+| RN01 gravava a data estimada pela km usando `DateTime.Today` | **Resolvido.** Grava a data do tempo; a data pela km é calculada na leitura. |
+| Faltavam FKs do DER (itens/veículos/tokens/check-ups → usuários, itens/modelos → categorias, avisos → itens) | **Resolvido** na migration `AjustesEntrega2`; excluir a conta apaga tudo em cascata. |
+| Sem política padrão de autorização, rate limit 10/min, refresh sem detecção de reuso, enums como número | **Resolvido.** Fallback policy, 5/min por IP com 429, reuso revoga todos os tokens, enums como texto. |
+| Front sem Zod/React Hook Form e sem T04, T05, T10, T13, T15 | **Resolvido.** Telas e rotas da §5.1, validação com Zod. |

@@ -1,10 +1,10 @@
 # Em Dia 📅
 
-> **Radar de vencimentos para adultos com TDAH**  
+> **Radar de vencimentos para adultos com TDAH**
 > Documentos, veículo, casa, saúde, contas e garantias — tudo em um lugar, com avisos antecipados.
 
-Trabalho Multidisciplinar · UX + Tópicos Especiais · UNICV – Engenharia de Software  
-**Entrega 3** | Outubro de 2026
+Trabalho Multidisciplinar · UX + Tópicos Especiais · UNICV – Engenharia de Software
+Implementação da **Entrega 2 – Especificação técnica da solução** | Outubro de 2026
 
 | Integrante | RA | Responsabilidade principal |
 |---|---|---|
@@ -13,104 +13,122 @@ Trabalho Multidisciplinar · UX + Tópicos Especiais · UNICV – Engenharia de 
 
 ---
 
-## Tecnologias
+## Tecnologias (spec §1.7)
 
 | Parte | Tecnologia |
 |---|---|
-| API | .NET 10 · ASP.NET Core Web API |
-| Banco | PostgreSQL 17 · Entity Framework Core · Npgsql |
-| Autenticação | JWT Bearer · BCrypt · Rate Limiter |
-| Documentação | Swashbuckle / OpenAPI (`/swagger`) |
+| API | .NET 10 (LTS) · ASP.NET Core Web API |
+| Dados | Entity Framework Core 10 + Npgsql · PostgreSQL 17 |
+| Validação | FluentValidation |
+| Segurança | JWT Bearer (HS256) · BCrypt (custo 12) · Rate Limiter do ASP.NET Core |
+| Documentação | Swagger / OpenAPI (`/swagger`) |
 | E-mail | MailKit (SMTP) |
-| Testes da API | xUnit · WebApplicationFactory · Testcontainers |
-| Frontend | React 19 · TypeScript · Vite |
-| Front: dados | axios · TanStack Query · React Hook Form · Zod |
+| Testes da API | xUnit · WebApplicationFactory · Testcontainers (PostgreSQL) |
+| Frontend | React 19 · TypeScript · Vite · React Router |
+| Front: dados e formulários | axios · TanStack Query · React Hook Form · Zod |
 | Testes do front | Vitest · Testing Library |
 
-## Estrutura do repositório
+## Estrutura (spec §1.3)
 
 ```
 em-dia/
-├── api/                    # Solução .NET (EmDia.sln)
+├── api/                          Solução .NET (EmDia.sln)
 │   ├── src/
-│   │   ├── EmDia.Api/          # Controllers, Middlewares, Program.cs
-│   │   ├── EmDia.Application/  # DTOs, Services, Validators, Interfaces
-│   │   ├── EmDia.Domain/       # Entidades, Regras de negócio, Enums, Exceções
-│   │   └── EmDia.Infrastructure/ # EF Core, Repositories, Email, Worker
+│   │   ├── EmDia.Api/            Controllers, Middlewares (ProblemDetails), Extensions (JWT, CORS, rate limit, Swagger)
+│   │   ├── EmDia.Application/    DTOs, Services, Validators (FluentValidation), Interfaces
+│   │   ├── EmDia.Domain/         Entities, Enums, Exceptions, regras RN01–RN15
+│   │   └── EmDia.Infrastructure/ Data (DbContext, Configurations, Migrations, Seed), Repositories, Security, Email, Jobs
 │   └── tests/
-│       ├── EmDia.Domain.Tests/          # Testes unitários (U01–U15)
-│       └── EmDia.Api.IntegrationTests/  # Testes de integração (CT01–CT51)
-├── web/                    # Frontend React + TypeScript (Vite)
-├── docs/                   # Documentação complementar
-├── docker-compose.yml      # PostgreSQL local
-├── .env.example            # Variáveis de ambiente necessárias
-└── .gitignore
+│       ├── EmDia.Domain.Tests/          Testes de unidade (U01–U15 + complementares)
+│       └── EmDia.Api.IntegrationTests/  Testes de integração (CT01–CT46)
+├── web/src/
+│   ├── api/          client.ts (axios + interceptors), endpoints.ts, types.ts
+│   ├── features/     auth, checkup, radar, itens, veiculos, historico, perfil
+│   ├── components/   Button, Field, StatusBadge, Dialog, BottomNav (AppLayout)…
+│   ├── routes/       AppRoutes, PrivateRoute, PublicRoute, CheckupGate
+│   ├── styles/       tokens.css, app.css
+│   └── test/         CT47–CT51 e validações (Vitest)
+├── docs/             desvios, testes, bugs
+└── docker-compose.yml  PostgreSQL local (porta 5433)
 ```
+
+> A pasta `mobile/` (React Native) é um extra que não faz parte da Entrega 2 e não foi atualizada para o contrato atual da API (ver `docs/desvios.md`, DV15).
 
 ## Como executar (desenvolvimento local)
 
 ### Pré-requisitos
-- [.NET 10 SDK](https://dot.net/v1/dotnet-install.ps1) (`dotnet --version` deve mostrar `10.x`)
-- [Node.js 20+](https://nodejs.org)
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+- [.NET 10 SDK](https://dot.net)
+- [Node.js 22+](https://nodejs.org)
+- Docker Desktop (para o banco local e os testes de integração) **ou** um PostgreSQL 17 na porta 5433
 
 ### 1. Banco de dados
-```bash
+```powershell
 docker compose up -d
 ```
 
-### 2. Segredos da API (nunca no código)
-```bash
+### 2. Segredos da API (nunca no código — spec §4.2 e §4.6)
+```powershell
 cd api
-dotnet user-secrets set "Jwt:Key" "sua-chave-aqui-minimo-256-bits" --project src/EmDia.Api
-dotnet user-secrets set "Email:Password" "sua-senha-smtp" --project src/EmDia.Api
+dotnet user-secrets set "Jwt:Key" "<uma chave aleatória com pelo menos 32 caracteres>" --project src/EmDia.Api
+# Opcional, para enviar e-mails de verdade (sem isso, os avisos só são registrados em log):
+dotnet user-secrets set "Email:Smtp:Host" "smtp.seuprovedor.com" --project src/EmDia.Api
+dotnet user-secrets set "Email:Smtp:Usuario" "usuario" --project src/EmDia.Api
+dotnet user-secrets set "Email:Smtp:Senha" "senha" --project src/EmDia.Api
 ```
 
-### 3. Migrations e seed
-```bash
+### 3. Migrations e dados iniciais
+```powershell
+dotnet tool restore
 dotnet ef database update --project src/EmDia.Infrastructure --startup-project src/EmDia.Api
 ```
 
 ### 4. API
 ```powershell
-# Em um terminal separado:
-cd api
-dotnet run --project src/EmDia.Api
+dotnet run --project src/EmDia.Api --launch-profile http
 # Swagger: http://localhost:5196/swagger
 ```
 
 ### 5. Frontend
 ```powershell
-# Em outro terminal:
 cd web
 npm install
 npm run dev
-# http://localhost:5173
+# http://localhost:5173 (as chamadas /api vão para a API pelo proxy do Vite)
 ```
 
 ### 6. Testes
 ```powershell
-# Unitários (Domain)
+# Unitários (Domain) — com cobertura
 cd api
-dotnet test tests/EmDia.Domain.Tests
+dotnet test tests/EmDia.Domain.Tests --collect:"XPlat Code Coverage"
 
-# Integração (requer Docker rodando)
+# Integração — usa Testcontainers (Docker). Sem Docker, aponte para um PostgreSQL de testes
+# (o banco informado é APAGADO e recriado):
+#   $env:EMDIA_TEST_DB = "Host=localhost;Port=5433;Database=emdia_test;Username=emdia;Password=emdia_dev"
 dotnet test tests/EmDia.Api.IntegrationTests
 
 # Frontend
-cd web
-npm test -- --run
+cd ../web
+npx vitest run
 ```
+
+## Rotas principais
+
+| API (prefixo `/api/v1`) | Tela |
+|---|---|
+| `POST /auth/registrar` · `/auth/login` · `/auth/refresh` · `/auth/logout` | `/cadastro`, `/entrar` |
+| `GET /usuarios/me` · `PUT /usuarios/me/preferencias` · `DELETE /usuarios/me` | `/perfil` |
+| `GET /categorias` · `/modelos` · `/checkup/perguntas` · `POST /checkup` | `/checkup`, `/checkup/dados`, `/checkup/resultado` |
+| `GET /radar?foco=` | `/`, `/?foco=1` |
+| `GET/POST /itens` · `GET/PUT/DELETE /itens/{id}` · `POST /itens/{id}/concluir` · `PATCH /itens/{id}/passos/{passoId}` | `/itens`, `/itens/novo`, `/itens/:id`, `/itens/:id/editar` |
+| `GET/POST /veiculos` · `PUT/DELETE /veiculos/{id}` · `PATCH /veiculos/{id}/km` | `/perfil/veiculos` |
+| `GET /historico` | `/historico` |
 
 ## Documentação complementar
 
 | Arquivo | Conteúdo |
 |---|---|
-| [`docs/desvios.md`](docs/desvios.md) | Decisões que se afastam da Entrega 2 |
-| [`docs/testes.md`](docs/testes.md) | Resultado de cada caso de teste (U01–U15, CT01–CT55) |
+| [`docs/desvios.md`](docs/desvios.md) | Decisões que se afastam ou complementam a Entrega 2 |
+| [`docs/testes.md`](docs/testes.md) | Resultado de cada caso de teste (U01–U15, CT01–CT51) e cobertura |
 | [`docs/bugs.md`](docs/bugs.md) | Bugs encontrados, causas e correções |
-| `api/src/EmDia.Api` → `/swagger` | Documentação interativa da API |
-
----
-
-*Especificação completa: `docs/Entrega2.pdf` e `docs/Entrega1.pdf`.*
+| `/swagger` | Documentação interativa da API |

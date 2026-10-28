@@ -4,107 +4,70 @@ using EmDia.Domain.Enums;
 namespace EmDia.Domain.Services;
 
 /// <summary>
-/// Lógica de domínio do Radar que opera sobre coleções de itens.
-/// RN03 (anel), RN04 (modo foco), RN11 (resultado do check-up).
+/// Regras do Radar que operam sobre coleções de itens:
+/// ordenação por urgência, RN04 (modo foco) e RN11 (resultado do check-up).
 /// </summary>
 public static class RadarDomain
 {
-    // ── RN04 — Modo Foco ──────────────────────────────────────────────────────
+    public const int ItensModoFoco = 3;
 
     /// <summary>
-    /// RN04: retorna os 3 itens mais urgentes.
-    /// Vencidos primeiro (mais atrasados antes), depois por menor prazo restante.
-    /// </summary>
-    public static IEnumerable<Item> AplicarModoFoco(
-        IEnumerable<Item> itens,
-        DateOnly hoje,
-        Func<Item, int?> obterKmAtualVeiculo)
-    {
-        return itens
-            .Select(i => new
-            {
-                Item = i,
-                Status = i.CalcularStatus(hoje, obterKmAtualVeiculo(i)),
-                Dias = i.DiasRestantes(hoje)
-            })
-            .OrderBy(x => x.Status == StatusItem.Vencido ? 0 : 1)
-            .ThenBy(x => x.Dias)
-            .Take(3)
-            .Select(x => x.Item);
-    }
-
-    /// <summary>
-    /// Ordena itens do Radar: mais urgente primeiro.
-    /// Vencidos → Atenção → Em Dia; dentro de cada grupo, menor prazo primeiro.
+    /// Ordena do mais urgente para o menos urgente: vencidos primeiro (os mais atrasados antes),
+    /// depois pelo menor prazo restante.
     /// </summary>
     public static IEnumerable<Item> OrdenarPorUrgencia(
-        IEnumerable<Item> itens,
-        DateOnly hoje,
-        Func<Item, int?> obterKmAtualVeiculo)
+        IEnumerable<Item> itens, DateOnly hoje, Func<Item, Veiculo?> veiculoDo)
     {
         return itens
             .Select(i => new
             {
                 Item = i,
-                Status = i.CalcularStatus(hoje, obterKmAtualVeiculo(i)),
-                Dias = i.DiasRestantes(hoje)
+                Vencido = i.CalcularStatus(hoje, veiculoDo(i)) == StatusItem.Vencido,
+                Dias = i.DiasRestantes(hoje, veiculoDo(i)) ?? int.MaxValue
             })
-            .OrderBy(x => x.Status switch
-            {
-                StatusItem.Vencido => 0,
-                StatusItem.Atencao => 1,
-                StatusItem.EmDia => 2,
-                _ => 3
-            })
+            .OrderBy(x => x.Vencido ? 0 : 1)
             .ThenBy(x => x.Dias)
             .Select(x => x.Item);
     }
 
-    // ── RN11 — Resultado do check-up ──────────────────────────────────────────
+    /// <summary>RN04: os 3 itens mais urgentes.</summary>
+    public static IEnumerable<Item> AplicarModoFoco(
+        IEnumerable<Item> itens, DateOnly hoje, Func<Item, Veiculo?> veiculoDo) =>
+        OrdenarPorUrgencia(itens, hoje, veiculoDo).Take(ItensModoFoco);
 
     /// <summary>
     /// RN11: conta itens por status e por categoria (ex.: "4 de 6 áreas em dia").
+    /// A situação de uma área é o pior status dos itens dela; área sem itens conta como em dia.
     /// </summary>
     public static ResultadoCheckup GerarResultado(
-        IEnumerable<Item> itens,
-        DateOnly hoje,
-        Func<Item, int?> obterKmAtualVeiculo)
+        IEnumerable<Item> itens, IEnumerable<short> categorias, DateOnly hoje, Func<Item, Veiculo?> veiculoDo)
     {
-        var lista = itens.ToList();
-        int vencidos = 0, atencao = 0, emDia = 0;
+        var ativos = itens.Where(i => !i.Encerrado)
+            .Select(i => (Item: i, Status: i.CalcularStatus(hoje, veiculoDo(i))))
+            .ToList();
 
-        foreach (var item in lista)
-        {
-            var status = item.CalcularStatus(hoje, obterKmAtualVeiculo(item));
-            switch (status)
+        var areas = categorias
+            .Select(c =>
             {
-                case StatusItem.Vencido: vencidos++; break;
-                case StatusItem.Atencao: atencao++; break;
-                default: emDia++; break;
-            }
-        }
-
-        var porCategoria = lista
-            .GroupBy(i => i.CategoriaId)
-            .Select(g =>
-            {
-                // Status da área = pior status dos itens dela
-                var statuses = g.Select(i => i.CalcularStatus(hoje, obterKmAtualVeiculo(i)));
+                var statuses = ativos.Where(x => x.Item.CategoriaId == c).Select(x => x.Status).ToList();
                 var pior = statuses.Contains(StatusItem.Vencido) ? StatusItem.Vencido
                          : statuses.Contains(StatusItem.Atencao) ? StatusItem.Atencao
                          : StatusItem.EmDia;
-                return new StatusPorCategoria(g.Key, pior);
+                return new StatusPorCategoria(c, pior, statuses.Count);
             })
             .ToList();
 
-        return new ResultadoCheckup(vencidos, atencao, emDia, porCategoria);
+        return new ResultadoCheckup(
+            ativos.Count(x => x.Status == StatusItem.Vencido),
+            ativos.Count(x => x.Status == StatusItem.Atencao),
+            ativos.Count(x => x.Status == StatusItem.EmDia),
+            areas);
     }
 }
 
-public record ResultadoCheckup(
-    int Vencidos,
-    int Atencao,
-    int EmDia,
-    IReadOnlyList<StatusPorCategoria> Areas);
+public record ResultadoCheckup(int Vencidos, int Atencao, int EmDia, IReadOnlyList<StatusPorCategoria> Areas)
+{
+    public int AreasEmDia => Areas.Count(a => a.Status == StatusItem.EmDia);
+}
 
-public record StatusPorCategoria(short CategoriaId, StatusItem Status);
+public record StatusPorCategoria(short CategoriaId, StatusItem Status, int QuantidadeItens);

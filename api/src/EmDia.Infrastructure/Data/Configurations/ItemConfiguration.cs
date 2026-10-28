@@ -65,7 +65,7 @@ public class ItemConfiguration : IEntityTypeConfiguration<Item>
          .OnDelete(DeleteBehavior.Cascade);
 
         b.HasMany(i => i.Historicos)
-         .WithOne()
+         .WithOne(h => h.Item)
          .HasForeignKey(h => h.ItemId)
          .OnDelete(DeleteBehavior.Cascade);
 

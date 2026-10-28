@@ -1,58 +1,58 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
-import { CheckupView } from '../features/checkup/CheckupView.tsx';
-import * as services from '../api/services.ts';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { Route, Routes } from 'react-router-dom';
+import { describe, expect, it, vi } from 'vitest';
+import { Providers } from './utils.tsx';
 
-// Mock do hook useAuth
-vi.mock('../features/auth/AuthContext.tsx', () => ({
-  useAuth: () => ({
-    user: { id: 'user-1', nome: 'Teste', precisaCheckup: true },
-    refreshUser: vi.fn(),
-  }),
+vi.mock('../api/endpoints.ts', () => ({
+  catalogoApi: {
+    perguntas: async () => [
+      { codigo: 'TEM_CARRO', texto: 'Você tem carro ou moto?', ajuda: '', categoriaId: 1, modelos: [] },
+      { codigo: 'TEM_CNH', texto: 'Você tem CNH?', ajuda: '', categoriaId: 2, modelos: [] },
+      { codigo: 'TEM_PET', texto: 'Você tem pet?', ajuda: '', categoriaId: 4, modelos: [] },
+    ],
+  },
 }));
 
-/**
- * CT47 — F1: Fluxo de Check-up inicial interativo
- */
-describe('CT47 — Fluxo F1: Check-up Inicial', () => {
-  it('permite selecionar respostas e finalizar gerando itens', async () => {
-    const executarSpy = vi
-      .spyOn(services.checkupApi, 'executar')
-      .mockResolvedValueOnce({
-        id: 'chk-1',
-        realizadoEm: new Date().toISOString(),
-        itensCriados: 2,
-        respostas: { TEM_PET: true, COMPROU_ELETRONICO: true },
-      });
+const { CheckupProvider } = await import('../features/checkup/CheckupContext.tsx');
+const { PerguntaPage } = await import('../features/checkup/PerguntaPage.tsx');
 
+describe('Check-up (T03)', () => {
+  it('CT51 · navegar só com Tab e Enter → todas as perguntas respondíveis; foco visível', async () => {
+    const user = userEvent.setup();
     render(
-      <BrowserRouter>
-        <CheckupView />
-      </BrowserRouter>
+      <Providers rota="/checkup">
+        <CheckupProvider>
+          <Routes>
+            <Route path="/checkup" element={<PerguntaPage />} />
+            <Route path="/checkup/dados" element={<p>Completar dados</p>} />
+          </Routes>
+        </CheckupProvider>
+      </Providers>,
     );
 
-    expect(screen.getByText('Configuração Rápida em 1 Minuto')).toBeInTheDocument();
-    expect(screen.getByText('Você tem animal de estimação?')).toBeInTheDocument();
+    // Pergunta 1: o foco começa no título; Tab leva ao "Sim"
+    expect(await screen.findByRole('heading', { name: 'Você tem carro ou moto?' })).toHaveFocus();
+    expect(screen.getByText('Pergunta 1 de 3')).toBeInTheDocument();
+    await user.tab();
+    expect(screen.getByRole('button', { name: 'Sim' })).toHaveFocus();
+    await user.keyboard('{Enter}');
 
-    // Clica no "Sim" da primeira pergunta (TEM_PET)
-    const botoesSim = screen.getAllByRole('button', { name: 'Sim' });
-    fireEvent.click(botoesSim[0]);
+    // Pergunta 2: responde "Não" com Tab, Tab, Enter
+    expect(await screen.findByRole('heading', { name: 'Você tem CNH?' })).toHaveFocus();
+    await user.tab();
+    await user.tab();
+    expect(screen.getByRole('button', { name: 'Não' })).toHaveFocus();
+    await user.keyboard('{Enter}');
 
-    // Submete o check-up
-    const btnFinalizar = screen.getByRole('button', {
-      name: 'Finalizar e Gerar Radar',
-    });
-    fireEvent.click(btnFinalizar);
+    // Pergunta 3: pula
+    expect(await screen.findByRole('heading', { name: 'Você tem pet?' })).toHaveFocus();
+    await user.tab();
+    await user.tab();
+    await user.tab();
+    expect(screen.getByRole('button', { name: 'Pular esta pergunta' })).toHaveFocus();
+    await user.keyboard('{Enter}');
 
-    await waitFor(() => {
-      expect(executarSpy).toHaveBeenCalledTimes(1);
-    });
-
-    // Deve exibir tela de sucesso
-    await waitFor(() => {
-      expect(screen.getByText('Check-up Concluído!')).toBeInTheDocument();
-      expect(screen.getByText(/2 item\(ns\) automático\(s\)/)).toBeInTheDocument();
-    });
+    expect(await screen.findByText('Completar dados')).toBeInTheDocument();
   });
 });

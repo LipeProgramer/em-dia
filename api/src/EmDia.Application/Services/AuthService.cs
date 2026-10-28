@@ -1,177 +1,121 @@
-using System.Security.Cryptography;
-using System.Text;
 using EmDia.Application.DTOs.Auth;
 using EmDia.Application.Interfaces;
 using EmDia.Application.Interfaces.Repositories;
 using EmDia.Domain.Entities;
 using EmDia.Domain.Exceptions;
+using FluentValidation;
+using Microsoft.Extensions.Options;
 
 namespace EmDia.Application.Services;
 
-/// <summary>
-/// Orquestra autenticação: registro, login, refresh, logout, exclusão de conta.
-/// Toda regra de negócio de acesso fica aqui (não nos controllers).
-/// </summary>
-public class AuthService
+/// <summary>Cadastro, login, renovação e saída (E01–E04 · spec §4).</summary>
+public class AuthService(
+    IUsuarioRepository usuarios,
+    IRefreshTokenRepository refreshTokens,
+    IUnitOfWork uow,
+    IPasswordHasher hasher,
+    ITokenService tokens,
+    IRelogio relogio,
+    IOptions<SegurancaOptions> seguranca,
+    IOptions<JwtOptions> jwt,
+    IValidator<RegistrarRequest> validadorRegistro,
+    IValidator<LoginRequest> validadorLogin)
 {
-    // Constantes de segurança (spec §4.3)
-    private const int MaxFalhasLogin = 5;
-    private const int BloqueioMinutos = 15;
-    private const int DiasRefreshToken = 7;
+    /// <summary>Mensagem genérica: não diz se o e-mail existe nem se a conta está bloqueada (spec §4.5).</summary>
+    public const string MensagemLoginInvalido = "E-mail ou senha inválidos.";
 
-    private readonly IUsuarioRepository _usuarios;
-    private readonly IRefreshTokenRepository _refreshTokens;
-    private readonly IPasswordHasher _hasher;
-    private readonly ITokenService _tokenService;
-    private readonly IRelogio _relogio;
-
-    public AuthService(
-        IUsuarioRepository usuarios,
-        IRefreshTokenRepository refreshTokens,
-        IPasswordHasher hasher,
-        ITokenService tokenService,
-        IRelogio relogio)
+    /// <summary>E01: cria a conta e as preferências padrão de aviso.</summary>
+    public async Task<RegistrarResponse> RegistrarAsync(RegistrarRequest req, CancellationToken ct)
     {
-        _usuarios = usuarios;
-        _refreshTokens = refreshTokens;
-        _hasher = hasher;
-        _tokenService = tokenService;
-        _relogio = relogio;
+        await validadorRegistro.ValidateAndThrowAsync(req, ct);
+
+        if (await usuarios.EmailExisteAsync(Usuario.NormalizarEmail(req.Email), ct))
+            throw new ConflictException(CodigosErro.EmailDuplicado, "Já existe uma conta com este e-mail.");
+
+        var usuario = new Usuario(req.Nome, req.Email, hasher.Hash(req.Senha), relogio.Agora);
+        await usuarios.AdicionarAsync(usuario, ct);
+        await uow.SalvarAsync(ct);
+
+        return new RegistrarResponse(usuario.Id, usuario.Nome, usuario.Email);
     }
 
-    // ── E01: Registrar ───────────────────────────────────────────────────────
-    public async Task<(LoginResponse Resposta, RefreshToken RefreshToken)> RegistrarAsync(
-        RegistrarRequest req, CancellationToken ct = default)
+    /// <summary>E02: autentica; 5 falhas seguidas bloqueiam a conta por 15 minutos.</summary>
+    public async Task<SessaoEmitida<LoginResponse>> LoginAsync(LoginRequest req, CancellationToken ct)
     {
-        var existe = await _usuarios.ObterPorEmailAsync(req.Email, ct);
-        if (existe is not null)
-            throw new ConflictException("EMAIL_DUPLICADO", "Já existe uma conta com este e-mail.");
+        await validadorLogin.ValidateAndThrowAsync(req, ct);
+        var agora = relogio.Agora;
 
-        var hash = _hasher.Hash(req.Senha);
-        var usuario = new Usuario(req.Nome, req.Email, hash, _relogio.Agora);
+        var usuario = await usuarios.ObterPorEmailAsync(Usuario.NormalizarEmail(req.Email), ct);
+        if (usuario is null || usuario.EstaBloqueado(agora))
+            throw new UnauthorizedException("CREDENCIAIS_INVALIDAS", MensagemLoginInvalido);
 
-        await _usuarios.AdicionarAsync(usuario, ct);
-        await _usuarios.SalvarAsync(ct);
-
-        var accessToken = _tokenService.GerarAccessToken(usuario);
-        var refreshToken = _tokenService.GerarRefreshToken(usuario.Id, _relogio.Agora);
-
-        await _refreshTokens.AdicionarAsync(refreshToken, ct);
-        await _refreshTokens.SalvarAsync(ct);
-
-        var resposta = new LoginResponse(usuario.Id, usuario.Nome, usuario.Email, accessToken, usuario.PrecisaCheckup);
-        return (resposta, refreshToken);
-    }
-
-    // ── E02: Login ───────────────────────────────────────────────────────────
-    public async Task<(LoginResponse Resposta, RefreshToken RefreshToken)> LoginAsync(
-        LoginRequest req, CancellationToken ct = default)
-    {
-        var usuario = await _usuarios.ObterPorEmailAsync(req.Email, ct);
-
-        // Sempre retornar 401 genérico — não revelar se e-mail existe ou não
-        if (usuario is null)
-            throw new UnauthorizedException("CREDENCIAIS_INVALIDAS", "E-mail ou senha incorretos.");
-
-        if (usuario.EstaBloqueado(_relogio.Agora))
-            throw new UnauthorizedException("CONTA_BLOQUEADA",
-                $"Conta bloqueada por excesso de tentativas. Tente novamente mais tarde.");
-
-        if (!_hasher.Verificar(req.Senha, usuario.SenhaHash))
+        if (!hasher.Verificar(req.Senha, usuario.SenhaHash))
         {
-            usuario.RegistrarFalhaLogin(_relogio.Agora, MaxFalhasLogin, BloqueioMinutos);
-            await _usuarios.SalvarAsync(ct);
-            throw new UnauthorizedException("CREDENCIAIS_INVALIDAS", "E-mail ou senha incorretos.");
+            usuario.RegistrarFalhaLogin(agora, seguranca.Value.MaxFalhasLogin, seguranca.Value.BloqueioMinutos);
+            await uow.SalvarAsync(ct);
+            throw new UnauthorizedException("CREDENCIAIS_INVALIDAS", MensagemLoginInvalido);
         }
 
         usuario.RegistrarLoginComSucesso();
-        await _usuarios.SalvarAsync(ct);
+        var (accessToken, expiraEm) = tokens.GerarAccessToken(usuario);
+        var (refresh, refreshExpira) = await EmitirRefreshAsync(usuario.Id, ct);
+        await uow.SalvarAsync(ct);
 
-        var accessToken = _tokenService.GerarAccessToken(usuario);
-        var refreshToken = _tokenService.GerarRefreshToken(usuario.Id, _relogio.Agora);
-
-        await _refreshTokens.AdicionarAsync(refreshToken, ct);
-        await _refreshTokens.SalvarAsync(ct);
-
-        var resposta = new LoginResponse(usuario.Id, usuario.Nome, usuario.Email, accessToken, usuario.PrecisaCheckup);
-        return (resposta, refreshToken);
+        var resposta = new LoginResponse(accessToken, expiraEm,
+            new UsuarioLogado(usuario.Id, usuario.Nome, usuario.PrecisaCheckup));
+        return new SessaoEmitida<LoginResponse>(resposta, refresh, refreshExpira);
     }
 
-    // ── E03: Refresh ─────────────────────────────────────────────────────────
-    public async Task<(RefreshResponse Resposta, RefreshToken NovoRefreshToken)> RefreshAsync(
-        string tokenCru, CancellationToken ct = default)
+    /// <summary>
+    /// E03: rotação do refresh token. Reuso de um token já revogado revoga todos os tokens do usuário (spec §4.3).
+    /// </summary>
+    public async Task<SessaoEmitida<RefreshResponse>> RefreshAsync(string? valor, CancellationToken ct)
     {
-        var hash = ComputarSHA256(tokenCru);
-        var rt = await _refreshTokens.ObterPorHashAsync(hash, ct);
+        var agora = relogio.Agora;
+        if (string.IsNullOrWhiteSpace(valor))
+            throw new UnauthorizedException("REFRESH_INVALIDO", "Sua sessão expirou. Entre de novo.");
 
-        if (rt is null || !rt.EstaAtivo)
-            throw new UnauthorizedException("REFRESH_INVALIDO", "Token de renovação inválido ou expirado.");
+        var atual = await refreshTokens.ObterPorHashAsync(tokens.HashRefreshToken(valor), ct)
+            ?? throw new UnauthorizedException("REFRESH_INVALIDO", "Sua sessão expirou. Entre de novo.");
 
-        var usuario = await _usuarios.ObterPorIdAsync(rt.UsuarioId, ct);
-        if (usuario is null)
-            throw new UnauthorizedException("REFRESH_INVALIDO", "Token de renovação inválido.");
-
-        // Revogar token antigo
-        rt.Revogar(_relogio.Agora);
-        await _refreshTokens.SalvarAsync(ct);
-
-        // Emitir novos tokens (rotação)
-        var novoAccessToken = _tokenService.GerarAccessToken(usuario);
-        var novoRefreshToken = _tokenService.GerarRefreshToken(usuario.Id, _relogio.Agora);
-
-        await _refreshTokens.AdicionarAsync(novoRefreshToken, ct);
-        await _refreshTokens.SalvarAsync(ct);
-
-        return (new RefreshResponse(novoAccessToken), novoRefreshToken);
-    }
-
-    // ── E04: Logout ──────────────────────────────────────────────────────────
-    public async Task LogoutAsync(string tokenCru, CancellationToken ct = default)
-    {
-        var hash = ComputarSHA256(tokenCru);
-        var rt = await _refreshTokens.ObterPorHashAsync(hash, ct);
-
-        if (rt is not null && rt.EstaAtivo)
+        if (atual.Revogado)
         {
-            rt.Revogar(_relogio.Agora);
-            await _refreshTokens.SalvarAsync(ct);
+            await refreshTokens.RevogarTodosDoUsuarioAsync(atual.UsuarioId, agora, ct);
+            await uow.SalvarAsync(ct);
+            throw new UnauthorizedException("REFRESH_REUTILIZADO", "Sua sessão expirou. Entre de novo.");
         }
-        // Se o token não existe ou já foi revogado, retornar 204 silenciosamente
+
+        if (!atual.EstaAtivo(agora))
+            throw new UnauthorizedException("REFRESH_INVALIDO", "Sua sessão expirou. Entre de novo.");
+
+        var usuario = await usuarios.ObterPorIdAsync(atual.UsuarioId, ct)
+            ?? throw new UnauthorizedException("REFRESH_INVALIDO", "Sua sessão expirou. Entre de novo.");
+
+        atual.Revogar(agora);
+        var (accessToken, expiraEm) = tokens.GerarAccessToken(usuario);
+        var (refresh, refreshExpira) = await EmitirRefreshAsync(usuario.Id, ct);
+        await uow.SalvarAsync(ct);
+
+        return new SessaoEmitida<RefreshResponse>(new RefreshResponse(accessToken, expiraEm), refresh, refreshExpira);
     }
 
-    // ── E05: Obter perfil ────────────────────────────────────────────────────
-    public async Task<UsuarioResponse> ObterPerfilAsync(Guid usuarioId, CancellationToken ct = default)
+    /// <summary>E04: revoga o refresh token atual.</summary>
+    public async Task LogoutAsync(string? valor, CancellationToken ct)
     {
-        var usuario = await _usuarios.ObterPorIdAsync(usuarioId, ct)
-            ?? throw new NotFoundException("USUARIO_NAO_ENCONTRADO", "Usuário não encontrado.");
+        if (string.IsNullOrWhiteSpace(valor)) return;
 
-        return new UsuarioResponse(usuario.Id, usuario.Nome, usuario.Email, usuario.CriadoEm, usuario.PrecisaCheckup);
+        var atual = await refreshTokens.ObterPorHashAsync(tokens.HashRefreshToken(valor), ct);
+        if (atual is null) return;
+
+        atual.Revogar(relogio.Agora);
+        await uow.SalvarAsync(ct);
     }
 
-    // ── E06: Alterar nome ────────────────────────────────────────────────────
-    public async Task<UsuarioResponse> AlterarNomeAsync(
-        Guid usuarioId, AlterarNomeRequest req, CancellationToken ct = default)
+    private async Task<(string Valor, DateTimeOffset ExpiraEm)> EmitirRefreshAsync(Guid usuarioId, CancellationToken ct)
     {
-        var usuario = await _usuarios.ObterPorIdAsync(usuarioId, ct)
-            ?? throw new NotFoundException("USUARIO_NAO_ENCONTRADO", "Usuário não encontrado.");
-
-        usuario.AlterarNome(req.Nome);
-        await _usuarios.SalvarAsync(ct);
-
-        return new UsuarioResponse(usuario.Id, usuario.Nome, usuario.Email, usuario.CriadoEm, usuario.PrecisaCheckup);
-    }
-
-    // ── E07: Excluir conta ───────────────────────────────────────────────────
-    public async Task ExcluirContaAsync(Guid usuarioId, CancellationToken ct = default)
-    {
-        // Cascata no banco destrói tudo (RF18/LGPD)
-        await _usuarios.ExcluirAsync(usuarioId, ct);
-    }
-
-    // ── Auxiliar ─────────────────────────────────────────────────────────────
-    public static string ComputarSHA256(string valor)
-    {
-        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(valor));
-        return Convert.ToHexString(bytes).ToLowerInvariant();
+        var valor = tokens.GerarValorRefreshToken();
+        var rt = new RefreshToken(usuarioId, tokens.HashRefreshToken(valor), relogio.Agora, jwt.Value.RefreshTokenDays);
+        await refreshTokens.AdicionarAsync(rt, ct);
+        return (valor, rt.ExpiraEm);
     }
 }

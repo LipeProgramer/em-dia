@@ -39,6 +39,26 @@ public static class SeedData
     private static readonly Guid IdFiltroPurif     = new("a7000000-0000-0000-0000-000000000004");
     private static readonly Guid IdVacinaPet       = new("a7000000-0000-0000-0000-000000000005");
     private static readonly Guid IdGarantiaEletro  = new("a7000000-0000-0000-0000-000000000006");
+    private static readonly Guid IdLicenciamento   = new("a7000000-0000-0000-0000-000000000007");
+    private static readonly Guid IdPassaporte      = new("a7000000-0000-0000-0000-000000000008");
+    private static readonly Guid IdConsultaRotina  = new("a7000000-0000-0000-0000-000000000009");
+    private static readonly Guid IdDeclaracaoIr    = new("a7000000-0000-0000-0000-000000000010");
+
+    /// <summary>Modelos complementares aos exemplos da spec §2.7, para cobrir as 6 áreas e as 8 perguntas.</summary>
+    private static object Modelo(Guid id, short categoria, string nome, TipoVencimento tipo, int? dias,
+        short antecedencia, string codigo) => new
+    {
+        Id = id,
+        CategoriaId = categoria,
+        Nome = nome,
+        TipoVencimento = tipo,
+        IntervaloDias = dias,
+        IntervaloKm = (int?)null,
+        GarantiaFabricanteMeses = (short?)null,
+        AntecedenciaDias = antecedencia,
+        CodigoCheckup = codigo,
+        Ativo = true
+    };
 
     private static void SeedModelos(ModelBuilder b)
     {
@@ -126,7 +146,11 @@ public static class SeedData
                 AntecedenciaDias = (short)15,
                 CodigoCheckup = "COMPROU_ELETRONICO",
                 Ativo = true
-            }
+            },
+            Modelo(IdLicenciamento, 1, "Licenciamento", TipoVencimento.RecorrentePorTempo, 365, 30, "TEM_CARRO"),
+            Modelo(IdPassaporte, 2, "Passaporte", TipoVencimento.DataUnica, null, 90, "TEM_PASSAPORTE"),
+            Modelo(IdConsultaRotina, 4, "Consulta de rotina", TipoVencimento.RecorrentePorTempo, 365, 30, "CONSULTA_ROTINA"),
+            Modelo(IdDeclaracaoIr, 5, "Declaração do Imposto de Renda", TipoVencimento.RecorrentePorTempo, 365, 30, "DECLARA_IR")
         );
     }
 
@@ -151,7 +175,15 @@ public static class SeedData
             new { Id = new Guid("b1000000-0000-0000-0000-000000000010"), ModeloItemId = IdVacinaPet,      Ordem = (short)1, Descricao = "Agendar veterinário" },
             // Garantia de eletrônico
             new { Id = new Guid("b1000000-0000-0000-0000-000000000011"), ModeloItemId = IdGarantiaEletro, Ordem = (short)1, Descricao = "Testar o produto" },
-            new { Id = new Guid("b1000000-0000-0000-0000-000000000012"), ModeloItemId = IdGarantiaEletro, Ordem = (short)2, Descricao = "Separar a nota fiscal" }
+            new { Id = new Guid("b1000000-0000-0000-0000-000000000012"), ModeloItemId = IdGarantiaEletro, Ordem = (short)2, Descricao = "Separar a nota fiscal" },
+            // Modelos complementares
+            new { Id = new Guid("b1000000-0000-0000-0000-000000000013"), ModeloItemId = IdLicenciamento,  Ordem = (short)1, Descricao = "Pagar a taxa" },
+            new { Id = new Guid("b1000000-0000-0000-0000-000000000014"), ModeloItemId = IdLicenciamento,  Ordem = (short)2, Descricao = "Baixar o documento digital" },
+            new { Id = new Guid("b1000000-0000-0000-0000-000000000015"), ModeloItemId = IdPassaporte,     Ordem = (short)1, Descricao = "Agendar na Polícia Federal" },
+            new { Id = new Guid("b1000000-0000-0000-0000-000000000016"), ModeloItemId = IdPassaporte,     Ordem = (short)2, Descricao = "Pagar a taxa" },
+            new { Id = new Guid("b1000000-0000-0000-0000-000000000017"), ModeloItemId = IdConsultaRotina, Ordem = (short)1, Descricao = "Agendar a consulta" },
+            new { Id = new Guid("b1000000-0000-0000-0000-000000000018"), ModeloItemId = IdDeclaracaoIr,   Ordem = (short)1, Descricao = "Juntar os comprovantes" },
+            new { Id = new Guid("b1000000-0000-0000-0000-000000000019"), ModeloItemId = IdDeclaracaoIr,   Ordem = (short)2, Descricao = "Enviar a declaração" }
         );
     }
 }

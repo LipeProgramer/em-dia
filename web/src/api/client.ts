@@ -1,108 +1,87 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
-import type { ApiError } from './types.ts';
+import type { ProblemDetails } from './types.ts';
 
-// Token mantido em memória
-let currentAccessToken: string | null = null;
+// Cliente HTTP (spec §1.5 e §5.6): uma instância do axios com a URL base, que adiciona o token
+// de acesso em cada requisição. O token fica só em memória — nunca no localStorage (spec §4.3).
+
+let accessToken: string | null = null;
+let aoPerderSessao: (() => void) | null = null;
 
 export const setAccessToken = (token: string | null) => {
-  currentAccessToken = token;
+  accessToken = token;
 };
 
-export const getAccessToken = () => currentAccessToken;
+export const getAccessToken = () => accessToken;
+
+/** Chamado quando a renovação falha: a sessão é limpa e o usuário vai para o login. */
+export const onSessaoExpirada = (callback: (() => void) | null) => {
+  aoPerderSessao = callback;
+};
 
 export const api = axios.create({
   baseURL: '/api/v1',
-  withCredentials: true, // Garante envio e recepção de cookies HttpOnly (refresh_token)
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  withCredentials: true,
+  headers: { 'Content-Type': 'application/json' },
 });
 
-// Interceptor de requisição: injeta Bearer token
-api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  if (currentAccessToken && config.headers) {
-    config.headers.Authorization = `Bearer ${currentAccessToken}`;
-  }
+api.interceptors.request.use((config) => {
+  if (accessToken) config.headers.Authorization = `Bearer ${accessToken}`;
   return config;
 });
 
-// Flag para evitar múltiplos refreshes simultâneos
-let isRefreshing = false;
-let failedQueue: Array<{
-  resolve: (token: string) => void;
-  reject: (err: unknown) => void;
-}> = [];
+// Renovação compartilhada: várias requisições com 401 ao mesmo tempo esperam o mesmo refresh.
+let renovacao: Promise<string> | null = null;
 
-const processQueue = (error: unknown, token: string | null = null) => {
-  failedQueue.forEach((prom) => {
-    if (error) {
-      prom.reject(error);
-    } else if (token) {
-      prom.resolve(token);
-    }
-  });
-  failedQueue = [];
-};
+export async function renovarToken(): Promise<string> {
+  renovacao ??= axios
+    .post<{ accessToken: string }>('/api/v1/auth/refresh', null, { withCredentials: true })
+    .then(({ data }) => {
+      setAccessToken(data.accessToken);
+      return data.accessToken;
+    })
+    .finally(() => {
+      renovacao = null;
+    });
+  return renovacao;
+}
 
-// Interceptor de resposta: trata 401 e tenta refresh token
+const rotasDeAutenticacao = ['/auth/login', '/auth/registrar', '/auth/refresh'];
+
+// 401: tenta /auth/refresh uma única vez e repete a requisição; se falhar, leva ao login.
 api.interceptors.response.use(
-  (response) => response,
-  async (error: AxiosError<ApiError>) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & {
-      _retry?: boolean;
-    };
+  (resposta) => resposta,
+  async (erro: AxiosError) => {
+    const original = erro.config as (InternalAxiosRequestConfig & { _repetida?: boolean }) | undefined;
+    const ehAuth = rotasDeAutenticacao.some((r) => original?.url?.includes(r));
 
-    if (!originalRequest) {
-      return Promise.reject(error);
-    }
-
-    const isAuthRoute =
-      originalRequest.url?.includes('/auth/login') ||
-      originalRequest.url?.includes('/auth/registrar') ||
-      originalRequest.url?.includes('/auth/refresh');
-
-    // Se 401 e não for rota de auth e ainda não tentou retry
-    if (error.response?.status === 401 && !isAuthRoute && !originalRequest._retry) {
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        })
-          .then((token) => {
-            if (originalRequest.headers) {
-              originalRequest.headers.Authorization = `Bearer ${token}`;
-            }
-            return api(originalRequest);
-          })
-          .catch((err) => Promise.reject(err));
-      }
-
-      originalRequest._retry = true;
-      isRefreshing = true;
-
+    if (erro.response?.status === 401 && original && !original._repetida && !ehAuth) {
+      original._repetida = true;
       try {
-        const { data } = await axios.post<{ accessToken: string }>(
-          '/api/v1/auth/refresh',
-          {},
-          { withCredentials: true }
-        );
-
-        const newToken = data.accessToken;
-        setAccessToken(newToken);
-        processQueue(null, newToken);
-
-        if (originalRequest.headers) {
-          originalRequest.headers.Authorization = `Bearer ${newToken}`;
-        }
-        return api(originalRequest);
-      } catch (refreshError) {
-        processQueue(refreshError, null);
+        const novo = await renovarToken();
+        original.headers.Authorization = `Bearer ${novo}`;
+        return api(original);
+      } catch {
         setAccessToken(null);
-        return Promise.reject(refreshError);
-      } finally {
-        isRefreshing = false;
+        aoPerderSessao?.();
       }
     }
-
-    return Promise.reject(error);
-  }
+    return Promise.reject(erro);
+  },
 );
+
+/** Extrai o ProblemDetails de um erro da API. */
+export function problema(erro: unknown): ProblemDetails | null {
+  if (axios.isAxiosError(erro) && erro.response?.data && typeof erro.response.data === 'object') {
+    return { status: erro.response.status, ...(erro.response.data as ProblemDetails) };
+  }
+  return null;
+}
+
+/** Mensagem em linguagem simples para mostrar perto da ação que falhou (campo "detail"). */
+export function mensagemDeErro(erro: unknown): string {
+  const p = problema(erro);
+  if (p?.detail) return p.detail;
+  if (p?.status === 400) return 'Confira os campos destacados.';
+  if (axios.isAxiosError(erro) && !erro.response) return 'Sem conexão com o servidor. Tente de novo.';
+  return 'Algo deu errado. Tente de novo em instantes.';
+}

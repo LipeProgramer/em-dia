@@ -1,88 +1,68 @@
 using System.Security.Claims;
+using EmDia.Api.Extensions;
+using EmDia.Application.DTOs.Auth;
+using EmDia.Application.DTOs.Catalogo;
+using EmDia.Application.DTOs.Checkup;
+using EmDia.Application.DTOs.Historico;
 using EmDia.Application.DTOs.Itens;
+using EmDia.Application.DTOs.Usuarios;
+using EmDia.Application.DTOs.Veiculos;
 using EmDia.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace EmDia.Api.Controllers;
 
-/// <summary>
-/// E19: GET    /api/v1/itens
-/// E20: POST   /api/v1/itens
-/// E21: GET    /api/v1/itens/{id}
-/// E22: PUT    /api/v1/itens/{id}
-/// E23: DELETE /api/v1/itens/{id}
-/// E24: PATCH  /api/v1/itens/{id}/passos/{passoId}
-/// E25: POST   /api/v1/itens/{id}/concluir
-/// E26: GET    /api/v1/itens/{id}/historico
-/// </summary>
-[ApiController]
+/// <summary>E13–E19 · Itens.</summary>
 [Route("api/v1/itens")]
-[Authorize]
-public class ItensController : ControllerBase
+public class ItensController(ItemService itens) : ApiControllerBase
 {
-    private readonly ItemService _itens;
-    private readonly ConcluirService _concluir;
-
-    public ItensController(ItemService itens, ConcluirService concluir)
-    {
-        _itens    = itens;
-        _concluir = concluir;
-    }
-
-    private Guid UsuarioIdLogado =>
-        Guid.Parse(User.FindFirstValue("sub")
-            ?? throw new InvalidOperationException("Claim sub ausente."));
-
-    // ── E19: Listar ───────────────────────────────────────────────────────────
+    /// <summary>E13 · Listar itens (filtros opcionais: categoriaId, status).</summary>
     [HttpGet]
-    public async Task<IActionResult> Listar(
-        [FromQuery] short? categoriaId, CancellationToken ct)
-        => Ok(await _itens.ListarAsync(UsuarioIdLogado, categoriaId, ct));
+    [ProducesResponseType<IReadOnlyList<ItemResumoResponse>>(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public Task<IReadOnlyList<ItemResumoResponse>> Listar([FromQuery] short? categoriaId, [FromQuery] string? status,
+        CancellationToken ct) => itens.ListarAsync(UsuarioId, categoriaId, status, ct);
 
-    // ── E20: Criar ────────────────────────────────────────────────────────────
+    /// <summary>E14 · Detalhe com passos e histórico recente.</summary>
+    [HttpGet("{id:guid}")]
+    [ProducesResponseType<ItemDetalheResponse>(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status404NotFound)]
+    public Task<ItemDetalheResponse> Obter(Guid id, CancellationToken ct) => itens.ObterAsync(id, UsuarioId, ct);
+
+    /// <summary>E15 · Criar item (a partir de um modelo ou do zero).</summary>
     [HttpPost]
-    public async Task<IActionResult> Criar([FromBody] CriarItemRequest req, CancellationToken ct)
+    [ProducesResponseType<ItemDetalheResponse>(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest), ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Criar(SalvarItemRequest req, CancellationToken ct)
     {
-        var resp = await _itens.CriarAsync(UsuarioIdLogado, req, ct);
-        return Created($"/api/v1/itens/{resp.Id}", resp);
+        var item = await itens.CriarAsync(UsuarioId, req, ct);
+        return Created($"/api/v1/itens/{item.Id}", item);
     }
 
-    // ── E21: Obter ────────────────────────────────────────────────────────────
-    [HttpGet("{id:guid}")]
-    public async Task<IActionResult> Obter(Guid id, CancellationToken ct)
-        => Ok(await _itens.ObterAsync(id, UsuarioIdLogado, ct));
-
-    // ── E22: Editar ───────────────────────────────────────────────────────────
+    /// <summary>E16 · Editar item.</summary>
     [HttpPut("{id:guid}")]
-    public async Task<IActionResult> Editar(
-        Guid id, [FromBody] EditarItemRequest req, CancellationToken ct)
-        => Ok(await _itens.EditarAsync(id, UsuarioIdLogado, req, ct));
+    [ProducesResponseType<ItemDetalheResponse>(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public Task<ItemDetalheResponse> Editar(Guid id, SalvarItemRequest req, CancellationToken ct) =>
+        itens.EditarAsync(id, UsuarioId, req, ct);
 
-    // ── E23: Excluir ──────────────────────────────────────────────────────────
+    /// <summary>E17 · Excluir item.</summary>
     [HttpDelete("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent), ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Excluir(Guid id, CancellationToken ct)
     {
-        await _itens.ExcluirAsync(id, UsuarioIdLogado, ct);
+        await itens.ExcluirAsync(id, UsuarioId, ct);
         return NoContent();
     }
 
-    // ── E24: Marcar passo ─────────────────────────────────────────────────────
-    [HttpPatch("{id:guid}/passos/{passoId:guid}")]
-    public async Task<IActionResult> MarcarPasso(
-        Guid id, Guid passoId, [FromBody] MarcarPassoRequest req, CancellationToken ct)
-        => Ok(await _itens.MarcarPassoAsync(id, passoId, UsuarioIdLogado, req.Concluido, ct));
-
-    // ── E25: Concluir item ────────────────────────────────────────────────────
+    /// <summary>E18 · Concluir e renovar.</summary>
     [HttpPost("{id:guid}/concluir")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> Concluir(
-        Guid id, [FromBody] ConcluirItemRequest req, CancellationToken ct)
-        => Ok(await _concluir.ConcluirAsync(id, UsuarioIdLogado, req, ct));
+    [ProducesResponseType<ConcluirResponse>(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public Task<ConcluirResponse> Concluir(Guid id, ConcluirRequest req, CancellationToken ct) =>
+        itens.ConcluirAsync(id, UsuarioId, req, ct);
 
-    // ── E26: Histórico do item ────────────────────────────────────────────────
-    [HttpGet("{id:guid}/historico")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> Historico(Guid id, CancellationToken ct)
-        => Ok(await _concluir.ListarHistoricoAsync(id, UsuarioIdLogado, ct));
+    /// <summary>E19 · Marcar ou desmarcar um passo.</summary>
+    [HttpPatch("{id:guid}/passos/{passoId:guid}")]
+    [ProducesResponseType<MarcarPassoResponse>(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status404NotFound)]
+    public Task<MarcarPassoResponse> MarcarPasso(Guid id, Guid passoId, MarcarPassoRequest req, CancellationToken ct) =>
+        itens.MarcarPassoAsync(id, passoId, UsuarioId, req, ct);
 }

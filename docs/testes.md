@@ -1,192 +1,112 @@
-# Plano e Resultados de Testes — Em Dia
+# Resultados dos Testes — Em Dia
 
-> Documento gerado na Fase 2. Atualizado a cada fase.
-> **Data de referência nos testes:** 15/10/2026 (IRelogio)
+> Plano de testes da Entrega 2 (§6). **"Hoje" fixado em 15/10/2026** pela interface `IRelogio` nos testes de unidade e
+> de integração. Execução de 28/10/2026, na branch de revisão de conformidade.
 
----
+## Resumo (critérios de aceite §6.6)
 
-## Legenda
+| Nível | Projeto / ferramenta | Testes | Resultado |
+|---|---|---|---|
+| Unitário (regras do Domain) | `EmDia.Domain.Tests` · xUnit | 49 (U01–U15 + 34 complementares) | ✅ 49/49 |
+| Integração da API | `EmDia.Api.IntegrationTests` · xUnit + WebApplicationFactory + PostgreSQL | 50 (CT01–CT46 + 4 extras de E08–E10, E13, E22/E24, E25) | ✅ 50/50 |
+| Frontend | `web/src/test` · Vitest + Testing Library | 17 (CT47–CT51 + validações) | ✅ 17/17 |
+| Integração front–API | Roteiro manual (navegador) | Fluxos F1–F4 | ✅ 4/4 |
 
-| Status | Significado |
-|---|---|
-| ✅ PASSOU | Teste executado e aprovado |
-| ❌ FALHOU | Teste falhou — ver coluna Observações |
-| ⏳ PENDENTE | Ainda não implementado |
+- **Cobertura do `EmDia.Domain`:** 97,3% das linhas, 89,5% dos ramos (critério: ≥ 80%). Comando:
+  `dotnet test tests/EmDia.Domain.Tests --collect:"XPlat Code Coverage"`.
+- **CT08 e CT44:** todas as rotas privadas recusam acesso sem token, e nenhuma resposta expõe senha, hash ou refresh token.
+- Relatórios: `dotnet test --logger trx` (pasta `TestResults/`) e `npx vitest run --reporter=verbose`; o CI publica os `.trx`.
 
----
+## Testes de unidade (U01–U15) — `RegrasNegocioTests.cs`
 
-## Resumo Geral de Execução
+| ID | Regra | Resultado esperado | Status |
+|---|---|---|---|
+| U01 | RN01/RN02 | Recorrente 15/04/2026 + 180 dias vence em 12/10/2026 → Vencido | ✅ |
+| U02 | RN01 | Faltam 500 km ≈ 6 dias → vence em 21/10/2026 (km vem primeiro) → Atenção | ✅ |
+| U03 | RN01 | Tempo vem primeiro → 01/05/2027 → Em dia | ✅ |
+| U04 | RN01 | Garantia 10/01/2026 + 12 meses + 90 dias = 10/04/2027 | ✅ |
+| U05 | RN02 | CNH 20/11/2026, antecedência 45 → faltam 36 dias → Atenção | ✅ |
+| U06 | RN02 | Km 85.200 ≥ 85.000 com data futura → Vencido | ✅ |
+| U07 | RN03 | −3, 12, 60, 200 dias → Centro, Anel 1, Anel 2, Externo | ✅ |
+| U08 | RN04 | −10, −2, 5, 20, 100 → foco devolve −10, −2 e 5 | ✅ |
+| U09 | RN05 | Concluir recorrente em 15/10/2026 → próximo 13/04/2027; passos desmarcados | ✅ |
+| U10 | RN05 | Data única sem nova validade → Encerrado | ✅ |
+| U11 | RN06 | 1 passo pendente sem confirmação → `PASSOS_PENDENTES` | ✅ |
+| U12 | RN07 | Km de 84.500 para 84.000 → "A km não pode ser menor que 84.500." | ✅ |
+| U13 | RN08/RN09 | Atenção no dia D, 2 reavisos a cada 3 dias → D, D+3, D+6; não em D+9 | ✅ |
+| U14 | RN09 | Concluído após 1 reaviso → novo ciclo começa do aviso antecipado | ✅ |
+| U15 | RN10 | IPVA já ativo para o mesmo veículo → não duplica | ✅ |
 
-| Camada / Tipo | Total de Testes | Status |
+Complementares (`EntidadesTests.cs` e final de `RegrasNegocioTests.cs`): textos de prazo, campos por tipo (§2.5),
+passos (máx. 10, progresso), validações de conclusão, veículo, preferências, bloqueio de login, refresh token,
+check-up, aviso e exceções — todos ✅.
+
+## Casos de teste da API (CT01–CT46)
+
+| ID | Cenário | Esperado | Status |
+|---|---|---|---|
+| CT01 | Cadastro válido | 201; preferências criadas; senha como hash | ✅ |
+| CT02 | E-mail repetido (maiúsculas) | 409 | ✅ |
+| CT03 | Senha fraca | 400 com erro no campo senha | ✅ |
+| CT04 | Login válido | 200; accessToken; cookie HttpOnly | ✅ |
+| CT05 | Senha errada | 401 genérico | ✅ |
+| CT06 | 5 falhas e depois senha certa | 401 durante o bloqueio | ✅ |
+| CT07 | 6 logins em 1 minuto | 429 | ✅ |
+| CT08 | `/radar` sem token | 401 | ✅ |
+| CT09 | Token expirado | 401 | ✅ |
+| CT10 | Refresh válido | 200; novo token; antigo revogado | ✅ |
+| CT11 | Reuso de refresh | 401; todos os tokens revogados | ✅ |
+| CT12 | Logout | 204; refresh revogado; cookie apagado | ✅ |
+| CT13 | Check-up válido | 201; itens; resumo por status e área | ✅ |
+| CT14 | Item sem resposta "sim" | 400 | ✅ |
+| CT15 | Troca de óleo sem veículo | 422 | ✅ |
+| CT16 | dataBase no futuro | 400 no campo | ✅ |
+| CT17 | Check-up repetido | Não duplica itens | ✅ |
+| CT18 | Criar data única | 201; vencimento e status corretos | ✅ |
+| CT19 | Recorrente sem intervalo | 400 | ✅ |
+| CT20 | Veículo de outra pessoa | 404 | ✅ |
+| CT21 | Item alheio | 404 | ✅ |
+| CT22 | Editar intervalo 180 → 365 | 200; recalculado | ✅ |
+| CT23 | Editar item encerrado | 422 | ✅ |
+| CT24 | Excluir item | 204; passos e histórico removidos | ✅ |
+| CT25 | Concluir recorrente | 200; histórico; mensagem positiva | ✅ |
+| CT26 | Passos pendentes | 422 `PASSOS_PENDENTES` | ✅ |
+| CT27 | Passos pendentes confirmados | 200 | ✅ |
+| CT28 | Conclusão amanhã | 400 | ✅ |
+| CT29 | Marcar passo | 200; progresso | ✅ |
+| CT30 | Passo de outro item | 404 | ✅ |
+| CT31 | Radar com os 4 anéis | 200; resumo; ordem por urgência | ✅ |
+| CT32 | Modo foco | 3 itens (RN04) | ✅ |
+| CT33 | Usuário novo | Resumo zerado; lista vazia | ✅ |
+| CT34 | Km menor | 422 | ✅ |
+| CT35 | Km que ultrapassa a do item | 200; item vira Vencido | ✅ |
+| CT36 | Excluir veículo com itens | 409 | ✅ |
+| CT37 | Apelido repetido | 409 | ✅ |
+| CT38 | Aviso antecipado | 1 e-mail; aviso número 0 | ✅ |
+| CT39 | Rotina 2x no mesmo dia | 1 e-mail | ✅ |
+| CT40 | max_reavisos = 1 por 10 dias | Antecipado + 1 reaviso | ✅ |
+| CT41 | E-mail desativado | Nenhum e-mail | ✅ |
+| CT42 | Excluir conta | 204; tudo removido | ✅ |
+| CT43 | Excluir com senha errada | 422; nada removido | ✅ |
+| CT44 | Dados sensíveis | Nenhuma resposta com senha/hash/refresh | ✅ |
+| CT45 | Erro inesperado | 500 genérico, sem stack trace | ✅ |
+| CT46 | Outra origem (CORS) | Sem `Access-Control-Allow-Origin` | ✅ |
+
+## Frontend (CT47–CT51)
+
+| ID | Cenário | Status |
 |---|---|---|
-| **Testes Unitários de Domínio (`EmDia.Domain.Tests`)** | 15 | ✅ 15/15 PASSOU |
-| **Testes de Integração de API (`EmDia.Api.IntegrationTests`)** | 52 | ✅ 52/52 PASSOU |
-| **Testes de Frontend React (`web/src/test`)** | 9 | ✅ 9/9 PASSOU |
-| **Total Consolidado** | **76** | **✅ 76/76 PASSOU (100%)** |
+| CT47 | Senha sem número → erro abaixo do campo, foco no campo, API não chamada (`cadastro.test.tsx`) | ✅ |
+| CT48 | 422 `PASSOS_PENDENTES` → "Concluir mesmo assim?" → reenvia com confirmação (`concluir.test.tsx`) | ✅ |
+| CT49 | Token expira → refresh transparente; se falhar, volta ao login (`sessao.test.ts`) | ✅ |
+| CT50 | Vencido com cor + símbolo + texto no Radar e na lista (`radar.test.tsx`) | ✅ |
+| CT51 | Check-up só com Tab e Enter; foco na pergunta (`checkup.test.tsx`) | ✅ |
 
----
+## Fluxos ponta a ponta (API + front rodando juntos)
 
-## Testes Unitários — Domain (U01 a U15)
-
-Executados em: `api/tests/EmDia.Domain.Tests`  
-Fase: **1** | Branch: `feature/fase-1-domain` | Commit: `fa7e49b`
-
-| ID | Descrição | Status | Observações |
-|---|---|---|---|
-| U01 | Item vencido há 1 dia → StatusItem.Atrasado | ✅ PASSOU | |
-| U02 | Item vence hoje → StatusItem.Hoje | ✅ PASSOU | |
-| U03 | Item vence em 5 dias → StatusItem.Proximo | ✅ PASSOU | |
-| U04 | Item vence em 30 dias → StatusItem.EmDia | ✅ PASSOU | |
-| U05 | Item sem vencimento → StatusItem.EmDia | ✅ PASSOU | |
-| U06 | AnelRadar Vermelho para status Atrasado/Hoje | ✅ PASSOU | |
-| U07 | AnelRadar Amarelo para status Proximo | ✅ PASSOU | |
-| U08 | AnelRadar Verde para status EmDia | ✅ PASSOU | |
-| U09 | Modo Foco: top-3 itens mais urgentes | ✅ PASSOU | |
-| U10 | Modo Foco: exclui itens EmDia | ✅ PASSOU | |
-| U11 | Aviso antecipado D-30 → numero=1 | ✅ PASSOU | |
-| U12 | Reaviso D-7 → numero=2 | ✅ PASSOU | |
-| U13 | Reaviso D-0 (dia) → numero=3 | ✅ PASSOU | |
-| U14 | Reaviso D+1 (pós) → numero=4 | ✅ PASSOU | |
-| U15 | Resultado check-up: "bom estado" vs "atenção" | ✅ PASSOU | |
-
-**Resultado:** 15/15 ✅
-
----
-
-## Testes de Autenticação (CT01 a CT12, CT42 a CT44)
-
-Executados em: `api/tests/EmDia.Api.IntegrationTests/Auth`  
-Fase: **3** | Branch: `feature/fase-3-auth` | Commit: `4c32c0f`
-
-| ID | Descrição | Status | Observações |
-|---|---|---|---|
-| CT01 | Registrar usuário válido → 201 | ✅ PASSOU | Cria conta, token JWT e cookie seguro |
-| CT02 | Registrar email duplicado → 409 | ✅ PASSOU | Conflito em e-mail já cadastrado |
-| CT03 | Registrar email inválido → 400 | ✅ PASSOU | Validação FluentValidation |
-| CT04 | Login correto → 200 + JWT + cookie | ✅ PASSOU | BCrypt verificado com sucesso |
-| CT05 | Login senha errada → 401 | ✅ PASSOU | Credenciais inválidas |
-| CT06 | Login usuário inexistente → 401 | ✅ PASSOU | Retorno padrão seguro |
-| CT07 | Refresh token válido → novo par | ✅ PASSOU | Rotação de tokens |
-| CT08 | Refresh token expirado → 401 | ✅ PASSOU | Rejeição por expiração |
-| CT09 | Refresh token revogado (reuso) → revogar família + 401 | ✅ PASSOU | Proteção contra replay attacks |
-| CT10 | Logout → revogar refresh token | ✅ PASSOU | Revogação de sessão |
-| CT11 | 5 falhas de login → bloqueio 15 min | ✅ PASSOU | Proteção contra força bruta |
-| CT12 | Acesso sem token → 401 | ✅ PASSOU | Middleware de autenticação JWT |
-| CT42 | Acesso a recurso de outro usuário → 404 / Excluir conta | ✅ PASSOU | Isolamento multitenant / LGPD |
-| CT43 | Token expirado (15 min) → 401 | ✅ PASSOU | Validação de assinatura e lifetime |
-| CT44 | Rate limit auth: 10 req/min → 429 | ✅ PASSOU | FixedWindowLimiter na partição auth |
-
-**Resultado:** 15/15 ✅
-
----
-
-## Testes de Check-up (CT13 a CT17)
-
-Executados em: `api/tests/EmDia.Api.IntegrationTests/Checkup`  
-Fase: **5** | Branch: `feature/fase-5-radar-checkup` | Commit: `22cedf5`
-
-| ID | Descrição | Status | Observações |
-|---|---|---|---|
-| CT13 | Iniciar check-up → retorna primeira pergunta | ✅ PASSOU | Fluxo interativo onboarding |
-| CT14 | Responder passo → próxima pergunta | ✅ PASSOU | Máquina de estados do check-up |
-| CT15 | Concluir check-up → itens criados | ✅ PASSOU | Itens pré-configurados inseridos |
-| CT16 | Reiniciar check-up em andamento | ✅ PASSOU | Reset de respostas |
-| CT17 | Check-up sem modelo → erro adequado | ✅ PASSOU | Tratamento consistente de ausência de dados |
-
-**Resultado:** 5/5 ✅
-
----
-
-## Testes de Catálogo e Itens (CT18 a CT24, CT29-CT30, CT34-CT37)
-
-Executados em: `api/tests/EmDia.Api.IntegrationTests/Catalogo`, `Veiculos`, `Itens`  
-Fase: **4** | Branch: `feature/fase-4-catalogo` | Commit: `13028e1`
-
-| ID | Descrição | Status | Observações |
-|---|---|---|---|
-| CT18 | Listar categorias → 200 + lista | ✅ PASSOU | 6 categorias oficiais semeadas |
-| CT19 | Listar modelos → 200 + lista | ✅ PASSOU | Modelos de itens de referência |
-| CT20 | Criar veículo válido → 201 | ✅ PASSOU | Suporta carro, moto e outros |
-| CT21 | Criar veículo inválido (placa) → 400 | ✅ PASSOU | Validação regex de placa |
-| CT22 | Criar item manual → 201 | ✅ PASSOU | Tipos DataUnica, RecorrenteData, RecorrenteKm, Ambos |
-| CT23 | Criar item com modelo → passos gerados | ✅ PASSOU | Checklist RN06 herdada |
-| CT24 | Editar item → 200 | ✅ PASSOU | Atualização parcial ou total |
-| CT29 | Atualizar km → recalcula proximo_vencimento | ✅ PASSOU | RN07 odômetro progressivo |
-| CT30 | Atualizar km inválido → 400 | ✅ PASSOU | Bloqueio de km menor que o anterior |
-| CT34 | Listar itens → somente do usuário logado | ✅ PASSOU | Filtro por UsuarioId |
-| CT35 | Obter item → 200 com status calculado | ✅ PASSOU | Status recalculado dinamicamente |
-| CT36 | Obter item de outro usuário → 404 | ✅ PASSOU | Isolamento de tenants |
-| CT37 | Excluir item → 204 | ✅ PASSOU | Remoção lógica ou física segura |
-
-**Resultado:** 13/13 ✅
-
----
-
-## Testes de Radar, Conclusão e Preferências (CT25 a CT28, CT31-CT33, CT52-CT55)
-
-Executados em: `api/tests/EmDia.Api.IntegrationTests/Radar`, `Itens`, `Preferencias`  
-Fase: **5** | Branch: `feature/fase-5-radar-checkup` | Commit: `22cedf5`
-
-| ID | Descrição | Status | Observações |
-|---|---|---|---|
-| CT25 | Radar → itens agrupados por anel | ✅ PASSOU | 4 anéis: Atrasados, Hoje, Próximos, Em Dia |
-| CT26 | Radar modo foco → top-3 | ✅ PASSOU | Redução de sobrecarga cognitiva (TDAH) |
-| CT27 | Concluir item → registro em histórico | ✅ PASSOU | Histórico imutável de conclusões |
-| CT28 | Concluir com novaDataVencimento → data atualizada | ✅ PASSOU | Recálculo de próximo ciclo |
-| CT31 | Histórico → lista ordenada por data desc | ✅ PASSOU | Timeline reversa |
-| CT32 | Histórico vazio → lista vazia | ✅ PASSOU | 200 com array vazio |
-| CT33 | Histórico de outro usuário → 404 | ✅ PASSOU | Isolamento de tenants |
-| CT52 | Preferências sem auth → 401 | ✅ PASSOU | Proteção JWT |
-| CT53 | Obter preferências → 200 com defaults | ✅ PASSOU | Valores padrão: ReceberEmail=true, MaxReavisos=2 |
-| CT54 | Atualizar preferências → 200 | ✅ PASSOU | Persistência de alterações |
-| CT55 | Obter após atualizar → valores confirmados | ✅ PASSOU | Idempotência de leitura/escrita |
-
-**Resultado:** 11/11 ✅
-
----
-
-## Testes de Avisos (CT38 a CT41)
-
-Executados em: `api/tests/EmDia.Api.IntegrationTests/Avisos`  
-Fase: **7** | Branch: `feature/fase-7-avisos-worker` | Commit: `045534e`
-
-| ID | Descrição | Status | Observações |
-|---|---|---|---|
-| CT38 | BackgroundService dispara às 8h | ✅ PASSOU | Execução imediata via AvisosWorker/RotinaAvisosService sem erros |
-| CT39 | Aviso D-30 enviado por e-mail | ✅ PASSOU | E-mail disparado via IEmailService e registrado na tabela de Avisos |
-| CT40 | Sem duplicata no mesmo ciclo | ✅ PASSOU | Idempotência e regras RN08/RN09 bloqueiam envio duplicado no mesmo ciclo |
-| CT41 | Aviso com e-mail desabilitado → não envia | ✅ PASSOU | Respeita PreferenciasAviso.ReceberEmail = false |
-
-**Resultado:** 4/4 ✅
-
----
-
-## Testes de Segurança (CT44 a CT46)
-
-Executados em: `api/tests/EmDia.Api.IntegrationTests/Seguranca`  
-Fase: **8** | Branch: `feature/fase-8-seguranca` | Status: ✅ APROVADO
-
-| ID | Descrição | Status | Observações |
-|---|---|---|---|
-| CT44 | Rate limit global → 429 | ✅ PASSOU | Limitação com FixedWindowLimiter e resposta 429 Too Many Requests |
-| CT45 | SQL injection na busca → 400 ou sem execução | ✅ PASSOU | EF Core com queries parametrizadas protege tabelas contra ataques |
-| CT46 | XSS em campo de texto → serialização segura | ✅ PASSOU | Payloads de script e HTML armazenados seguramente e com Content-Type JSON estrito |
-
-**Resultado:** 3/3 ✅
-
----
-
-## Testes de Frontend (CT47 a CT51)
-
-Executados em: `web/src/test` (Vitest + Testing Library)  
-Fase: **6** | Branch: `feature/fase-6-frontend` | Commit: `8656aba`
-
-| ID | Descrição | Status | Observações |
-|---|---|---|---|
-| CT47 | F1: Cadastro e check-up ponta a ponta | ✅ PASSOU | Validação completa de formulário e wizard |
-| CT48 | F2: Concluir item no Radar | ✅ PASSOU | Validação de passos pendentes RN06 e modal |
-| CT49 | F3: Criar item manual | ✅ PASSOU | Formulário com tipos de vencimento e checklist |
-| CT50 | F4: Atualizar km | ✅ PASSOU | Validação de km não decrescente RN07 |
-| CT51 | Acessibilidade: status nunca só por cor | ✅ PASSOU | RNF02: ícone + cor + texto legível (touch targets >= 44px) |
-
-**Resultado:** 9/9 ✅
+| Fluxo | Roteiro | Status |
+|---|---|---|
+| F1 | Cadastro → 8 perguntas → completar dados (validação por campo) → resultado "4 de 6 áreas em dia" → Radar | ✅ |
+| F2 | Radar → detalhe da troca de óleo → marcar passo → concluir com 1 passo pendente → "Concluir mesmo assim" → comemoração e novo prazo (95.200 km ou 28/10/2027) | ✅ |
+| F3 | + Novo → Casa → Filtro do purificador → campos do tipo recorrente, passos copiados → detalhe | ✅ |
+| F4 | Perfil → Veículos → atualizar km (menor que a atual recusada; maior marca a troca de óleo como Vencido) | ✅ |

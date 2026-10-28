@@ -29,6 +29,12 @@ public class PreferenciasAviso
         bool modoFocoPadrao,
         DateTimeOffset agora)
     {
+        // Mesmas faixas dos CHECKs da tabela (spec §2.3)
+        if (maxReavisos is < 0 or > 5)
+            throw new Exceptions.CampoInvalidoException("maxReavisos", "Escolha entre 0 e 5 reavisos.");
+        if (intervaloReavisoDias is < 1 or > 7)
+            throw new Exceptions.CampoInvalidoException("intervaloReavisoDias", "Escolha entre 1 e 7 dias.");
+
         ReceberEmail = receberEmail;
         MaxReavisos = maxReavisos;
         IntervaloReavisoDias = intervaloReavisoDias;

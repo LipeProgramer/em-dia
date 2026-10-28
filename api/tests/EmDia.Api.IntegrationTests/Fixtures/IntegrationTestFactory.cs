@@ -4,7 +4,6 @@ using EmDia.Infrastructure.Services;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Testcontainers.PostgreSql;
@@ -12,65 +11,80 @@ using Testcontainers.PostgreSql;
 namespace EmDia.Api.IntegrationTests.Fixtures;
 
 /// <summary>
-/// WebApplicationFactory que usa Testcontainers para provisionar
-/// um PostgreSQL efêmero em cada execução dos testes.
+/// Sobe a API com um PostgreSQL descartável (spec §6.1):
+/// por padrão via Testcontainers (exige Docker); se a variável EMDIA_TEST_DB tiver uma connection string,
+/// usa esse banco (que é apagado e recriado a cada execução).
+/// "Hoje" é fixado em 15/10/2026 por <see cref="RelogioFixo"/> e o e-mail é falso (só registra as mensagens).
 /// </summary>
 public class IntegrationTestFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
-    private readonly PostgreSqlContainer _pg = new PostgreSqlBuilder()
-        .WithDatabase("emdia_test")
-        .WithUsername("emdia_test")
-        .WithPassword("emdia_test")
-        .Build();
+    public const string ChaveJwt = "chave-de-testes-de-integracao-emdia-2026-com-mais-de-256-bits";
 
-    public string ConnectionString => _pg.GetConnectionString();
+    private PostgreSqlContainer? _container;
+    private string _connectionString = string.Empty;
+
+    public RelogioFixo Relogio { get; } = new();
+    public EmailServiceFake Emails { get; } = new();
 
     public async Task InitializeAsync()
     {
-        await _pg.StartAsync();
+        var externo = Environment.GetEnvironmentVariable("EMDIA_TEST_DB");
+        if (!string.IsNullOrWhiteSpace(externo))
+        {
+            _connectionString = externo;
+        }
+        else
+        {
+            _container = new PostgreSqlBuilder("postgres:17").Build();
+            await _container.StartAsync();
+            _connectionString = _container.GetConnectionString();
+        }
 
-        // Aplicar migrations no banco de teste
         using var scope = Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<EmDiaDbContext>();
+        await db.Database.EnsureDeletedAsync();
         await db.Database.MigrateAsync();
     }
 
     public new async Task DisposeAsync()
     {
-        await _pg.StopAsync();
         await base.DisposeAsync();
+        if (_container is not null)
+            await _container.DisposeAsync();
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        // ConfigureAppConfiguration roda ANTES do Program.cs ler a configuração
-        builder.ConfigureAppConfiguration((ctx, config) =>
-        {
-            config.AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                ["Jwt:Chave"]                  = "chave-testes-integracao-32chars-emdia2026xx",
-                ["Jwt:Emissor"]                = "emdia-api",
-                ["Jwt:Audiencia"]              = "emdia-web",
-                ["Cors:Origens"]               = "http://localhost:5173",
-                ["ConnectionStrings:Default"]  = _pg.GetConnectionString()
-            });
-        });
-
         builder.UseEnvironment("Testing");
+        builder.UseSetting("ConnectionStrings:Default", _connectionString);
+        builder.UseSetting("Jwt:Key", ChaveJwt);
+        builder.UseSetting("Cors:Origens:0", "http://localhost:5173");
+        // O limite real (5/min) é testado à parte no CT07; aqui ele não pode atrapalhar os outros testes
+        builder.UseSetting("Security:LoginTentativasPorMinuto", "100000");
 
         builder.ConfigureServices(services =>
         {
-            // Substituir DbContext pelo Testcontainer
-            services.RemoveAll<DbContextOptions<EmDiaDbContext>>();
-            services.RemoveAll<EmDiaDbContext>();
-
-            services.AddDbContext<EmDiaDbContext>(opts =>
-                opts.UseNpgsql(_pg.GetConnectionString(),
-                    o => o.MigrationsAssembly("EmDia.Infrastructure")));
-
-            // E-mail fake nos testes
+            services.RemoveAll<IRelogio>();
+            services.AddSingleton<IRelogio>(Relogio);
             services.RemoveAll<IEmailService>();
-            services.AddSingleton<IEmailService, EmailServiceFake>();
+            services.AddSingleton<IEmailService>(Emails);
         });
     }
 }
+
+/// <summary>
+/// Relógio controlado: "hoje" fixo (15/10/2026 por padrão). O momento atual cai no mesmo dia (entre 12h e 14h24 UTC,
+/// avançando com o relógio real para manter a ordem dos registros).
+/// </summary>
+public class RelogioFixo : IRelogio
+{
+    public static readonly DateOnly HojePadrao = new(2026, 10, 15);
+
+    public DateOnly Hoje { get; set; } = HojePadrao;
+
+    public DateTimeOffset Agora =>
+        new DateTimeOffset(Hoje.ToDateTime(new TimeOnly(12, 0)), TimeSpan.Zero) + DateTime.UtcNow.TimeOfDay / 10;
+}
+
+[CollectionDefinition("Integration")]
+public class IntegrationCollection : ICollectionFixture<IntegrationTestFactory>;

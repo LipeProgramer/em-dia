@@ -1,9 +1,6 @@
 namespace EmDia.Domain.Entities;
 
-/// <summary>
-/// Token de renovação de sessão (spec §2.3, §4.3).
-/// Guarda apenas o hash SHA-256 do token — nunca o valor em texto claro.
-/// </summary>
+/// <summary>Token de renovação de sessão (spec §4.3). Guarda só o hash SHA-256 do valor.</summary>
 public class RefreshToken
 {
     public Guid Id { get; private set; }
@@ -13,9 +10,6 @@ public class RefreshToken
     public DateTimeOffset ExpiraEm { get; private set; }
     public DateTimeOffset? RevogadoEm { get; private set; }
 
-    public bool EstaAtivo => RevogadoEm is null && DateTimeOffset.UtcNow < ExpiraEm;
-
-    // EF Core
     protected RefreshToken() { }
 
     public RefreshToken(Guid usuarioId, string tokenHash, DateTimeOffset agora, int diasValidade)
@@ -27,5 +21,9 @@ public class RefreshToken
         ExpiraEm = agora.AddDays(diasValidade);
     }
 
-    public void Revogar(DateTimeOffset agora) => RevogadoEm = agora;
+    public bool Revogado => RevogadoEm is not null;
+
+    public bool EstaAtivo(DateTimeOffset agora) => !Revogado && agora < ExpiraEm;
+
+    public void Revogar(DateTimeOffset agora) => RevogadoEm ??= agora;
 }

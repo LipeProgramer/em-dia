@@ -1,96 +1,63 @@
 using System.Text.Json;
 using EmDia.Domain.Exceptions;
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EmDia.Api.Middlewares;
 
 /// <summary>
-/// Intercepta exceções e devolve ProblemDetails (RFC 9457) — spec §4.4.
-/// Nunca expõe stack trace em produção.
+/// Middleware global de erros (spec §3.5): converte as exceções em ProblemDetails (RFC 9457)
+/// e registra o erro em log, sem stack trace na resposta e sem dados sensíveis.
 /// </summary>
-public class ErrorHandlingMiddleware
+public class ErrorHandlingMiddleware(RequestDelegate next, ILogger<ErrorHandlingMiddleware> logger)
 {
-    private readonly RequestDelegate _next;
-    private readonly ILogger<ErrorHandlingMiddleware> _logger;
-    private readonly IHostEnvironment _env;
-
-    public ErrorHandlingMiddleware(RequestDelegate next, ILogger<ErrorHandlingMiddleware> logger, IHostEnvironment env)
-    {
-        _next = next;
-        _logger = logger;
-        _env = env;
-    }
+    private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 
     public async Task InvokeAsync(HttpContext ctx)
     {
         try
         {
-            await _next(ctx);
+            await next(ctx);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (!ctx.Response.HasStarted)
         {
-            await TratarAsync(ctx, ex);
+            var problema = Converter(ex);
+            if (problema.Status == StatusCodes.Status500InternalServerError)
+                logger.LogError(ex, "Erro inesperado em {Metodo} {Caminho}", ctx.Request.Method, ctx.Request.Path);
+
+            ctx.Response.Clear();
+            ctx.Response.StatusCode = problema.Status!.Value;
+            // Serializa pelo tipo real, para incluir "errors" do ValidationProblemDetails
+            await ctx.Response.WriteAsJsonAsync(problema, problema.GetType(), Json, "application/problem+json");
         }
     }
 
-    private async Task TratarAsync(HttpContext ctx, Exception ex)
+    private static ProblemDetails Converter(Exception ex) => ex switch
     {
-        int status;
-        string code;
-        string mensagem;
-
-        if (ex is NotFoundException nf)
-        {
-            status = 404; code = nf.Code; mensagem = nf.Message;
-        }
-        else if (ex is ConflictException cf)
-        {
-            status = 409; code = cf.Code; mensagem = cf.Message;
-        }
-        else if (ex is UnauthorizedException ue)
-        {
-            status = 401; code = ue.Code; mensagem = ue.Message;
-        }
-        else if (ex is DomainException de)
-        {
-            status = 422; code = de.Code; mensagem = de.Message;
-        }
-        else
-        {
-            status = 500;
-            code = "ERRO_INTERNO";
-            mensagem = _env.IsDevelopment() ? $"{ex.GetType().Name}: {ex.Message}" : "Ocorreu um erro inesperado.";
-            _logger.LogError(ex, "Erro não tratado: {Path}", ctx.Request.Path);
-        }
-
-        var problema = new ProblemDetails
-        {
-            Status   = status,
-            Title    = ObterTitulo(status),
-            Detail   = mensagem,
-            Instance = ctx.Request.Path
-        };
-        problema.Extensions["code"] = code;
-
-        ctx.Response.StatusCode  = status;
-        ctx.Response.ContentType = "application/problem+json";
-
-        var json = JsonSerializer.Serialize(problema, new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        });
-
-        await ctx.Response.WriteAsync(json);
-    }
-
-    private static string ObterTitulo(int status) => status switch
-    {
-        400 => "Requisição inválida",
-        401 => "Não autorizado",
-        404 => "Não encontrado",
-        409 => "Conflito",
-        422 => "Entidade não processável",
-        429 => "Muitas requisições",
-        _   => "Erro interno do servidor"
+        ValidationException v => DadosInvalidos(v.Errors.GroupBy(e => CamelCase(e.PropertyName))
+            .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).Distinct().ToArray())),
+        CampoInvalidoException c => DadosInvalidos(new() { [c.Campo] = [c.Message] }),
+        UnauthorizedException u => Problema(401, "Não autorizado", u.Message, u.Code),
+        NotFoundException n => Problema(404, "Não encontrado", n.Message, n.Code),
+        ConflictException c => Problema(409, "Conflito", c.Message, c.Code),
+        DomainException d => Problema(422, "Regra de negócio", d.Message, d.Code),
+        BadHttpRequestException { StatusCode: 413 } => Problema(413, "Requisição muito grande",
+            "O conteúdo enviado é maior que o permitido.", "CORPO_GRANDE"),
+        _ => Problema(500, "Erro inesperado", "Algo deu errado do nosso lado. Tente de novo em instantes.", "ERRO_INTERNO")
     };
+
+    public static ValidationProblemDetails DadosInvalidos(Dictionary<string, string[]> erros) =>
+        new(erros) { Title = "Dados inválidos", Status = StatusCodes.Status400BadRequest };
+
+    private static ProblemDetails Problema(int status, string titulo, string detalhe, string code) => new()
+    {
+        Status = status,
+        Title = titulo,
+        Detail = detalhe,
+        Extensions = { ["code"] = code }
+    };
+
+    /// <summary>"Itens[0].DataBase" → "itens[0].dataBase" (nomes dos campos iguais aos do JSON).</summary>
+    public static string CamelCase(string caminho) =>
+        string.Join('.', caminho.Split('.').Select(p => p.Length == 0 ? p : char.ToLowerInvariant(p[0]) + p[1..]));
 }

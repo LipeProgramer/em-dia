@@ -1,233 +1,58 @@
-// ── Enums como const objects (compatível com erasableSyntaxOnly) ──────────────
-export const TipoVencimento = {
-  DataUnica: 1,
-  RecorrentePorTempo: 2,
-  UsoOuTempo: 3,
-  Calculado: 4,
-} as const;
-export type TipoVencimento = (typeof TipoVencimento)[keyof typeof TipoVencimento];
+// Contratos da API (spec §3.4). Enums trafegam como texto.
 
-export const TipoVeiculo = {
-  Carro: 1,
-  Moto: 2,
-} as const;
-export type TipoVeiculo = (typeof TipoVeiculo)[keyof typeof TipoVeiculo];
+export type TipoVencimento = 'DataUnica' | 'RecorrentePorTempo' | 'UsoOuTempo' | 'Calculado';
+export type StatusItem = 'Vencido' | 'Atencao' | 'EmDia' | 'Encerrado';
+export type AnelRadar = 'Centro' | 'Anel1' | 'Anel2' | 'Externo';
+export type TipoVeiculo = 'Carro' | 'Moto';
+export type SituacaoItem = 'Ativo' | 'Encerrado';
 
-export const AnelRadar = {
-  Centro: 0,
-  Anel1: 1,
-  Anel2: 2,
-  Externo: 3,
-} as const;
-export type AnelRadar = (typeof AnelRadar)[keyof typeof AnelRadar];
-
-export const StatusItem = {
-  Vencido: 0,
-  Atencao: 1,
-  EmDia: 2,
-  Encerrado: 3,
-} as const;
-export type StatusItem = (typeof StatusItem)[keyof typeof StatusItem];
-
-export const SituacaoItem = {
-  Ativo: 0,
-  Atencao: 1,
-  Vencido: 2,
-  Encerrado: 3,
-} as const;
-export type SituacaoItem = (typeof SituacaoItem)[keyof typeof SituacaoItem];
-
-// ── Auth ──────────────────────────────────────────────────────────────────────
-export interface RegistrarRequest {
-  nome: string;
-  email: string;
-  senha: string;
+/** Erro no formato ProblemDetails (spec §3.5). */
+export interface ProblemDetails {
+  title?: string;
+  status?: number;
+  detail?: string;
+  code?: string;
+  errors?: Record<string, string[]>;
 }
 
-export interface LoginRequest {
-  email: string;
-  senha: string;
+// ── Autenticação e conta ────────────────────────────────────────────────────
+export interface UsuarioLogado {
+  id: string;
+  nome: string;
+  precisaCheckup: boolean;
 }
 
 export interface LoginResponse {
   accessToken: string;
   expiraEm: string;
-  usuario: UsuarioResponse;
+  usuario: UsuarioLogado;
 }
 
-export interface UsuarioResponse {
+export interface Preferencias {
+  receberEmail: boolean;
+  maxReavisos: number;
+  intervaloReavisoDias: number;
+  modoFocoPadrao: boolean;
+}
+
+export interface Usuario {
   id: string;
   nome: string;
   email: string;
+  ultimoCheckupEm: string | null;
   precisaCheckup: boolean;
-  criadoEm: string;
+  preferencias: Preferencias;
 }
 
-export interface AlterarNomeRequest {
-  nome: string;
-}
-
-// ── Radar ─────────────────────────────────────────────────────────────────────
-export interface PassoResponse {
-  id: string;
-  ordem: number;
-  descricao: string;
-  concluido: boolean;
-  concluidoEm: string | null;
-}
-
-export interface ItemRadarResponse {
-  id: string;
-  nome: string;
-  categoriaId: number;
-  anel: AnelRadar;
-  status: StatusItem;
-  proximoVencimentoData: string | null;
-  proximoVencimentoKm: number | null;
-  diasRestantes: number;
-  progressoPassos: number;
-  passos: PassoResponse[];
-}
-
-export interface RadarResponse {
-  centro: ItemRadarResponse[];
-  anel1: ItemRadarResponse[];
-  anel2: ItemRadarResponse[];
-  externo: ItemRadarResponse[];
-  modoFoco: boolean;
-}
-
-// ── Itens ─────────────────────────────────────────────────────────────────────
-export interface ItemResponse {
-  id: string;
-  nome: string;
-  categoriaId: number;
-  tipoVencimento: TipoVencimento;
-  dataBase: string | null;
-  dataVencimento: string | null;
-  intervaloDias: number | null;
-  intervaloKm: number | null;
-  kmBase: number | null;
-  garantiaFabricanteMeses: number | null;
-  antecedenciaDias: number;
-  proximoVencimentoData: string | null;
-  proximoVencimentoKm: number | null;
-  situacao: SituacaoItem;
-  status: StatusItem;
-  diasRestantes: number;
-  progressoPassos: number;
-  veiculoId: string | null;
-  modeloItemId: string | null;
-  observacao: string | null;
-  passos: PassoResponse[];
-  criadoEm: string;
-  atualizadoEm: string;
-}
-
-export interface CriarItemRequest {
-  nome: string;
-  categoriaId: number;
-  tipoVencimento: TipoVencimento;
-  dataBase?: string | null;
-  dataVencimento?: string | null;
-  intervaloDias?: number | null;
-  intervaloKm?: number | null;
-  kmBase?: number | null;
-  garantiaFabricanteMeses?: number | null;
-  antecedenciaDias: number;
-  veiculoId?: string | null;
-  modeloItemId?: string | null;
-  observacao?: string | null;
-  passos?: string[];
-}
-
-export type EditarItemRequest = CriarItemRequest;
-
-export interface ConcluirItemRequest {
-  dataConclusao: string;
-  kmNaConclusao?: number | null;
-  valorGasto?: number | null;
-  novaDataVencimento?: string | null;
-  observacao?: string | null;
-  confirmarPassosPendentes?: boolean;
-}
-
-export interface HistoricoResponse {
-  id: string;
-  itemId: string;
-  concluidoEm: string;
-  kmNaConclusao: number | null;
-  valorGasto: number | null;
-  vencimentoAnterior: string | null;
-  proximoVencimento: string | null;
-  observacao: string | null;
-  criadoEm: string;
-}
-
-// ── Veículos ──────────────────────────────────────────────────────────────────
-export interface VeiculoResponse {
-  id: string;
-  apelido: string;
-  tipoVeiculo: TipoVeiculo;
-  placa: string | null;
-  kmAtual: number;
-  mediaKmMes: number | null;
-  criadoEm: string;
-}
-
-export interface CriarVeiculoRequest {
-  apelido: string;
-  tipoVeiculo: TipoVeiculo;
-  placa?: string | null;
-  kmAtual: number;
-  mediaKmMes?: number | null;
-}
-
-export type EditarVeiculoRequest = CriarVeiculoRequest;
-
-// ── Checkup ───────────────────────────────────────────────────────────────────
-export interface CheckupResponse {
-  id: string;
-  realizadoEm: string;
-  itensCriados: number;
-  respostas: Record<string, boolean>;
-}
-
-export interface ExecutarCheckupRequest {
-  respostas: Record<string, boolean>;
-}
-
-// ── Preferências ──────────────────────────────────────────────────────────────
-export interface PreferenciasResponse {
-  receberEmail: boolean;
-  maxReavisos: number;
-  intervaloReavisoDias: number;
-  modoFocoPadrao: boolean;
-  atualizadoEm: string;
-}
-
-export interface AtualizarPreferenciasRequest {
-  receberEmail: boolean;
-  maxReavisos: number;
-  intervaloReavisoDias: number;
-  modoFocoPadrao: boolean;
-}
-
-// ── Catálogo ──────────────────────────────────────────────────────────────────
-export interface CategoriaResponse {
+// ── Catálogo e check-up ─────────────────────────────────────────────────────
+export interface Categoria {
   id: number;
   nome: string;
   icone: string;
   ordem: number;
 }
 
-export interface PassoModeloResponse {
-  id: string;
-  ordem: number;
-  descricao: string;
-}
-
-export interface ModeloItemResponse {
+export interface Modelo {
   id: string;
   nome: string;
   categoriaId: number;
@@ -237,12 +62,157 @@ export interface ModeloItemResponse {
   garantiaFabricanteMeses: number | null;
   antecedenciaDias: number;
   codigoCheckup: string | null;
-  passos: PassoModeloResponse[];
+  passos: string[];
 }
 
-// ── Erro de API ───────────────────────────────────────────────────────────────
-export interface ApiError {
+export interface Pergunta {
   codigo: string;
+  texto: string;
+  ajuda: string;
+  categoriaId: number;
+  modelos: Modelo[];
+}
+
+export interface CheckupRequest {
+  respostas: { codigo: string; resposta: boolean }[];
+  veiculos: { ref: string; apelido: string; tipo: TipoVeiculo; kmAtual: number; mediaKmMes: number }[];
+  itens: {
+    modeloId: string;
+    veiculoRef?: string;
+    dataBase?: string;
+    kmBase?: number;
+    dataVencimento?: string;
+  }[];
+}
+
+export interface ResumoStatus {
+  vencidos: number;
+  atencao: number;
+  emDia: number;
+}
+
+export interface CheckupResponse {
+  checkupId: string;
+  itensCriados: number;
+  resumo: ResumoStatus;
+  areasEmDia: number;
+  areas: { categoriaId: number; categoria: string; status: StatusItem; quantidadeItens: number }[];
+  destaques: { itemId: string; nome: string; categoriaId: number; status: StatusItem; textoPrazo: string }[];
+}
+
+// ── Radar e itens ───────────────────────────────────────────────────────────
+export interface ItemResumo {
+  id: string;
+  nome: string;
+  categoriaId: number;
+  tipoVencimento: TipoVencimento;
+  status: StatusItem;
+  anel: AnelRadar;
+  diasRestantes: number | null;
+  kmRestantes: number | null;
+  dataLimite: string | null;
+  textoPrazo: string;
+  progressoPassos: number;
+}
+
+export interface RadarResponse {
+  resumo: ResumoStatus;
+  modoFoco: boolean;
+  itens: ItemResumo[];
+}
+
+export interface Passo {
+  id: string;
+  ordem: number;
+  descricao: string;
+  concluido: boolean;
+}
+
+export interface ItemDetalhe {
+  id: string;
+  nome: string;
+  categoriaId: number;
+  modeloItemId: string | null;
+  tipoVencimento: TipoVencimento;
+  situacao: SituacaoItem;
+  status: StatusItem;
+  anel: AnelRadar;
+  textoPrazo: string;
+  diasRestantes: number | null;
+  kmRestantes: number | null;
+  dataLimite: string | null;
+  proximoVencimentoData: string | null;
+  proximoVencimentoKm: number | null;
+  dataBase: string | null;
+  dataVencimento: string | null;
+  intervaloDias: number | null;
+  intervaloKm: number | null;
+  kmBase: number | null;
+  garantiaFabricanteMeses: number | null;
+  antecedenciaDias: number;
+  observacao: string | null;
+  veiculo: { id: string; apelido: string } | null;
+  passos: Passo[];
+  progressoPassos: number;
+  historico: { id: string; concluidoEm: string; km: number | null; valorGasto: number | null }[];
+}
+
+export interface SalvarItemRequest {
+  nome: string;
+  categoriaId: number;
+  modeloId?: string | null;
+  tipoVencimento: TipoVencimento;
+  dataBase?: string | null;
+  dataVencimento?: string | null;
+  intervaloDias?: number | null;
+  intervaloKm?: number | null;
+  kmBase?: number | null;
+  garantiaFabricanteMeses?: number | null;
+  veiculoId?: string | null;
+  antecedenciaDias: number;
+  observacao?: string | null;
+  passos?: string[];
+}
+
+export interface ConcluirRequest {
+  dataConclusao: string;
+  km?: number | null;
+  valorGasto?: number | null;
+  observacao?: string | null;
+  confirmarPassosPendentes: boolean;
+  novaDataVencimento?: string | null;
+}
+
+export interface ConcluirResponse {
+  item: ItemDetalhe;
+  historicoId: string;
   mensagem: string;
-  detalhe?: string;
+}
+
+// ── Veículos e histórico ────────────────────────────────────────────────────
+export interface Veiculo {
+  id: string;
+  apelido: string;
+  tipo: TipoVeiculo;
+  kmAtual: number;
+  mediaKmMes: number;
+  kmAtualizadoEm: string;
+  quantidadeItens: number;
+}
+
+export interface AtualizarKmResponse {
+  kmAtual: number;
+  itensAfetados: { id: string; nome: string; status: StatusItem }[];
+}
+
+export interface HistoricoItem {
+  id: string;
+  itemId: string;
+  itemNome: string;
+  concluidoEm: string;
+  km: number | null;
+  valorGasto: number | null;
+  observacao: string | null;
+  vencimentoAnterior: string | null;
+  proximoVencimento: string | null;
 }

@@ -8,6 +8,9 @@ public class Historico
 {
     public Guid Id { get; private set; }
     public Guid ItemId { get; private set; }
+
+    /// <summary>Item concluído (navegação usada pelo histórico — E25).</summary>
+    public Item Item { get; private set; } = null!;
     public DateOnly ConcluidoEm { get; private set; }
     public int? KmNaConclusao { get; private set; }
     public decimal? ValorGasto { get; private set; }
@@ -36,7 +39,7 @@ public class Historico
         ValorGasto = valorGasto;
         VencimentoAnterior = vencimentoAnterior;
         ProximoVencimento = proximoVencimento;
-        Observacao = observacao;
+        Observacao = string.IsNullOrWhiteSpace(observacao) ? null : observacao.Trim();
         CriadoEm = agora;
     }
 }

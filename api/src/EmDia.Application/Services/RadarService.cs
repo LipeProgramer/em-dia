@@ -1,83 +1,45 @@
+using EmDia.Application.DTOs.Checkup;
 using EmDia.Application.DTOs.Itens;
-using EmDia.Application.DTOs.Radar;
 using EmDia.Application.Interfaces;
 using EmDia.Application.Interfaces.Repositories;
+using EmDia.Domain.Entities;
 using EmDia.Domain.Enums;
+using EmDia.Domain.Exceptions;
 using EmDia.Domain.Services;
 
 namespace EmDia.Application.Services;
 
-/// <summary>
-/// E10: GET /api/v1/radar — lista itens agrupados por anel (RN03/RN04).
-/// </summary>
-public class RadarService
+/// <summary>E12: monta o Radar (RN02, RN03 e, no modo foco, RN04).</summary>
+public class RadarService(
+    IItemRepository itens,
+    IVeiculoRepository veiculos,
+    IUsuarioRepository usuarios,
+    IRelogio relogio)
 {
-    private readonly IItemRepository _itens;
-    private readonly IVeiculoRepository _veiculos;
-    private readonly IUsuarioRepository _usuarios;
-    private readonly IRelogio _relogio;
-
-    public RadarService(
-        IItemRepository itens,
-        IVeiculoRepository veiculos,
-        IUsuarioRepository usuarios,
-        IRelogio relogio)
+    /// <param name="foco">Quando nulo, usa a preferência do usuário (modoFocoPadrao).</param>
+    public async Task<RadarResponse> ObterAsync(Guid usuarioId, bool? foco, CancellationToken ct)
     {
-        _itens    = itens;
-        _veiculos = veiculos;
-        _usuarios = usuarios;
-        _relogio  = relogio;
-    }
+        var hoje = relogio.Hoje;
+        var usuario = await usuarios.ObterPorIdAsync(usuarioId, ct)
+            ?? throw new NotFoundException("USUARIO_NAO_ENCONTRADO", "Não encontramos sua conta.");
+        var modoFoco = foco ?? usuario.Preferencias?.ModoFocoPadrao ?? false;
 
-    public async Task<RadarResponse> ObterAsync(Guid usuarioId, CancellationToken ct)
-    {
-        var hoje     = _relogio.Hoje;
-        var todos    = await _itens.ListarPorUsuarioAsync(usuarioId, ct);
-        var veiculos = await _veiculos.ListarPorUsuarioAsync(usuarioId, ct);
-        var usuario  = await _usuarios.ObterPorIdAsync(usuarioId, ct);
+        var porId = (await veiculos.ListarPorUsuarioAsync(usuarioId, ct)).ToDictionary(v => v.Id);
+        Veiculo? VeiculoDo(Item i) => i.VeiculoId is { } id ? porId.GetValueOrDefault(id) : null;
 
-        // Dicionário km atual por veículo para cálculo de status
-        var kmPorVeiculo = veiculos.ToDictionary(v => v.Id, v => v.KmAtual);
+        // Só itens ativos do usuário, do mais urgente para o menos urgente
+        var ativos = (await itens.ListarPorUsuarioAsync(usuarioId, ct)).Where(i => !i.Encerrado).ToList();
+        var ordenados = RadarDomain.OrdenarPorUrgencia(ativos, hoje, VeiculoDo);
+        if (modoFoco)
+            ordenados = ordenados.Take(RadarDomain.ItensModoFoco);
 
-        int? ObterKm(Domain.Entities.Item i) =>
-            i.VeiculoId.HasValue && kmPorVeiculo.TryGetValue(i.VeiculoId.Value, out var km) ? km : null;
+        var statuses = ativos.Select(i => i.CalcularStatus(hoje, VeiculoDo(i))).ToList();
+        var resumo = new ResumoStatus(
+            statuses.Count(s => s == StatusItem.Vencido),
+            statuses.Count(s => s == StatusItem.Atencao),
+            statuses.Count(s => s == StatusItem.EmDia));
 
-        // Filtrar encerrados
-        var ativos = todos.Where(i => i.Situacao != SituacaoItem.Encerrado).ToList();
-
-        // Modo foco: preferência do usuário
-        var modoFoco = usuario?.Preferencias?.ModoFocoPadrao ?? false;
-
-        IEnumerable<Domain.Entities.Item> itensRadar = modoFoco
-            ? RadarDomain.AplicarModoFoco(ativos, hoje, ObterKm)
-            : RadarDomain.OrdenarPorUrgencia(ativos, hoje, ObterKm);
-
-        // Agrupar por anel
-        var grupos = itensRadar.GroupBy(i => i.CalcularAnel(hoje, ObterKm(i)));
-
-        ItemRadarResponse ToItemRadar(Domain.Entities.Item i) => new(
-            i.Id,
-            i.Nome,
-            i.CategoriaId,
-            i.CalcularAnel(hoje, ObterKm(i)),
-            i.CalcularStatus(hoje, ObterKm(i)),
-            i.ProximoVencimentoData,
-            i.ProximoVencimentoKm,
-            i.DiasRestantes(hoje),
-            i.ProgressoPassos(),
-            i.Passos.OrderBy(p => p.Ordem)
-                .Select(p => new PassoResponse(p.Id, p.Ordem, p.Descricao, p.Concluido, p.ConcluidoEm))
-                .ToList());
-
-        List<ItemRadarResponse> Grupo(AnelRadar anel) =>
-            grupos.FirstOrDefault(g => g.Key == anel)?.Select(ToItemRadar).ToList()
-            ?? new List<ItemRadarResponse>();
-
-        return new RadarResponse(
-            Grupo(AnelRadar.Centro),
-            Grupo(AnelRadar.Anel1),
-            Grupo(AnelRadar.Anel2),
-            Grupo(AnelRadar.Externo),
-            modoFoco);
+        return new RadarResponse(resumo, modoFoco,
+            ordenados.Select(i => Mapeamento.Resumo(i, hoje, VeiculoDo(i))).ToList());
     }
 }

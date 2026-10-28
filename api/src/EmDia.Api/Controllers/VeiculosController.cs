@@ -1,59 +1,53 @@
 using System.Security.Claims;
+using EmDia.Api.Extensions;
+using EmDia.Application.DTOs.Auth;
+using EmDia.Application.DTOs.Catalogo;
+using EmDia.Application.DTOs.Checkup;
+using EmDia.Application.DTOs.Historico;
+using EmDia.Application.DTOs.Itens;
+using EmDia.Application.DTOs.Usuarios;
 using EmDia.Application.DTOs.Veiculos;
 using EmDia.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace EmDia.Api.Controllers;
 
-/// <summary>
-/// E13: GET    /api/v1/veiculos
-/// E14: POST   /api/v1/veiculos
-/// E15: GET    /api/v1/veiculos/{id}
-/// E16: PUT    /api/v1/veiculos/{id}
-/// E17: DELETE /api/v1/veiculos/{id}
-/// </summary>
-[ApiController]
+/// <summary>E20–E24 · Veículos.</summary>
 [Route("api/v1/veiculos")]
-[Authorize]
-public class VeiculosController : ControllerBase
+public class VeiculosController(VeiculoService veiculos) : ApiControllerBase
 {
-    private readonly VeiculoService _veiculos;
-
-    public VeiculosController(VeiculoService veiculos) => _veiculos = veiculos;
-
-    private Guid UsuarioIdLogado =>
-        Guid.Parse(User.FindFirstValue("sub")
-            ?? throw new InvalidOperationException("Claim sub ausente."));
-
-    // ── E13: Listar ───────────────────────────────────────────────────────────
+    /// <summary>E20 · Listar veículos.</summary>
     [HttpGet]
-    public async Task<IActionResult> Listar(CancellationToken ct)
-        => Ok(await _veiculos.ListarAsync(UsuarioIdLogado, ct));
+    public Task<IReadOnlyList<VeiculoResponse>> Listar(CancellationToken ct) => veiculos.ListarAsync(UsuarioId, ct);
 
-    // ── E14: Criar ────────────────────────────────────────────────────────────
+    /// <summary>E21 · Cadastrar veículo.</summary>
     [HttpPost]
-    public async Task<IActionResult> Criar([FromBody] CriarVeiculoRequest req, CancellationToken ct)
+    [ProducesResponseType<VeiculoResponse>(StatusCodes.Status201Created), ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Criar(CriarVeiculoRequest req, CancellationToken ct)
     {
-        var resp = await _veiculos.CriarAsync(UsuarioIdLogado, req, ct);
-        return Created($"/api/v1/veiculos/{resp.Id}", resp);
+        var veiculo = await veiculos.CriarAsync(UsuarioId, req, ct);
+        return Created($"/api/v1/veiculos/{veiculo.Id}", veiculo);
     }
 
-    // ── E15: Obter ────────────────────────────────────────────────────────────
-    [HttpGet("{id:guid}")]
-    public async Task<IActionResult> Obter(Guid id, CancellationToken ct)
-        => Ok(await _veiculos.ObterAsync(id, UsuarioIdLogado, ct));
-
-    // ── E16: Editar ───────────────────────────────────────────────────────────
+    /// <summary>E22 · Editar apelido, tipo e média de km.</summary>
     [HttpPut("{id:guid}")]
-    public async Task<IActionResult> Editar(Guid id, [FromBody] EditarVeiculoRequest req, CancellationToken ct)
-        => Ok(await _veiculos.EditarAsync(id, UsuarioIdLogado, req, ct));
+    public Task<VeiculoResponse> Editar(Guid id, EditarVeiculoRequest req, CancellationToken ct) =>
+        veiculos.EditarAsync(id, UsuarioId, req, ct);
 
-    // ── E17: Excluir ──────────────────────────────────────────────────────────
+    /// <summary>E23 · Atualizar a quilometragem atual.</summary>
+    [HttpPatch("{id:guid}/km")]
+    [ProducesResponseType<AtualizarKmResponse>(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public Task<AtualizarKmResponse> AtualizarKm(Guid id, AtualizarKmRequest req, CancellationToken ct) =>
+        veiculos.AtualizarKmAsync(id, UsuarioId, req, ct);
+
+    /// <summary>E24 · Excluir veículo (bloqueado se houver itens ligados).</summary>
     [HttpDelete("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent), ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Excluir(Guid id, CancellationToken ct)
     {
-        await _veiculos.ExcluirAsync(id, UsuarioIdLogado, ct);
+        await veiculos.ExcluirAsync(id, UsuarioId, ct);
         return NoContent();
     }
 }

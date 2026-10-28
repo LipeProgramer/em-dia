@@ -1,42 +1,56 @@
 # Registro de Bugs — Em Dia
 
-> Cada bug tem: como apareceu, causa raiz, correção aplicada e commit/branch.
+> Cada bug tem: como apareceu, causa raiz e correção aplicada.
 
 ---
 
-## BUG-01 — Npgsql 9.x falha autenticação com PostgreSQL 17 via rede (SCRAM/SASL)
+## BUG-01 — Npgsql 9.x falhava ao autenticar no PostgreSQL 17 (SCRAM)
+- **Como apareceu:** `dotnet ef database update` lançava `28P01`.
+- **Correção:** pacotes atualizados para EF Core / Npgsql 10; o comando passou a funcionar e o contorno com `psql`
+  (DV05) foi removido. ✅ Resolvido
 
-| Campo | Valor |
-|---|---|
-| **Como apareceu** | `dotnet ef database update` lança `28P01: autenticação do tipo senha falhou` mesmo com `trust` no pg_hba |
-| **Fase** | Fase 2 |
-| **Branch** | `feature/fase-2-infrastructure` |
-| **Causa raiz** | O Npgsql 9.x inicia o handshake SASL (SCRAM-SHA-256) antes de receber a resposta do pg_hba do PostgreSQL 17. Mesmo com `trust` configurado, o servidor anuncia SCRAM como mecanismo preferencial e o Npgsql tenta autenticar com ele. A senha do usuário `emdia` foi armazenada com `scram-sha-256` (padrão do PostgreSQL 17), causando falha na autenticação via Npgsql mesmo que a connection string tenha `Password`. |
-| **Correção** | Workaround: usar `dotnet ef migrations script` para gerar SQL e aplicar via `docker cp + psql` dentro do container (Unix socket, sem autenticação SCRAM). Registrado em `docs/desvios.md` como DV05. |
-| **Status** | ⚠️ Contornado em dev — não afeta runtime da aplicação |
+## BUG-02 — `appsettings.json` ausente no projeto Infrastructure (design-time)
+- **Correção:** a factory de design-time lê o `appsettings` da Api, com fallback para a connection string local. ✅
 
----
+## BUG-03 — TypeScript com `erasableSyntaxOnly` rejeitava `enum`
+- **Correção:** enums viraram tipos de união de strings. ✅
 
-## BUG-02 — `appsettings.json` ausente no projeto Infrastructure
+## BUG-04 — Data por km calculada com `DateTime.Today` e gravada no banco
+- **Como apareceu:** revisão da RN01: o status de troca de óleo ficava desatualizado depois de atualizar a km e
+  dependia do relógio do servidor.
+- **Causa raiz:** `RecalcularProximoVencimento` usava `DateTime.Today` e gravava a menor data entre tempo e km.
+- **Correção:** grava só a data do tempo e a km alvo; `DataEfetiva(hoje, veiculo)` calcula a data pela km na leitura. ✅
 
-| Campo | Valor |
-|---|---|
-| **Como apareceu** | `EmDiaDbContextFactory` tenta ler `appsettings.json` de dois diretórios; em desenvolvimento, o arquivo não existia na pasta procurada |
-| **Fase** | Fase 2 |
-| **Branch** | `feature/fase-2-infrastructure` |
-| **Causa raiz** | O path calculado por `AppContext.BaseDirectory` no design-time aponta para `bin/Debug/net10.0/` e a busca por `../../../../EmDia.Api` não encontra o diretório no ambiente de desenvolvimento do dev |
-| **Correção** | A factory tem fallback para a connection string hardcoded com `SSL Mode=Disable`. O `appsettings.Development.json` será criado no projeto `EmDia.Api` na Fase 3. |
-| **Status** | ✅ Contornado via fallback |
+## BUG-05 — Excluir conta não apagava os dados
+- **Como apareceu:** revisão do DER: faltavam as chaves estrangeiras de `itens`, `veiculos`, `checkups` e
+  `refresh_tokens` para `usuarios`.
+- **Correção:** FKs com `CASCADE` na migration `AjustesEntrega2`; teste CT42 confere que nada sobra. ✅
 
----
+## BUG-06 — Concluir item devolvia 500
+- **Como apareceu:** testes CT23, CT25 e CT27.
+- **Causa raiz:** o histórico criado pelo Domain já tem `id`; o EF entendia que era um registro existente e tentava
+  um `UPDATE`.
+- **Correção:** ids uuid configurados como gerados pela aplicação (`ValueGeneratedNever`), como diz a spec §2.5. ✅
 
-## BUG-03 — TypeScript com `erasableSyntaxOnly` rejeita enums no frontend
+## BUG-07 — Erro 400 sem o campo `errors`
+- **Como apareceu:** teste manual do cadastro com senha fraca.
+- **Causa raiz:** o middleware serializava pelo tipo declarado (`ProblemDetails`) e perdia o `errors` do
+  `ValidationProblemDetails`.
+- **Correção:** serialização pelo tipo real. ✅
 
-| Campo | Valor |
-|---|---|
-| **Como apareceu** | O comando `npm run build` do frontend falhou com erro `TS1353: 'enum' declarations are not allowed with erasableSyntaxOnly`. |
-| **Fase** | Fase 6 |
-| **Branch** | `feature/fase-6-frontend` |
-| **Causa raiz** | O Vite / TypeScript configurado com `erasableSyntaxOnly: true` não permite sintaxes que gerem código JS de runtime (como `enum`). |
-| **Correção** | Enums convertidos para objetos congelados `as const` acompanhados por union types (`typeof X[keyof typeof X]`). |
-| **Status** | ✅ Resolvido |
+## BUG-08 — Contador de falhas de login não zerava depois do bloqueio
+- **Causa raiz:** após os 15 minutos, a próxima senha errada bloqueava de novo na hora.
+- **Correção:** o contador volta a zero quando o bloqueio é aplicado (teste "5 falhas seguidas bloqueiam"). ✅
+
+## BUG-09 — Foco não ia para a primeira pergunta do check-up
+- **Como apareceu:** teste CT51 (teclado).
+- **Causa raiz:** o efeito de foco só reagia à troca de pergunta, não ao fim do carregamento.
+- **Correção:** o efeito também depende da lista de perguntas. ✅
+
+## BUG-10 — Resultado do check-up mostrava o destaque na área errada
+- **Como apareceu:** teste dos fluxos no navegador: "Documentos" exibia a troca de óleo.
+- **Correção:** o destaque traz `categoriaId` e cada área usa o seu. ✅
+
+## BUG-11 — Observação em branco gravada no histórico
+- **Como apareceu:** teste de unidade complementar.
+- **Correção:** espaços em branco viram `null`, como no item. ✅
