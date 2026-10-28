@@ -1,32 +1,37 @@
-# React + TypeScript + Vite
+# Em Dia — Radar de vencimentos
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Aplicação web React/TypeScript para centralizar vencimentos da vida prática e ajudar o usuário a identificar o que precisa de atenção. O frontend é pensado como uma extensão web do produto mobile e mantém o Radar de quatro níveis, o Modo Foco, o Check-up inicial, checklists, manutenção por quilometragem e preferências de aviso.
 
-Currently, two official plugins are available:
+## Tecnologias
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- React 19, TypeScript e Vite
+- React Router para rotas
+- TanStack Query e Axios para comunicação com a API
+- CSS próprio, tokens semânticos e ícones SVG locais
 
-## React Compiler
+## Executar localmente
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Requer uma versão recente do Node.js compatível com o Vite 8 e npm.
 
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm ci
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Por padrão, o Vite sobe em `http://localhost:5173` e encaminha `/api` para `http://localhost:5196`. Inicie a API .NET do projeto na porta `5196` ou ajuste `vite.config.ts` para o endereço correto do backend.
+
+## Verificações
+
+```bash
+npm run lint
+npx tsc -b
+npm run test:run
+npm run build
+```
+
+Os testes funcionais de integração com a API precisam do backend/configuração esperados pelo projeto. O frontend foi verificado por TypeScript durante o redesign; lint, testes Vitest e build devem ser executados novamente após `npm ci` no ambiente de desenvolvimento, já que a pasta `node_modules` da cópia original não é portátil entre Windows e Linux.
+
+## Documentação de design
+
+- [`DESIGN.md`](./DESIGN.md): identidade visual, tokens e princípios de composição.
+- [`UX-CONTRACT.md`](./UX-CONTRACT.md): fluxos, estados, confirmação e critérios de acessibilidade.

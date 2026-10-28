@@ -2,6 +2,7 @@ import { useState, useEffect, type FormEvent } from 'react';
 import { Modal } from '../../components/Modal.tsx';
 import { veiculosApi } from '../../api/services.ts';
 import { TipoVeiculo, type VeiculoResponse } from '../../api/types.ts';
+import { Icon } from '../../components/Icon.tsx';
 
 interface VeiculoFormModalProps {
   veiculo: VeiculoResponse | null;
@@ -97,7 +98,7 @@ export function VeiculoFormModal({
       <form onSubmit={handleSubmit} className="veiculo-form">
         {erro && (
           <div className="alert alert-error" role="alert">
-            <span aria-hidden="true">⚠️</span> {erro}
+            <Icon name="alert-triangle" size={17} /> {erro}
           </div>
         )}
 
@@ -126,8 +127,8 @@ export function VeiculoFormModal({
                 setTipoVeiculo(parseInt(e.target.value, 10) as TipoVeiculo)
               }
             >
-              <option value={TipoVeiculo.Carro}>🚗 Carro</option>
-              <option value={TipoVeiculo.Moto}>🏍️ Moto</option>
+              <option value={TipoVeiculo.Carro}>Carro</option>
+              <option value={TipoVeiculo.Moto}>Moto</option>
             </select>
           </div>
 

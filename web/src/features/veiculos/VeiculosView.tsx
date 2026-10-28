@@ -3,6 +3,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { veiculosApi } from '../../api/services.ts';
 import { TipoVeiculo, type VeiculoResponse } from '../../api/types.ts';
 import { ModalAtualizarKm } from './ModalAtualizarKm.tsx';
+import { Icon } from '../../components/Icon.tsx';
+import { ConfirmDialog } from '../../components/ConfirmDialog.tsx';
 import { VeiculoFormModal } from './VeiculoFormModal.tsx';
 
 export function VeiculosView() {
@@ -22,23 +24,25 @@ export function VeiculosView() {
   const [veiculoKm, setVeiculoKm] = useState<VeiculoResponse | null>(null);
   const [veiculoEditar, setVeiculoEditar] = useState<VeiculoResponse | null>(null);
   const [modalNovoAberto, setModalNovoAberto] = useState(false);
+  const [veiculoParaExcluir, setVeiculoParaExcluir] = useState<VeiculoResponse | null>(null);
 
   const excluirMutation = useMutation({
     mutationFn: (id: string) => veiculosApi.excluir(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['veiculos'] });
       queryClient.invalidateQueries({ queryKey: ['radar'] });
+      queryClient.invalidateQueries({ queryKey: ['itens'] });
+      setVeiculoParaExcluir(null);
+    },
+    onError: () => {
+      queryClient.invalidateQueries({ queryKey: ['veiculos'] });
+      queryClient.invalidateQueries({ queryKey: ['radar'] });
     },
   });
 
-  const handleExcluir = async (veiculo: VeiculoResponse) => {
-    if (
-      window.confirm(
-        `Tem certeza de que deseja excluir o veículo "${veiculo.apelido}"?`
-      )
-    ) {
-      await excluirMutation.mutateAsync(veiculo.id);
-    }
+  const handleExcluir = (veiculo: VeiculoResponse) => { excluirMutation.reset(); setVeiculoParaExcluir(veiculo); };
+  const confirmarExclusao = () => {
+    if (veiculoParaExcluir) excluirMutation.mutate(veiculoParaExcluir.id);
   };
 
   const atualizarTudo = () => {
@@ -62,7 +66,7 @@ export function VeiculosView() {
           className="btn btn-primary"
           onClick={() => setModalNovoAberto(true)}
         >
-          + Cadastrar Veículo
+          <Icon name="plus" size={17} /> Cadastrar veículo
         </button>
       </header>
 
@@ -89,7 +93,7 @@ export function VeiculosView() {
       {!isLoading && veiculos && veiculos.length === 0 && (
         <div className="empty-state-card">
           <div className="empty-icon" aria-hidden="true">
-            🚗
+            <Icon name="car" size={28} />
           </div>
           <h2>Nenhum veículo cadastrado</h2>
           <p>
@@ -112,7 +116,7 @@ export function VeiculosView() {
             <article key={v.id} className="veiculo-card" aria-labelledby={`veiculo-${v.id}`}>
               <div className="veiculo-card-header">
                 <span className="veiculo-type-icon" aria-hidden="true">
-                  {v.tipoVeiculo === TipoVeiculo.Moto ? '🏍️' : '🚗'}
+                  <Icon name={v.tipoVeiculo === TipoVeiculo.Moto ? 'bike' : 'car'} size={23} />
                 </span>
                 <div>
                   <h2 id={`veiculo-${v.id}`} className="veiculo-title">
@@ -141,7 +145,7 @@ export function VeiculosView() {
                   onClick={() => setVeiculoKm(v)}
                   aria-label={`Atualizar km de ${v.apelido}`}
                 >
-                  ⚡ Atualizar Km
+                  <Icon name="gauge" size={17} /> Atualizar km
                 </button>
                 <div className="veiculo-actions-secondary">
                   <button
@@ -187,6 +191,17 @@ export function VeiculosView() {
         isOpen={modalNovoAberto}
         onClose={() => setModalNovoAberto(false)}
         onSucesso={atualizarTudo}
+      />
+
+      <ConfirmDialog
+        isOpen={!!veiculoParaExcluir}
+        title={`Excluir ${veiculoParaExcluir?.apelido ? `“${veiculoParaExcluir.apelido}”` : 'veículo'}?`}
+        description="O veículo será removido da sua lista e os itens vinculados serão desassociados dele. Confira essas relações antes de prosseguir."
+        confirmLabel="Excluir veículo"
+        isPending={excluirMutation.isPending}
+        error={excluirMutation.isError ? 'Não foi possível excluir o veículo. Confira sua conexão e tente novamente.' : null}
+        onClose={() => { if (!excluirMutation.isPending) { setVeiculoParaExcluir(null); excluirMutation.reset(); } }}
+        onConfirm={confirmarExclusao}
       />
     </div>
   );

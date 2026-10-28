@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from './AuthContext.tsx';
 import logoImg from '../../assets/logo.png';
+import { Icon } from '../../components/Icon.tsx';
 import './AtlassianAuth.css';
 
 interface AuthPageAtlassianProps {
@@ -19,7 +20,6 @@ export function AuthPageAtlassian({ initialMode }: AuthPageAtlassianProps) {
   const [senha, setSenha] = useState('');
   const [erro, setErro] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(false);
-  const [showBanner, setShowBanner] = useState(true);
 
   const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/';
 
@@ -34,6 +34,11 @@ export function AuthPageAtlassian({ initialMode }: AuthPageAtlassianProps) {
 
     if (!email.trim() || !senha) {
       setErro('Preencha seu e-mail e senha.');
+      return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      setErro('Informe um e-mail válido, como voce@exemplo.com.');
       return;
     }
 
@@ -72,121 +77,32 @@ export function AuthPageAtlassian({ initialMode }: AuthPageAtlassianProps) {
     }
   };
 
-  const handleGoogleDemo = async () => {
-    // Autenticação rápida de demonstração com um clique
-    setEmail('felipe@emdia.com');
-    setSenha('SenhaForte@123');
-    try {
-      setCarregando(true);
-      await login({ email: 'felipe@emdia.com', senha: 'SenhaForte@123' });
-      navigate(from, { replace: true });
-    } catch {
-      setErro('Use o formulário para entrar ou registrar.');
-    } finally {
-      setCarregando(false);
-    }
-  };
+
 
   return (
     <div className="atlassian-page">
-      {/* ── 1. Announcement Bar ────────────────────────────────────────────── */}
-      {showBanner && (
-        <div className="atlassian-announcement">
-          <span>
-            87% dos adultos com TDAH relatam menos estresse ao usar o radar visual. Apenas 13% sentem atrito.{' '}
-            <a href="#showcase">Veja como funciona o radar</a>
-          </span>
-          <button
-            type="button"
-            className="announcement-close"
-            onClick={() => setShowBanner(false)}
-            aria-label="Fechar aviso"
-          >
-            ×
-          </button>
-        </div>
-      )}
-
       {/* ── 2. Top Navigation Bar ──────────────────────────────────────────── */}
       <header className="atlassian-header">
         <div className="atlassian-header-inner">
           <div className="atlassian-nav-left">
-            <a href="/" className="atlassian-brand">
-              <img src={logoImg} alt="Em Dia Logo" className="atlassian-logo-img" />
+            <a href="/login" className="atlassian-brand" aria-label="Em Dia — início">
+              <img src={logoImg} alt="Em Dia" className="atlassian-logo-img" />
             </a>
-
-            <nav className="atlassian-nav-menu" aria-label="Menu principal">
-              <button type="button" className="atlassian-nav-item">
-                Funções
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M6 9l6 6 6-6" />
-                </svg>
-              </button>
-              <button type="button" className="atlassian-nav-item">
-                Soluções
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M6 9l6 6 6-6" />
-                </svg>
-              </button>
-              <button type="button" className="atlassian-nav-item">
-                Guias
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M6 9l6 6 6-6" />
-                </svg>
-              </button>
-              <button type="button" className="atlassian-nav-item">
-                Modelos
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M6 9l6 6 6-6" />
-                </svg>
-              </button>
-              <button type="button" className="atlassian-nav-item">
-                Preços
-              </button>
-            </nav>
+            <a href="#showcase" className="atlassian-nav-item">Como funciona <Icon name="arrow-right" size={15} /></a>
           </div>
 
           <div className="atlassian-nav-right">
-            <button type="button" className="btn-search-icon" aria-label="Pesquisar">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="11" cy="11" r="8" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
-            </button>
-
             {mode === 'cadastro' ? (
-              <button
-                type="button"
-                onClick={() => {
-                  setMode('login');
-                  setErro(null);
-                }}
-                className="nav-link-login"
-              >
-                Entrar
+              <button type="button" onClick={() => { setMode('login'); setErro(null); }} className="nav-link-login">
+                Já tenho conta
               </button>
             ) : (
-              <button
-                type="button"
-                onClick={() => {
-                  setMode('cadastro');
-                  setErro(null);
-                }}
-                className="nav-link-login"
-              >
-                Fazer cadastro
+              <button type="button" onClick={() => { setMode('cadastro'); setErro(null); }} className="nav-link-login">
+                Criar conta
               </button>
             )}
-
-            <button
-              type="button"
-              onClick={() => {
-                setMode('cadastro');
-                setErro(null);
-              }}
-              className="btn-header-cta"
-            >
-              Obtenha grátis
+            <button type="button" onClick={() => { setMode('cadastro'); setErro(null); }} className="btn-header-cta">
+              Começar grátis <Icon name="arrow-right" size={16} />
             </button>
           </div>
         </div>
@@ -199,11 +115,10 @@ export function AuthPageAtlassian({ initialMode }: AuthPageAtlassianProps) {
           <div className="hero-left">
             <div className="hero-grid-bg" aria-hidden="true" />
             <h1 className="hero-headline">
-              Foco nos resultados, não na administração
+              Sua vida já tem coisa demais para lembrar.
             </h1>
             <p className="hero-subhead">
-              Radar inteligente de vencimentos e lembretes para adultos com TDAH que elimina a
-              ansiedade e evita multas e esquecimentos desnecessários.
+              O Em Dia reúne prazos de documentos, veículo, casa, saúde e garantias em um Radar visual pensado para ajudar você a agir no momento certo — sem depender só da memória.
             </p>
 
             <div className="hero-badges-row">
@@ -220,7 +135,7 @@ export function AuthPageAtlassian({ initialMode }: AuthPageAtlassianProps) {
                   <circle cx="12" cy="12" r="6" />
                   <circle cx="12" cy="12" r="2" />
                 </svg>
-                Modo Foco Anti-Procrastinação
+                Modo Foco para reduzir distrações
               </span>
               <span className="hero-badge-pill">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -300,12 +215,13 @@ export function AuthPageAtlassian({ initialMode }: AuthPageAtlassianProps) {
                     className="atlassian-input"
                     placeholder="voce@empresa.com"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => { setEmail(e.target.value); if (erro) setErro(null); }}
                     required
+                    aria-invalid={!!erro}
                     autoComplete="email"
                   />
                   <span className="input-helper">
-                    Use um e-mail corporativo ou pessoal para ter acesso completo ao radar.
+                    Seu e-mail é usado para acessar sua conta e seus prazos.
                   </span>
                 </div>
 
@@ -319,8 +235,9 @@ export function AuthPageAtlassian({ initialMode }: AuthPageAtlassianProps) {
                     className="atlassian-input"
                     placeholder="••••••••"
                     value={senha}
-                    onChange={(e) => setSenha(e.target.value)}
+                    onChange={(e) => { setSenha(e.target.value); if (erro) setErro(null); }}
                     required
+                    aria-invalid={!!erro}
                     autoComplete={mode === 'cadastro' ? 'new-password' : 'current-password'}
                   />
                 </div>
@@ -338,48 +255,23 @@ export function AuthPageAtlassian({ initialMode }: AuthPageAtlassianProps) {
                 </button>
               </form>
 
-              <div className="atlassian-divider">
-                <span>Ou continuar com</span>
-              </div>
-
-              <button
-                type="button"
-                className="btn-google"
-                onClick={handleGoogleDemo}
-                title="Acesso rápido para demonstração"
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24">
-                  <path
-                    fill="#4285F4"
-                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                  />
-                  <path
-                    fill="#34A853"
-                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                  />
-                  <path
-                    fill="#FBBC05"
-                    d="M5.84 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.62z"
-                  />
-                  <path
-                    fill="#EA4335"
-                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-                  />
-                </svg>
-                Google
-              </button>
             </div>
           </div>
         </div>
       </main>
 
       {/* ── 4. Showcase / Mockup do Produto (Inferior) ────────────────────────── */}
-      <section id="showcase" className="atlassian-showcase-section">
+      <section id="showcase" className="atlassian-showcase-section" aria-labelledby="showcase-title">
+        <div className="showcase-intro">
+          <span className="section-eyebrow">UMA VISÃO MAIS CLARA</span>
+          <h2 id="showcase-title">Os prazos no lugar certo.</h2>
+          <p>Prévia ilustrativa da organização por urgência. Seus itens reais aparecem depois de entrar na conta.</p>
+        </div>
         <div className="showcase-window">
           {/* Topbar do Mockup */}
           <div className="window-topbar">
             <div className="window-breadcrumb">
-              <span className="breadcrumb-icon">✓</span>
+              <span className="breadcrumb-icon"><Icon name="check-circle" size={15} /></span>
               <span>Em Dia App · Radar & Tarefas</span>
             </div>
 
@@ -397,7 +289,7 @@ export function AuthPageAtlassian({ initialMode }: AuthPageAtlassianProps) {
             <div className="mock-column">
               <div className="mock-column-header">
                 <span>Atrasados & Hoje</span>
-                <span className="mock-badge-count">3</span>
+  
               </div>
 
               <div className="mock-card">
@@ -416,7 +308,7 @@ export function AuthPageAtlassian({ initialMode }: AuthPageAtlassianProps) {
                 </div>
                 {/* Tooltip do Modo Foco idêntico ao balão do Liam */}
                 <div className="mock-agent-pill">
-                  🎯 Modo Foco: 3 itens prioritários
+                  Modo Foco · até 3 itens prioritários
                 </div>
               </div>
 
@@ -433,7 +325,7 @@ export function AuthPageAtlassian({ initialMode }: AuthPageAtlassianProps) {
             <div className="mock-column">
               <div className="mock-column-header">
                 <span>Próximos 7 Dias</span>
-                <span className="mock-badge-count">2</span>
+  
               </div>
 
               <div className="mock-card">
@@ -457,7 +349,7 @@ export function AuthPageAtlassian({ initialMode }: AuthPageAtlassianProps) {
             <div className="mock-column">
               <div className="mock-column-header">
                 <span>Resolvidos & Em Dia</span>
-                <span className="mock-badge-count">7</span>
+  
               </div>
 
               <div className="mock-card">

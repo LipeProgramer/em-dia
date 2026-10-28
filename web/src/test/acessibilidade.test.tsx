@@ -12,7 +12,7 @@ describe('CT51 — Acessibilidade de Status (RNF02)', () => {
     const badge = screen.getByRole('status');
     expect(badge).toHaveAttribute('aria-label', 'Status: Vencido');
     expect(badge).toHaveTextContent('Vencido');
-    expect(badge).toHaveTextContent('✕');
+    expect(badge.querySelector('svg')).toBeInTheDocument();
     expect(badge).toHaveClass('badge-vencido');
   });
 
@@ -21,7 +21,7 @@ describe('CT51 — Acessibilidade de Status (RNF02)', () => {
     const badge = screen.getByRole('status');
     expect(badge).toHaveAttribute('aria-label', 'Status: Atenção');
     expect(badge).toHaveTextContent('Atenção');
-    expect(badge).toHaveTextContent('⚠');
+    expect(badge.querySelector('svg')).toBeInTheDocument();
     expect(badge).toHaveClass('badge-atencao');
   });
 
@@ -30,7 +30,7 @@ describe('CT51 — Acessibilidade de Status (RNF02)', () => {
     const badge = screen.getByRole('status');
     expect(badge).toHaveAttribute('aria-label', 'Status: Em dia');
     expect(badge).toHaveTextContent('Em dia');
-    expect(badge).toHaveTextContent('✓');
+    expect(badge.querySelector('svg')).toBeInTheDocument();
     expect(badge).toHaveClass('badge-em-dia');
   });
 
@@ -39,7 +39,7 @@ describe('CT51 — Acessibilidade de Status (RNF02)', () => {
     const badge = screen.getByRole('status');
     expect(badge).toHaveAttribute('aria-label', 'Status: Encerrado');
     expect(badge).toHaveTextContent('Encerrado');
-    expect(badge).toHaveTextContent('—');
+    expect(badge.querySelector('svg')).toBeInTheDocument();
     expect(badge).toHaveClass('badge-encerrado');
   });
 });

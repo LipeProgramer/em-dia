@@ -3,10 +3,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { itensApi, catalogoApi } from '../../api/services.ts';
 import { StatusBadge } from '../../components/StatusBadge.tsx';
+import { Icon } from '../../components/Icon.tsx';
+import { ConfirmDialog } from '../../components/ConfirmDialog.tsx';
 
 export function ItensView() {
   const queryClient = useQueryClient();
   const [categoriaFiltro, setCategoriaFiltro] = useState<number | undefined>(undefined);
+  const [itemParaExcluir, setItemParaExcluir] = useState<{ id: string; nome: string } | null>(null);
 
   const { data: categorias } = useQuery({
     queryKey: ['categorias'],
@@ -28,13 +31,17 @@ export function ItensView() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['itens'] });
       queryClient.invalidateQueries({ queryKey: ['radar'] });
+      setItemParaExcluir(null);
+    },
+    onError: () => {
+      queryClient.invalidateQueries({ queryKey: ['itens'] });
+      queryClient.invalidateQueries({ queryKey: ['radar'] });
     },
   });
 
-  const handleExcluir = async (id: string, nome: string) => {
-    if (window.confirm(`Tem certeza de que deseja excluir o item "${nome}"?`)) {
-      await excluirMutation.mutateAsync(id);
-    }
+  const handleExcluir = (id: string, nome: string) => { excluirMutation.reset(); setItemParaExcluir({ id, nome }); };
+  const confirmarExclusao = () => {
+    if (itemParaExcluir) excluirMutation.mutate(itemParaExcluir.id);
   };
 
   return (
@@ -45,7 +52,7 @@ export function ItensView() {
           <p>Gerencie todos os seus prazos cadastrados e tarefas vinculadas.</p>
         </div>
         <Link to="/itens/novo" className="btn btn-primary">
-          + Novo Item
+          <Icon name="plus" size={17} /> Novo item
         </Link>
       </header>
 
@@ -95,7 +102,7 @@ export function ItensView() {
       {!isLoading && itens && itens.length === 0 && (
         <div className="empty-state-card">
           <div className="empty-icon" aria-hidden="true">
-            📂
+            <Icon name="folder" size={28} />
           </div>
           <h2>Nenhum item encontrado</h2>
           <p>
@@ -187,6 +194,17 @@ export function ItensView() {
           </table>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={!!itemParaExcluir}
+        title={`Excluir ${itemParaExcluir?.nome ? `“${itemParaExcluir.nome}”` : 'item'}?`}
+        description="O item será removido dos seus itens cadastrados e deixará de aparecer no Radar. Esta ação não pode ser desfeita por aqui."
+        confirmLabel="Excluir item"
+        isPending={excluirMutation.isPending}
+        error={excluirMutation.isError ? 'Não foi possível excluir o item. Confira sua conexão e tente novamente.' : null}
+        onClose={() => { if (!excluirMutation.isPending) { setItemParaExcluir(null); excluirMutation.reset(); } }}
+        onConfirm={confirmarExclusao}
+      />
     </div>
   );
 }

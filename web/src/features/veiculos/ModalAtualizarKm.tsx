@@ -2,6 +2,7 @@ import { useState, useEffect, type FormEvent } from 'react';
 import { Modal } from '../../components/Modal.tsx';
 import { veiculosApi } from '../../api/services.ts';
 import type { VeiculoResponse } from '../../api/types.ts';
+import { Icon } from '../../components/Icon.tsx';
 
 interface ModalAtualizarKmProps {
   veiculo: VeiculoResponse | null;
@@ -72,7 +73,7 @@ export function ModalAtualizarKm({
       <form onSubmit={handleSubmit} className="atualizar-km-form">
         {erro && (
           <div className="alert alert-error" role="alert">
-            <span aria-hidden="true">⚠️</span> {erro}
+            <Icon name="alert-triangle" size={17} /> {erro}
           </div>
         )}
 

@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { radarApi, itensApi, preferenciasApi } from '../../api/services.ts';
 import { StatusBadge } from '../../components/StatusBadge.tsx';
+import { Icon } from '../../components/Icon.tsx';
 import { ModalConcluirItem } from './ModalConcluirItem.tsx';
 import { ModalHistoricoItem } from './ModalHistoricoItem.tsx';
 import type { ItemRadarResponse } from '../../api/types.ts';
@@ -154,7 +155,7 @@ export function RadarView() {
                 onClick={() => toggleExpandirPassos(item.id)}
                 aria-expanded={expandido}
               >
-                {expandido ? 'Ocultar checklist ▲' : 'Ver checklist ▼'}
+                {expandido ? <>Ocultar checklist <Icon name="chevron-down" size={14} /></> : <>Ver checklist <Icon name="chevron-right" size={14} /></>}
               </button>
             </div>
 
@@ -214,41 +215,89 @@ export function RadarView() {
 
   return (
     <div className="radar-page">
-      {/* Topo do Radar: Boas-vindas e Modo Foco */}
-      <section className="radar-header-card">
+      {/* Introdução do Radar e representação dos quatro níveis de urgência */}
+      <section className="radar-header-card" aria-labelledby="radar-page-title">
         <div className="radar-header-info">
-          <h1>Radar de Vencimentos</h1>
-          <p>
-            Visão concêntrica dos seus prazos. Quanto mais próximo do centro, mais
-            urgente a sua atenção.
-          </p>
+          <span className="section-eyebrow">SEU PAINEL DE PRAZOS</span>
+          <h1 id="radar-page-title">Radar de vencimentos<span className="heading-period">.</span></h1>
+          <p>Veja o que pede atenção agora. O restante pode esperar — um passo de cada vez.</p>
+          <div className="radar-header-actions">
+            <Link to="/itens/novo" className="btn btn-primary radar-add-action">
+              <Icon name="plus" size={17} /> Novo item
+            </Link>
+            <Link to="/checkup" className="radar-secondary-action">
+              Fazer Check-up <Icon name="arrow-right" size={16} />
+            </Link>
+          </div>
         </div>
 
-        <div className="radar-focus-control">
+        <div className="radar-header-aside">
+          <div className="radar-orbit" aria-hidden="true">
+            <svg viewBox="0 0 220 220" focusable="false">
+              <circle className="orbit-ring orbit-ring-outer" cx="110" cy="110" r="96" />
+              <circle className="orbit-ring orbit-ring-mid" cx="110" cy="110" r="72" />
+              <circle className="orbit-ring orbit-ring-near" cx="110" cy="110" r="48" />
+              <circle className="orbit-ring orbit-ring-core" cx="110" cy="110" r="25" />
+              <path className="orbit-axis" d="M110 14v192M14 110h192" />
+              <circle className="orbit-center-dot" cx="110" cy="110" r="4" />
+              <circle className="orbit-point orbit-point-one" cx="110" cy="61" r="4" />
+              <circle className="orbit-point orbit-point-two" cx="159" cy="110" r="4" />
+              <circle className="orbit-point orbit-point-three" cx="76" cy="76" r="4" />
+            </svg>
+            <div className="radar-orbit-center">
+              <strong>{totalItens}</strong>
+              <span>{totalItens === 1 ? 'item visível' : 'itens visíveis'}</span>
+            </div>
+          </div>
           <label className="focus-toggle-label" htmlFor="toggle-foco">
+            <span className="focus-toggle-icon"><Icon name="focus" size={19} /></span>
+            <span className="focus-toggle-text">
+              <strong>Modo Foco</strong>
+              <small>Mostrar só as 3 prioridades</small>
+            </span>
             <input
               id="toggle-foco"
               type="checkbox"
               className="toggle-switch"
               checked={radar.modoFoco}
               onChange={(e) => alternarModoFocoMutation.mutate(e.target.checked)}
+              disabled={alternarModoFocoMutation.isPending}
             />
-            <span className="focus-toggle-text">
-              <strong>Modo Foco 🎯</strong>
-              <small>Exibir apenas os 3 mais urgentes</small>
-            </span>
           </label>
+          {alternarModoFocoMutation.isError && (
+            <p className="focus-error" role="alert">Não foi possível alterar o Modo Foco. Tente novamente.</p>
+          )}
+        </div>
+      </section>
+
+      <section className="radar-ring-summary" aria-label="Resumo dos níveis do Radar">
+        <div className="ring-summary-item summary-urgent">
+          <span className="summary-marker" aria-hidden="true" />
+          <span className="summary-copy"><strong>Vencidos e hoje</strong><small>Resolver primeiro</small></span>
+          <strong className="summary-count">{radar.centro.length}</strong>
+        </div>
+        <div className="ring-summary-item summary-attention">
+          <span className="summary-marker" aria-hidden="true" />
+          <span className="summary-copy"><strong>Próximos</strong><small>Estão chegando</small></span>
+          <strong className="summary-count">{radar.anel1.length}</strong>
+        </div>
+        <div className="ring-summary-item summary-ontrack">
+          <span className="summary-marker" aria-hidden="true" />
+          <span className="summary-copy"><strong>Em dia</strong><small>Sem urgência agora</small></span>
+          <strong className="summary-count">{radar.anel2.length}</strong>
+        </div>
+        <div className="ring-summary-item summary-later">
+          <span className="summary-marker" aria-hidden="true" />
+          <span className="summary-copy"><strong>Prazos longos</strong><small>Para acompanhar depois</small></span>
+          <strong className="summary-count">{radar.externo.length}</strong>
         </div>
       </section>
 
       {/* Alerta de Modo Foco ativo */}
       {radar.modoFoco && (
-        <div className="alert alert-info" role="status">
-          <span aria-hidden="true">🎯</span>
-          <div>
-            <strong>Modo Foco ativado:</strong> Exibindo apenas os 3 itens de
-            maior urgência para evitar sobrecarga mental.
-          </div>
+        <div className="focus-active-note" role="status">
+          <Icon name="focus" size={17} />
+          <span><strong>Modo Foco ativado.</strong> Esta visualização mostra até 3 prioridades para ajudar você a começar.</span>
         </div>
       )}
 
@@ -256,7 +305,7 @@ export function RadarView() {
       {totalItens === 0 ? (
         <div className="radar-empty-card">
           <div className="empty-icon" aria-hidden="true">
-            🌟
+            <Icon name="check-circle" size={28} />
           </div>
           <h2>Seu Radar está vazio e em dia!</h2>
           <p>
@@ -277,9 +326,7 @@ export function RadarView() {
           {/* ANEL CENTRO: Máxima Urgência */}
           <section className="radar-ring ring-centro" aria-labelledby="ring-centro-title">
             <header className="ring-header">
-              <span className="ring-indicator ring-indicator-centro" aria-hidden="true">
-                🔴
-              </span>
+              <span className="ring-indicator ring-indicator-centro" aria-hidden="true" />
               <h2 id="ring-centro-title" className="ring-title">
                 Centro do Radar — Vencidos e Hoje ({radar.centro.length})
               </h2>
@@ -294,9 +341,7 @@ export function RadarView() {
           {/* ANEL 1: Atenção (Próximos dias) */}
           <section className="radar-ring ring-anel1" aria-labelledby="ring-anel1-title">
             <header className="ring-header">
-              <span className="ring-indicator ring-indicator-anel1" aria-hidden="true">
-                🟡
-              </span>
+              <span className="ring-indicator ring-indicator-anel1" aria-hidden="true" />
               <h2 id="ring-anel1-title" className="ring-title">
                 Anel 1 — Próximos do Vencimento ({radar.anel1.length})
               </h2>
@@ -311,9 +356,7 @@ export function RadarView() {
           {/* ANEL 2: Em Dia */}
           <section className="radar-ring ring-anel2" aria-labelledby="ring-anel2-title">
             <header className="ring-header">
-              <span className="ring-indicator ring-indicator-anel2" aria-hidden="true">
-                🟢
-              </span>
+              <span className="ring-indicator ring-indicator-anel2" aria-hidden="true" />
               <h2 id="ring-anel2-title" className="ring-title">
                 Anel 2 — Em Dia ({radar.anel2.length})
               </h2>
@@ -328,9 +371,7 @@ export function RadarView() {
           {/* ANEL EXTERNO: Prazo Longo ou Sem Data */}
           <section className="radar-ring ring-externo" aria-labelledby="ring-externo-title">
             <header className="ring-header">
-              <span className="ring-indicator ring-indicator-externo" aria-hidden="true">
-                ⚪
-              </span>
+              <span className="ring-indicator ring-indicator-externo" aria-hidden="true" />
               <h2 id="ring-externo-title" className="ring-title">
                 Anel Externo — Prazos Mais Longos ({radar.externo.length})
               </h2>

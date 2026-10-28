@@ -8,6 +8,7 @@ import {
   type EditarItemRequest,
   type ModeloItemResponse,
 } from '../../api/types.ts';
+import { Icon } from '../../components/Icon.tsx';
 
 export function ItemFormView() {
   const { id } = useParams<{ id: string }>();
@@ -186,7 +187,7 @@ export function ItemFormView() {
 
       {erro && (
         <div className="alert alert-error" role="alert">
-          <span aria-hidden="true">⚠️</span> {erro}
+          <Icon name="alert-triangle" size={17} /> {erro}
         </div>
       )}
 
@@ -449,7 +450,7 @@ export function ItemFormView() {
                     onClick={() => handleRemoverPasso(idx)}
                     aria-label={`Remover passo ${p}`}
                   >
-                    ✕
+                    <Icon name="close" size={15} strokeWidth={2.4} />
                   </button>
                 </li>
               ))}

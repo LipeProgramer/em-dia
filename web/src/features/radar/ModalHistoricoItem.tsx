@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Modal } from '../../components/Modal.tsx';
 import { itensApi } from '../../api/services.ts';
 import type { HistoricoResponse, ItemRadarResponse } from '../../api/types.ts';
+import { Icon } from '../../components/Icon.tsx';
 
 interface ModalHistoricoItemProps {
   item: ItemRadarResponse | null;
@@ -59,7 +60,7 @@ export function ModalHistoricoItem({
 
         {erro && (
           <div className="alert alert-error" role="alert">
-            <span aria-hidden="true">⚠️</span> {erro}
+            <Icon name="alert-triangle" size={17} /> {erro}
           </div>
         )}
 
@@ -74,7 +75,7 @@ export function ModalHistoricoItem({
             {historico.map((h) => (
               <div key={h.id} className="timeline-item">
                 <div className="timeline-marker" aria-hidden="true">
-                  ✓
+                  <Icon name="check" size={14} strokeWidth={2.6} />
                 </div>
                 <div className="timeline-content">
                   <div className="timeline-header">

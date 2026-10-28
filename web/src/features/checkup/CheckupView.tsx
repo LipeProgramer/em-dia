@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { checkupApi } from '../../api/services.ts';
+import { Icon, type IconName } from '../../components/Icon.tsx';
 import { useAuth } from '../auth/AuthContext.tsx';
 
 interface PerguntaCheckup {
   codigo: string;
-  icone: string;
+  icone: IconName;
   titulo: string;
   descricao: string;
 }
@@ -13,31 +14,31 @@ interface PerguntaCheckup {
 const PERGUNTAS: PerguntaCheckup[] = [
   {
     codigo: 'TEM_PET',
-    icone: '🐾',
+    icone: 'paw',
     titulo: 'Você tem animal de estimação?',
     descricao: 'Vamos monitorar as vacinas e vermífugos anuais do seu pet.',
   },
   {
     codigo: 'COMPROU_ELETRONICO',
-    icone: '📱',
+    icone: 'monitor',
     titulo: 'Comprou eletrônicos ou eletrodomésticos recentes?',
     descricao: 'Acompanhe os prazos de garantia do fabricante para não perder direitos.',
   },
   {
     codigo: 'TEM_PURIFICADOR',
-    icone: '💧',
+    icone: 'droplet',
     titulo: 'Possui purificador ou filtro de água em casa?',
     descricao: 'Lembretes periódicos para substituição do refil e água limpa.',
   },
   {
     codigo: 'TEM_CARRO',
-    icone: '🚗',
+    icone: 'car',
     titulo: 'Possui automóvel ou motocicleta?',
     descricao: 'Prazos de IPVA, seguro e manutenção preventiva.',
   },
   {
     codigo: 'TEM_CNH',
-    icone: '🪪',
+    icone: 'id-card',
     titulo: 'Você possui Carteira Nacional de Habilitação (CNH)?',
     descricao: 'Alertas com antecedência para renovação de exames e taxas.',
   },
@@ -84,7 +85,7 @@ export function CheckupView() {
       <div className="checkup-container">
         <div className="checkup-success-card">
           <div className="checkup-success-icon" aria-hidden="true">
-            🎉
+            <Icon name="check-circle" size={30} />
           </div>
           <h1>Check-up Concluído!</h1>
           <p className="checkup-success-text">
@@ -126,7 +127,7 @@ export function CheckupView() {
 
         {erro && (
           <div className="alert alert-error" role="alert">
-            <span aria-hidden="true">⚠️</span> {erro}
+            <Icon name="alert-circle" size={17} /> {erro}
           </div>
         )}
 
@@ -142,7 +143,7 @@ export function CheckupView() {
               >
                 <div className="question-info">
                   <span className="question-icon" aria-hidden="true">
-                    {p.icone}
+                    <Icon name={p.icone} size={22} />
                   </span>
                   <div>
                     <h2 className="question-title">{p.titulo}</h2>

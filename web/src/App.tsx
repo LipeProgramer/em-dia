@@ -4,6 +4,7 @@ import { AuthProvider } from './features/auth/AuthContext.tsx';
 import { AppRoutes } from './routes/AppRoutes.tsx';
 import './styles/tokens.css';
 import './App.css';
+import './styles/redesign.css';
 
 const queryClient = new QueryClient({
   defaultOptions: {

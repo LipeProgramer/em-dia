@@ -1,9 +1,18 @@
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../features/auth/AuthContext.tsx';
+import { Icon } from './Icon.tsx';
 
 export function Layout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const primeiroNome = user?.nome?.trim().split(/\s+/)[0] || 'você';
+  const iniciais = user?.nome
+    ?.trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((parte) => parte[0])
+    .join('')
+    .toUpperCase() || 'ED';
 
   const handleLogout = async () => {
     await logout();
@@ -12,95 +21,73 @@ export function Layout() {
 
   return (
     <div className="app-container">
-      {/* Banner de Check-up Pendente (TDAH onboarding) */}
+      <a className="skip-link" href="#conteudo">Pular para o conteúdo</a>
+
       {user?.precisaCheckup && (
-        <aside className="checkup-banner" role="banner">
+        <aside className="checkup-banner" aria-label="Configuração inicial pendente">
           <div className="checkup-banner-content">
             <span className="checkup-banner-icon" aria-hidden="true">
-              ✨
+              <Icon name="sparkles" size={20} />
             </span>
             <p>
-              <strong>Você ainda não fez o Check-up inicial.</strong> Leva menos
-              de 1 minuto para organizar seus prazos essenciais!
+              <strong>Vamos montar seu Radar.</strong>{' '}
+              Responda a 5 perguntas rápidas para começar com o que faz parte da sua rotina.
             </p>
-            <Link to="/checkup" className="btn btn-checkup-action">
-              Fazer Check-up agora
+            <Link to="/checkup" className="btn-checkup-action">
+              Fazer Check-up <Icon name="arrow-right" size={16} />
             </Link>
           </div>
         </aside>
       )}
 
-      {/* Header Principal */}
       <header className="app-header">
         <div className="header-inner">
-          <div className="brand">
-            <Link to="/" className="brand-logo" aria-label="Em Dia - Página inicial">
-              <span className="brand-icon">📅</span>
-              <span className="brand-name">Em Dia</span>
-            </Link>
-            <span className="brand-badge">Radar TDAH</span>
-          </div>
+          <Link to="/" className="brand-logo" aria-label="Em Dia — ir para o Radar">
+            <span className="brand-mark"><Icon name="radar" size={23} strokeWidth={2} /></span>
+            <span className="brand-wordmark">
+              <span className="brand-name">em dia<span className="brand-period">.</span></span>
+              <span className="brand-caption">RADAR PESSOAL</span>
+            </span>
+          </Link>
 
           <nav className="nav-menu" aria-label="Navegação principal">
-            <NavLink
-              to="/"
-              end
-              className={({ isActive }) =>
-                `nav-link ${isActive ? 'nav-link-active' : ''}`
-              }
-            >
-              <span aria-hidden="true">🎯</span> Radar
+            <NavLink to="/" end className={({ isActive }) => `nav-link ${isActive ? 'nav-link-active' : ''}`}>
+              <Icon name="radar" size={18} /> <span>Radar</span>
             </NavLink>
-            <NavLink
-              to="/itens"
-              className={({ isActive }) =>
-                `nav-link ${isActive ? 'nav-link-active' : ''}`
-              }
-            >
-              <span aria-hidden="true">📋</span> Meus Itens
+            <NavLink to="/itens" className={({ isActive }) => `nav-link ${isActive ? 'nav-link-active' : ''}`}>
+              <Icon name="list" size={18} /> <span>Meus itens</span>
             </NavLink>
-            <NavLink
-              to="/veiculos"
-              className={({ isActive }) =>
-                `nav-link ${isActive ? 'nav-link-active' : ''}`
-              }
-            >
-              <span aria-hidden="true">🚗</span> Veículos
+            <NavLink to="/veiculos" className={({ isActive }) => `nav-link ${isActive ? 'nav-link-active' : ''}`}>
+              <Icon name="car" size={18} /> <span>Veículos</span>
             </NavLink>
-            <NavLink
-              to="/perfil"
-              className={({ isActive }) =>
-                `nav-link ${isActive ? 'nav-link-active' : ''}`
-              }
-            >
-              <span aria-hidden="true">⚙️</span> Perfil
+            <NavLink to="/perfil" className={({ isActive }) => `nav-link ${isActive ? 'nav-link-active' : ''}`}>
+              <Icon name="settings" size={18} /> <span>Preferências</span>
             </NavLink>
           </nav>
 
           <div className="header-user">
-            <span className="user-greeting">Olá, {user?.nome?.split(' ')[0] || 'você'}</span>
-            <button
-              type="button"
-              className="btn btn-outline btn-sm btn-logout"
-              onClick={handleLogout}
-              aria-label="Sair da conta"
-            >
-              Sair
+            <span className="user-avatar" aria-hidden="true">{iniciais}</span>
+            <span className="user-greeting">
+              <span className="user-greeting-overline">BEM-VINDO(A)</span>
+              <strong>{primeiroNome}</strong>
+            </span>
+            <span className="header-user-divider" aria-hidden="true" />
+            <button type="button" className="btn-logout" onClick={handleLogout} aria-label="Sair da conta" title="Sair da conta">
+              <Icon name="logout" size={18} />
+              <span>Sair</span>
             </button>
           </div>
         </div>
       </header>
 
-      {/* Conteúdo Principal */}
-      <main className="app-main">
+      <main id="conteudo" className="app-main" tabIndex={-1}>
         <Outlet />
       </main>
 
       <footer className="app-footer">
-        <p>
-          Em Dia &bull; Radar de vencimentos para adultos com TDAH &bull; UNICV
-          Engenharia de Software
-        </p>
+        <span className="footer-brand"><Icon name="radar" size={15} /> em dia.</span>
+        <span>Um passo de cada vez.</span>
+        <span>Organização sem culpa · UNICV</span>
       </footer>
     </div>
   );

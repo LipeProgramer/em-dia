@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { Modal } from '../../components/Modal.tsx';
+import { Icon } from '../../components/Icon.tsx';
 import { itensApi } from '../../api/services.ts';
 import type { ItemRadarResponse } from '../../api/types.ts';
 
@@ -74,13 +75,13 @@ export function ModalConcluirItem({
       <form onSubmit={handleSubmit} className="concluir-form">
         {erro && (
           <div className="alert alert-error" role="alert">
-            <span aria-hidden="true">⚠️</span> {erro}
+            <Icon name="alert-triangle" size={17} /> {erro}
           </div>
         )}
 
         {temPassosPendentes && (
           <div className="alert alert-warning" role="alert">
-            <span aria-hidden="true">💡</span>
+            <Icon name="lightbulb" size={19} />
             <div>
               <strong>Atenção:</strong> Você ainda tem{' '}
               <strong>{passosPendentes} passo(s) pendente(s)</strong> na lista.

@@ -1,6 +1,8 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext.tsx';
+import { Icon } from '../../components/Icon.tsx';
+import { Modal } from '../../components/Modal.tsx';
 import { authApi, preferenciasApi } from '../../api/services.ts';
 
 export function PerfilView() {
@@ -23,6 +25,10 @@ export function PerfilView() {
   const [msgPrefs, setMsgPrefs] = useState<{ tipo: 'ok' | 'erro'; texto: string } | null>(
     null
   );
+  const [confirmarExclusao, setConfirmarExclusao] = useState(false);
+  const [textoConfirmacao, setTextoConfirmacao] = useState('');
+  const [excluindoConta, setExcluindoConta] = useState(false);
+  const [erroExclusao, setErroExclusao] = useState<string | null>(null);
 
   // Carregar preferências
   useEffect(() => {
@@ -76,18 +82,28 @@ export function PerfilView() {
     }
   };
 
+  const abrirConfirmacaoExclusao = () => {
+    setTextoConfirmacao('');
+    setErroExclusao(null);
+    setConfirmarExclusao(true);
+  };
+
   const handleExcluirConta = async () => {
-    const confirmacao = window.prompt(
-      'ATENÇÃO: Esta ação é definitiva e apagará todos os seus itens, veículos e dados conforme a LGPD.\n\nPara confirmar, digite EXCLUIR abaixo:'
-    );
-    if (confirmacao === 'EXCLUIR') {
-      try {
-        await authApi.excluirConta();
-        await logout();
-        navigate('/login');
-      } catch {
-        alert('Erro ao excluir conta. Tente novamente.');
-      }
+    if (textoConfirmacao.trim() !== 'EXCLUIR') {
+      setErroExclusao('Digite EXCLUIR exatamente como aparece para confirmar.');
+      return;
+    }
+
+    try {
+      setExcluindoConta(true);
+      setErroExclusao(null);
+      await authApi.excluirConta();
+      await logout();
+      navigate('/login', { replace: true });
+    } catch {
+      setErroExclusao('Não foi possível excluir sua conta. Tente novamente.');
+    } finally {
+      setExcluindoConta(false);
     }
   };
 
@@ -104,7 +120,7 @@ export function PerfilView() {
         {/* Card: Dados Básicos */}
         <section className="card perfil-card" aria-labelledby="dados-pessoais-title">
           <h2 id="dados-pessoais-title" className="card-title">
-            👤 Dados da Conta
+            <Icon name="user" size={19} /> Dados da conta
           </h2>
           <div className="user-email-display">
             <span className="label">E-mail cadastrado:</span>
@@ -145,7 +161,7 @@ export function PerfilView() {
         {/* Card: Preferências de Notificação e Foco */}
         <section className="card perfil-card" aria-labelledby="prefs-title">
           <h2 id="prefs-title" className="card-title">
-            🔔 Preferências de Aviso e Foco
+            <Icon name="bell" size={19} /> Preferências de aviso e foco
           </h2>
 
           {msgPrefs && (
@@ -180,7 +196,7 @@ export function PerfilView() {
                 <input
                   id="maxReavisosInput"
                   type="number"
-                  min={1}
+                  min={0}
                   max={5}
                   className="form-control"
                   value={maxReavisos}
@@ -196,7 +212,7 @@ export function PerfilView() {
                   id="intervaloDiasInput"
                   type="number"
                   min={1}
-                  max={15}
+                  max={7}
                   className="form-control"
                   value={intervaloReavisoDias}
                   onChange={(e) =>
@@ -237,7 +253,7 @@ export function PerfilView() {
         {/* Card: Zona de Perigo / LGPD */}
         <section className="card card-danger" aria-labelledby="perigo-title">
           <h2 id="perigo-title" className="card-title text-danger">
-            ⚠️ Zona de Perigo (LGPD)
+            <Icon name="shield-check" size={19} /> Zona de perigo (LGPD)
           </h2>
           <p className="danger-desc">
             Excluir sua conta removerá todos os seus itens cadastrados, histórico,
@@ -246,12 +262,45 @@ export function PerfilView() {
           <button
             type="button"
             className="btn btn-danger"
-            onClick={handleExcluirConta}
+            onClick={abrirConfirmacaoExclusao}
           >
-            Excluir Minha Conta Definitivamente
+            Excluir minha conta definitivamente
           </button>
         </section>
       </div>
+
+      <Modal
+        isOpen={confirmarExclusao}
+        onClose={() => { if (!excluindoConta) setConfirmarExclusao(false); }}
+        title="Excluir sua conta?"
+      >
+        <div className="delete-account-warning" role="note">
+          <Icon name="alert-triangle" size={21} />
+          <p>Esta ação é permanente. Seus itens, histórico, veículos e preferências serão removidos e não poderão ser recuperados.</p>
+        </div>
+        <div className="form-group">
+          <label htmlFor="confirmarExclusaoTexto">Para confirmar, digite <strong>EXCLUIR</strong></label>
+          <input
+            id="confirmarExclusaoTexto"
+            type="text"
+            autoComplete="off"
+            className="form-control"
+            value={textoConfirmacao}
+            onChange={(event) => { setTextoConfirmacao(event.target.value); setErroExclusao(null); }}
+            aria-invalid={!!erroExclusao}
+            aria-describedby={erroExclusao ? 'erroExclusaoConta' : undefined}
+            disabled={excluindoConta}
+          />
+          <p className="form-text">Digite a palavra em letras maiúsculas para habilitar a exclusão.</p>
+        </div>
+        {erroExclusao && <div id="erroExclusaoConta" className="alert alert-error" role="alert">{erroExclusao}</div>}
+        <div className="modal-actions">
+          <button type="button" className="btn btn-outline" onClick={() => setConfirmarExclusao(false)} disabled={excluindoConta}>Manter minha conta</button>
+          <button type="button" className="btn btn-danger" onClick={handleExcluirConta} disabled={excluindoConta || textoConfirmacao.trim() !== 'EXCLUIR'}>
+            {excluindoConta ? 'Excluindo conta…' : 'Excluir conta definitivamente'}
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 }
