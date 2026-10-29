@@ -35,14 +35,17 @@ public class IntegrationTestFactory : WebApplicationFactory<Program>, IAsyncLife
         }
         else
         {
-            _container = new PostgreSqlBuilder("postgres:17").Build();
+            // Banco próprio: o padrão do contêiner ("postgres") não pode ser apagado estando conectado a ele
+            _container = new PostgreSqlBuilder("postgres:17").WithDatabase("emdia_test").Build();
             await _container.StartAsync();
             _connectionString = _container.GetConnectionString();
         }
 
         using var scope = Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<EmDiaDbContext>();
-        await db.Database.EnsureDeletedAsync();
+        // O contêiner já nasce vazio; só o banco externo precisa ser recriado
+        if (_container is null)
+            await db.Database.EnsureDeletedAsync();
         await db.Database.MigrateAsync();
     }
 
