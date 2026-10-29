@@ -105,10 +105,13 @@ O Swagger fica em `https://emdia-api-felipemsantoss.onrender.com/swagger` e perm
 
 O token vale 15 minutos; depois disso, faça login de novo e troque no **Authorize**.
 
-Todos os corpos JSON já vêm com um **exemplo válido**: é só **Try it out → Execute**. Para criar item sem mexer em
-JSON, use **`POST /api/v1/itens/rapido`**: cada campo é um parâmetro (os obrigatórios têm `*`, o tipo de vencimento é
-uma lista). Copie o `id` da resposta — ou do botão **Copiar** no detalhe do item no site — e use em
-`GET /api/v1/itens/{id}`, `PUT`, `DELETE` e `POST /api/v1/itens/{id}/concluir`.
+Todos os corpos JSON já vêm com um **exemplo válido**: é só **Try it out → Execute**. Para não mexer em JSON, cada
+POST, PUT e PATCH tem uma versão **`.../rapido`** logo abaixo da original, com cada campo como parâmetro (os
+obrigatórios têm `*`, os tipos são listas de opções). Ex.: `POST /api/v1/auth/login/rapido` (a senha vai no campo
+de cabeçalho `senha`), `POST /api/v1/itens/rapido`, `PUT /api/v1/itens/{id}/rapido`,
+`POST /api/v1/itens/{id}/concluir/rapido`, `POST /api/v1/veiculos/rapido`. Copie o `id` da resposta — ou do botão
+**Copiar** no detalhe do item no site — e use em `GET /api/v1/itens/{id}`, nos `PUT` e no `DELETE`. Cada rota
+descreve os parâmetros e o que cada resposta (200, 400, 404, 409, 422…) significa.
 
 ## Se der erro
 

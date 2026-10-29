@@ -204,6 +204,7 @@ public static class ServiceCollectionExtensions
             // Exemplos válidos nos corpos e lista de opções nos filtros: testar pelo Swagger sem erro de digitação
             c.SchemaFilter<ExemplosSwagger>();
             c.OperationFilter<OpcoesDeFiltroSwagger>();
+            c.OperationFilter<RespostasComunsSwagger>();
         });
         return services;
     }

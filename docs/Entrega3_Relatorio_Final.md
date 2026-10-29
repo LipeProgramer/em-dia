@@ -238,10 +238,10 @@ navegador, o token de renovação vai no corpo da resposta e fica no **SecureSto
 | Nível | Ferramenta | Testes | Resultado |
 |---|---|---|---|
 | Unitário (Domain) | xUnit | 50 (U01–U15 + 35 complementares) | ✅ 50/50 |
-| Integração da API | xUnit + WebApplicationFactory + PostgreSQL | 59 (CT01–CT46 + extras) | ✅ 59/59 |
+| Integração da API | xUnit + WebApplicationFactory + PostgreSQL | 62 (CT01–CT46 + extras) | ✅ 62/62 |
 | Frontend web | Vitest + Testing Library | 17 (CT47–CT51 + validações) | ✅ 17/17 |
 | App mobile | Vitest | 11 (validações e datas) | ✅ 11/11 |
-| **Total** | | **137** | **✅ 137/137** |
+| **Total** | | **140** | **✅ 140/140** |
 
 - **Cobertura do `EmDia.Domain`:** 97,3% das linhas e 89,5% dos ramos (critério: ≥ 80%).
 - **Fluxos F1–F4** executados de ponta a ponta com a API e o front rodando juntos: primeiro acesso, concluir item com
@@ -296,7 +296,7 @@ O sistema está publicado com HTTPS, em serviços gratuitos (passo a passo em `d
 ## 12. Conclusão, dificuldades e aprendizados
 
 A solução implementa o que a Entrega 2 especificou — contrato da API, modelo de dados, regras de negócio, segurança e
-telas — com 137 testes automatizados aprovados, cobertura de 97% nas regras de negócio e o sistema publicado online.
+telas — com 140 testes automatizados aprovados, cobertura de 97% nas regras de negócio e o sistema publicado online.
 As duas metáforas (Radar e Check-up) orientam as telas, e a acessibilidade foi verificada por testes (status com texto
 e símbolo, uso só com teclado).
 

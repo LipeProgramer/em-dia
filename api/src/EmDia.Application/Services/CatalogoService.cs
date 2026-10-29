@@ -33,6 +33,8 @@ public class CatalogoService(ICatalogoRepository catalogo)
         ("COMPROU_ELETRODOMESTICO", "Comprou algum eletrodoméstico no último ano?", "Geladeira, máquina de lavar, micro-ondas: a garantia tem prazo."),
     ];
 
+    /// <summary>Códigos das perguntas, na ordem do check-up (lista de opções no Swagger).</summary>
+    public static IEnumerable<string> CodigosPerguntas => Perguntas.Select(p => p.Codigo);
 
     public async Task<IReadOnlyList<CategoriaResponse>> ListarCategoriasAsync(CancellationToken ct) =>
         (await catalogo.ListarCategoriasAsync(ct))

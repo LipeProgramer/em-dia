@@ -1,16 +1,6 @@
-using System.Security.Claims;
-using EmDia.Api.Extensions;
-using EmDia.Application.DTOs.Auth;
-using EmDia.Application.DTOs.Catalogo;
-using EmDia.Application.DTOs.Checkup;
 using EmDia.Application.DTOs.Historico;
-using EmDia.Application.DTOs.Itens;
-using EmDia.Application.DTOs.Usuarios;
-using EmDia.Application.DTOs.Veiculos;
 using EmDia.Application.Services;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.RateLimiting;
 
 namespace EmDia.Api.Controllers;
 
@@ -18,8 +8,17 @@ namespace EmDia.Api.Controllers;
 [Route("api/v1/historico")]
 public class HistoricoController(HistoricoService historico) : ApiControllerBase
 {
+    /// <summary>E25 · Histórico de conclusões (filtros opcionais).</summary>
+    /// <param name="itemId">Só as conclusões de um item (uuid)</param>
+    /// <param name="de">A partir desta data (aaaa-mm-dd)</param>
+    /// <param name="ate">Até esta data (aaaa-mm-dd)</param>
+    /// <param name="ct"></param>
+    /// <response code="200">Cada conclusão com data, km, valor gasto, observação e o vencimento antes e depois.</response>
+    /// <response code="400">Período inválido ("de" depois de "ate").</response>
+    /// <response code="404">Item não existe ou é de outra pessoa.</response>
     [HttpGet]
     [ProducesResponseType<IReadOnlyList<HistoricoResponse>>(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public Task<IReadOnlyList<HistoricoResponse>> Listar([FromQuery] Guid? itemId, [FromQuery] DateOnly? de,
         [FromQuery] DateOnly? ate, CancellationToken ct) => historico.ListarAsync(UsuarioId, itemId, de, ate, ct);
 }

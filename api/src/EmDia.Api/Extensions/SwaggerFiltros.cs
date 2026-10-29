@@ -3,7 +3,9 @@ using EmDia.Application.DTOs.Checkup;
 using EmDia.Application.DTOs.Itens;
 using EmDia.Application.DTOs.Usuarios;
 using EmDia.Application.DTOs.Veiculos;
+using EmDia.Application.Services;
 using EmDia.Domain.Enums;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
@@ -46,16 +48,52 @@ public class ExemplosSwagger : ISchemaFilter
     }
 }
 
-/// <summary>Filtro <c>status</c> de GET /itens como lista de opções (texto livre deixava digitar valores inválidos).</summary>
+/// <summary>
+/// Listas de opções onde o valor é texto (texto livre deixava digitar valores inválidos): o filtro <c>status</c> de
+/// GET /itens e as perguntas respondidas "sim" no POST /checkup/rapido.
+/// </summary>
 public class OpcoesDeFiltroSwagger : IOperationFilter
 {
     public void Apply(OpenApiOperation operation, OperationFilterContext context)
     {
-        var status = operation.Parameters?.FirstOrDefault(p => p.Name == "status" && p.In == ParameterLocation.Query);
-        if (status is null)
-            return;
+        foreach (var p in operation.Parameters?.Where(p => p.In == ParameterLocation.Query) ?? [])
+        {
+            if (p.Name == "status")
+            {
+                p.Schema.Enum = Opcoes(Enum.GetNames<StatusItem>());
+                p.Description = "Vencido, Atencao (vence dentro da antecedência), EmDia ou Encerrado";
+            }
+            else if (p.Name == "sim" && p.Schema.Items is not null)
+            {
+                p.Schema.Items.Enum = Opcoes(CatalogoService.CodigosPerguntas);
+            }
+        }
+    }
 
-        status.Schema.Enum = Enum.GetNames<StatusItem>().Select(n => (IOpenApiAny)new OpenApiString(n)).ToList();
-        status.Description = "Vencido, Atencao (vence dentro da antecedência), EmDia ou Encerrado";
+    private static List<IOpenApiAny> Opcoes(IEnumerable<string> valores) =>
+        valores.Select(v => (IOpenApiAny)new OpenApiString(v)).ToList();
+}
+
+/// <summary>
+/// Respostas que valem para várias rotas, documentadas em todas: 401 nas que exigem login e 429 do limite geral
+/// (DV21). Também tira o cadeado das rotas abertas (cadastro, login e renovação).
+/// </summary>
+public class RespostasComunsSwagger : IOperationFilter
+{
+    public void Apply(OpenApiOperation operation, OperationFilterContext context)
+    {
+        var aberta = context.ApiDescription.ActionDescriptor.EndpointMetadata.OfType<IAllowAnonymous>().Any();
+        if (aberta)
+            operation.Security = [];
+        else
+            operation.Responses.TryAdd("401", new OpenApiResponse
+            {
+                Description = "Sem login ou token vencido: faça POST /api/v1/auth/login e cole o accessToken em Authorize."
+            });
+
+        operation.Responses.TryAdd("429", new OpenApiResponse
+        {
+            Description = "MUITAS_REQUISICOES: mais de 300 requisições por minuto deste IP. Aguarde 1 minuto."
+        });
     }
 }

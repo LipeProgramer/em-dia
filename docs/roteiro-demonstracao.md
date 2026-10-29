@@ -72,9 +72,10 @@ Tempo previsto: **8 a 10 minutos**. Os slides que acompanham estão na apresenta
 | Passo | Ação | O que mostrar e falar |
 |---|---|---|
 | 5.1 | `GET /api/v1/radar` sem token → **Execute** | **401**: toda rota exige login, exceto registrar, login e refresh. |
-| 5.2 | `POST /api/v1/auth/login` com a conta da demo → copie o `accessToken` | Autenticação JWT (HS256). |
-| 5.3 | **Authorize** → cole o token → `GET /api/v1/radar` | **200**: os mesmos dados que o site mostra. 25 endpoints (E01–E25) documentados. |
-| 5.4 | (Opcional) `POST /api/v1/auth/registrar` com corpo vazio | **400** com `errors` por campo: a validação existe também na API, não só no front. |
+| 5.2 | `POST /api/v1/auth/login/rapido`: `email` no parâmetro e `senha` no campo de cabeçalho → copie o `accessToken` | Autenticação JWT (HS256). A senha vai no cabeçalho, nunca no endereço (endereços ficam em logs). |
+| 5.3 | **Authorize** → cole o token → `GET /api/v1/radar` | **200**: os mesmos dados que o site mostra. 25 endpoints (E01–E25) documentados, cada um com resumo, parâmetros e respostas. |
+| 5.4 | `POST /api/v1/itens/rapido` (nome, categoriaId, tipoVencimento e dataVencimento) → copie o `id` → `GET /api/v1/itens/{id}` | **201** e **200**. Cada POST, PUT e PATCH tem uma versão `.../rapido` com os campos como parâmetros; o site e o app continuam usando JSON. |
+| 5.5 | (Opcional) `POST /api/v1/itens/rapido` sem `nome` | **400** `"Campo obrigatório."` no campo: a validação existe também na API, não só no front. |
 
 ## Fechamento (≈ 30 s)
 
@@ -93,5 +94,5 @@ cascata. No **Neon**, a tabela `usuarios` não tem mais a conta da demonstraçã
 | E a API com o banco? | Entity Framework Core 10 + Npgsql; migrations versionam o banco e criam o catálogo; repositórios filtram sempre pelo dono (RN12). |
 | Como evitam ataque de força bruta? | 5 tentativas de login por minuto por IP (429) e bloqueio da conta por 15 min após 5 falhas. Além disso, toda a API aceita no máximo 300 requisições por minuto por IP (DV21). |
 | E se alguém tentar ver o item de outra pessoa? | O id do usuário vem só do token; recurso de outro usuário responde **404**. |
-| Como sabem que funciona? | 137 testes automatizados (50 unitários, 59 de integração com PostgreSQL real, 17 do front, 11 do app), cobertura de 97,3% no Domain e CI no GitHub Actions a cada push. |
+| Como sabem que funciona? | 140 testes automatizados (50 unitários, 62 de integração com PostgreSQL real, 17 do front, 11 do app), cobertura de 97,3% no Domain e CI no GitHub Actions a cada push. |
 | Por que Vercel + Render + Neon? | Gratuitos e separados por função. O Vercel repassa `/api/*` para o Render, então o navegador vê um só endereço e o cookie `SameSite=Strict` funciona. |

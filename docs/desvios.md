@@ -109,9 +109,20 @@ login também contam.
 ### DV22 — Teste pelo Swagger sem digitar JSON
 Para a demonstração, o Swagger ficou fácil de usar sem erro de digitação, sem mudar o contrato E01–E25 (o site e o app
 continuam enviando JSON):
-- **`POST /api/v1/itens/rapido`** (extra): cria um item com cada campo como **parâmetro** — `nome`, `categoriaId` e
-  `tipoVencimento` obrigatórios (lista de opções), datas no formato `aaaa-mm-dd`, `antecedenciaDias` padrão 30 e
-  `passos` um por linha. Mesmas validações e regras do E15; faltou um obrigatório → 400 "Campo obrigatório.".
+- **Rotas `.../rapido`** (extras): cada POST, PUT e PATCH com corpo JSON ganhou uma versão com os campos como
+  **parâmetros** (obrigatórios com `*`, enums como lista de opções, datas `aaaa-mm-dd`). Elas montam o mesmo request
+  do contrato, então valem as mesmas validações e regras; faltou um obrigatório → 400 "Campo obrigatório.".
+  `POST /auth/registrar/rapido`, `POST /auth/login/rapido` (com o mesmo limite de 5 por minuto),
+  `PUT /usuarios/me/preferencias/rapido`, `DELETE /usuarios/me/rapido`, `POST /checkup/rapido` (respostas "sim" em
+  lista, até um veículo e um item), `POST /itens/rapido`, `PUT /itens/{id}/rapido`, `POST /itens/{id}/concluir/rapido`,
+  `PATCH /itens/{id}/passos/{passoId}/rapido`, `POST /veiculos/rapido`, `PUT /veiculos/{id}/rapido` e
+  `PATCH /veiculos/{id}/km/rapido`. GET e DELETE já usavam só parâmetros. As rotas de push ficam só com JSON, porque
+  os dados vêm do navegador.
+- A **senha** nessas rotas vai num campo de **cabeçalho** (`senha`), nunca no endereço: endereços ficam gravados em
+  logs e no histórico do navegador.
+- **Documentação completa**: toda rota tem resumo, observações com exemplo, descrição de cada parâmetro e de cada
+  resposta (inclusive os `code` de regra, como `PASSOS_PENDENTES`); 401 e 429 aparecem em todas, e as rotas abertas
+  ficam sem o cadeado. Um teste de integração falha se alguma rota, parâmetro ou resposta ficar sem descrição.
 - **Exemplos válidos** em todos os corpos JSON (cadastro, login, check-up, item, concluir, veículo, km, preferências):
   "Try it out" → "Execute" funciona sem editar; um teste de integração envia cada exemplo para a API.
 - O filtro `status` de `GET /itens` virou **lista de opções** (Vencido, Atencao, EmDia, Encerrado).

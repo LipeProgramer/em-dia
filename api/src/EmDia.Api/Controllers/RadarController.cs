@@ -1,16 +1,6 @@
-using System.Security.Claims;
-using EmDia.Api.Extensions;
-using EmDia.Application.DTOs.Auth;
-using EmDia.Application.DTOs.Catalogo;
-using EmDia.Application.DTOs.Checkup;
-using EmDia.Application.DTOs.Historico;
 using EmDia.Application.DTOs.Itens;
-using EmDia.Application.DTOs.Usuarios;
-using EmDia.Application.DTOs.Veiculos;
 using EmDia.Application.Services;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.RateLimiting;
 
 namespace EmDia.Api.Controllers;
 
@@ -18,7 +8,11 @@ namespace EmDia.Api.Controllers;
 [Route("api/v1/radar")]
 public class RadarController(RadarService radar) : ApiControllerBase
 {
-    /// <summary>E12 · Resumo e itens por anel. Sem "foco", usa a preferência do usuário.</summary>
+    /// <summary>E12 · Radar: resumo e itens por anel (vencido, atenção, em dia).</summary>
+    /// <param name="foco">true mostra só o que é urgente (vencidos e atenção); vazio usa a preferência da pessoa</param>
+    /// <param name="ct"></param>
+    /// <response code="200">Contagem por status, se o modo foco está ligado e os itens com o anel de cada um.</response>
     [HttpGet]
+    [ProducesResponseType<RadarResponse>(StatusCodes.Status200OK)]
     public Task<RadarResponse> Obter([FromQuery] bool? foco, CancellationToken ct) => radar.ObterAsync(UsuarioId, foco, ct);
 }
