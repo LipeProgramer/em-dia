@@ -1,7 +1,28 @@
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import logo from '../../assets/logo.png';
 
+const VERDE = '#153f38';
+
+/**
+ * Enquanto uma tela de entrada está aberta, a página inteira fica verde: no celular, a área atrás do relógio e o
+ * espaço que aparece ao arrastar a tela para baixo usam a cor da página (antes ficavam cinza-claro).
+ */
+function usePaginaVerde() {
+  useEffect(() => {
+    const html = document.documentElement;
+    const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+    const corAnterior = meta?.content;
+    html.classList.add('pagina-auth');
+    meta?.setAttribute('content', VERDE);
+    return () => {
+      html.classList.remove('pagina-auth');
+      if (meta && corAnterior) meta.setAttribute('content', corAnterior);
+    };
+  }, []);
+}
+
 export function AuthLayout({ titulo, subtitulo, children }: { titulo: string; subtitulo: string; children: ReactNode }) {
+  usePaginaVerde();
   return (
     <main className="auth" id="conteudo">
       <div className="auth-cartao">
