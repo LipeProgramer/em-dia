@@ -1,0 +1,27 @@
+name: Manter a API acordada
+
+# No plano gratuito do Render a API "dorme" depois de 15 minutos sem uso, e a primeira chamada depois disso leva
+# perto de 1 minuto (DV23). Este agendamento chama /health a cada 10 minutos das 6h à meia-noite (Brasília), então
+# a API fica pronta no horário de uso. São ~560 horas por mês, dentro das 750 horas gratuitas do Render. De
+# madrugada ela dorme; às 8h15 o agendamento dos avisos também a acorda.
+on:
+  schedule:
+    - cron: "*/10 0-2,9-23 * * *"   # UTC: 6h às 23h59 em Brasília
+  workflow_dispatch:
+
+jobs:
+  ping:
+    name: Chamar /health
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Chamar a API até responder
+        run: |
+          for i in $(seq 1 6); do
+            if curl -sf -m 90 https://emdia-api-felipemsantoss.onrender.com/health > /dev/null; then
+              echo "API acordada (tentativa $i)."
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "A API não respondeu." && exit 1

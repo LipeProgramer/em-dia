@@ -76,6 +76,8 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapGet("/", () => Results.Redirect("/swagger")).AllowAnonymous().ExcludeFromDescription();
+// Verificação leve (sem banco) usada pelo agendamento que mantém a API acordada no plano gratuito (DV23)
+app.MapGet("/health", () => Results.Text("ok")).AllowAnonymous().ExcludeFromDescription();
 
 app.Run();
 

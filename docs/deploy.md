@@ -59,9 +59,13 @@ login (`SameSite=Strict`) funciona e não é preciso mexer no código do site.
 
 ## Antes de apresentar
 
-- **Acorde a API.** No plano gratuito do Render, a API "dorme" depois de 15 minutos sem uso e leva perto de 1 minuto
-  para acordar. Uns 2 minutos antes, abra `https://emdia-api-felipemsantoss.onrender.com/swagger` e espere carregar.
-  Sem isso, o primeiro cadastro ou login pode dar "Algo deu errado".
+- **A API fica acordada das 6h à meia-noite.** No plano gratuito do Render, a API "dorme" depois de 15 minutos sem uso
+  e leva perto de 1 minuto para acordar. O agendamento `.github/workflows/manter-acordado.yml` chama
+  `https://emdia-api-felipemsantoss.onrender.com/health` a cada 10 minutos nesse horário (~560 h/mês, dentro das 750 h
+  gratuitas do Render; se tiver outro serviço gratuito no Render, as horas são somadas). O GitHub pode atrasar
+  agendamentos; por garantia, uns 2 minutos antes de apresentar, abra o `/health` e espere aparecer `ok`.
+- Para não depender do GitHub, dá para cadastrar o mesmo endereço `/health` num monitor gratuito (ex.: UptimeRobot,
+  a cada 5 minutos).
 - Sem as variáveis de e-mail (abaixo), os avisos por e-mail só aparecem no log do Render (**Logs**) (DV16).
 
 ## Avisos de vencimento: e-mail e celular

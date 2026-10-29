@@ -128,6 +128,19 @@ continuam enviando JSON):
 - O filtro `status` de `GET /itens` virou **lista de opções** (Vencido, Atencao, EmDia, Encerrado).
 - No site, o detalhe do item mostra o **id flutuante com botão Copiar**, para colar em `GET /api/v1/itens/{id}`.
 
+### DV23 — Desempenho no plano gratuito
+O servidor gratuito do Render tem 0,1 CPU e dorme depois de 15 minutos sem uso; a primeira chamada depois disso
+levava perto de 1 minuto. Sem mudar o contrato:
+- **API acordada no horário de uso:** rota `GET /health` (sem banco, fora do Swagger) e um agendamento do GitHub
+  Actions que a chama a cada 10 minutos, das 6h à meia-noite (~560 h/mês, dentro das 750 h gratuitas). De madrugada a
+  API dorme; o banco (Neon) continua dormindo quando não há uso e acorda em menos de 1 segundo.
+- **Imagem pré-compilada (ReadyToRun)** e coletor de lixo simples: menos trabalho de compilação na CPU fraca, então
+  a API sobe e responde às primeiras chamadas de cada tela mais rápido.
+- **Site:** depois de criar, editar ou concluir, a tela usa o item devolvido pela API e recarrega as listas em
+  segundo plano, sem esperar; os arquivos do site (com nome versionado) ficam em cache no navegador por 1 ano.
+- O BCrypt continua com **custo 12** (spec §4.3): o cálculo da senha é lento de propósito (dificulta ataques), então
+  login e cadastro são as chamadas mais demoradas na CPU fraca.
+
 ### DV16 — Sem SMTP configurado, e-mails só vão para o log
 Se `Email:Smtp:Host` estiver vazio, a API usa um serviço de e-mail falso que só registra as mensagens. Com o host
 configurado, usa o MailKit. A rotina diária roda às 8h (America/Sao_Paulo).

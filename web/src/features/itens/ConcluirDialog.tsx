@@ -10,7 +10,7 @@ import { Alerta, Button, Dialog, Field } from '../../components/ui.tsx';
 import { aplicarErrosDaApi } from '../../utils/erros.ts';
 import { hojeIso } from '../../utils/formato.ts';
 import { concluirSchema } from './schemas.ts';
-import { chaves, useInvalidar } from './useInvalidar.ts';
+import { chaves, useGuardarItem, useInvalidar } from './useInvalidar.ts';
 
 type Schema = ReturnType<typeof concluirSchema>;
 
@@ -21,6 +21,7 @@ type Schema = ReturnType<typeof concluirSchema>;
 export function ConcluirDialog({ item, aberto, aoFechar }: { item: ItemDetalhe; aberto: boolean; aoFechar: () => void }) {
   const navigate = useNavigate();
   const invalidar = useInvalidar();
+  const guardarItem = useGuardarItem();
   const exigeKm = item.tipoVencimento === 'UsoOuTempo';
   const [pendencia, setPendencia] = useState<string | null>(null);
   const [mensagem, setMensagem] = useState<string | null>(null);
@@ -46,7 +47,8 @@ export function ConcluirDialog({ item, aberto, aoFechar }: { item: ItemDetalhe; 
       });
       setPendencia(null);
       setMensagem(r.mensagem);
-      await invalidar(chaves.radar, chaves.itens, chaves.item(item.id), chaves.historico, chaves.veiculos);
+      guardarItem(r.item);
+      await invalidar(chaves.radar, chaves.itens, chaves.historico, chaves.veiculos);
     } catch (e) {
       const p = problema(e);
       if (p?.code === 'PASSOS_PENDENTES') {

@@ -10,7 +10,7 @@ import { Alerta, Button, ErrorState, Field, PageHeader, Skeleton } from '../../c
 import { aplicarErrosDaApi } from '../../utils/erros.ts';
 import { hojeIso, tiposVencimento } from '../../utils/formato.ts';
 import { itemSchema, type ItemForm, type ItemValido } from './schemas.ts';
-import { chaves, useInvalidar } from './useInvalidar.ts';
+import { chaves, useGuardarItem, useInvalidar } from './useInvalidar.ts';
 
 const vazio: ItemForm = {
   nome: '', categoriaId: '', tipoVencimento: 'RecorrentePorTempo', dataBase: '', dataVencimento: '',
@@ -185,6 +185,7 @@ function ItemFormulario({ inicial, modeloId, enviar, rotuloEnviar }: {
 export function NovoItemPage() {
   const navigate = useNavigate();
   const invalidar = useInvalidar();
+  const guardarItem = useGuardarItem();
   const [categoria, setCategoria] = useState<number>(1);
   const [modelo, setModelo] = useState<Modelo | null | undefined>(undefined); // undefined = ainda escolhendo
   const categorias = useQuery({ queryKey: ['categorias'], queryFn: catalogoApi.categorias, staleTime: Infinity });
@@ -192,6 +193,7 @@ export function NovoItemPage() {
 
   const criar = async (dados: SalvarItemRequest) => {
     const item = await itensApi.criar(dados);
+    guardarItem(item);
     await invalidar(chaves.radar, chaves.itens);
     navigate(`/itens/${item.id}`, { replace: true });
   };
@@ -238,11 +240,12 @@ export function EditarItemPage() {
   const { id = '' } = useParams();
   const navigate = useNavigate();
   const invalidar = useInvalidar();
+  const guardarItem = useGuardarItem();
   const item = useQuery({ queryKey: chaves.item(id), queryFn: () => itensApi.obter(id) });
 
   const salvar = async (dados: SalvarItemRequest) => {
-    await itensApi.editar(id, dados);
-    await invalidar(chaves.radar, chaves.itens, chaves.item(id));
+    guardarItem(await itensApi.editar(id, dados));
+    await invalidar(chaves.radar, chaves.itens);
     navigate(`/itens/${id}`, { replace: true });
   };
 
