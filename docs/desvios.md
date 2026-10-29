@@ -156,6 +156,17 @@ recebe um link para criar uma senha nova:
 - O e-mail usa o mesmo SMTP dos avisos (DV16), pelo Brevo na porta 2525 (o Render gratuito bloqueia a 587). O app Expo (DV15) não tem a função: ele roda com a API local, e o link
   do e-mail abre o site publicado.
 
+### DV25 — Reuso de token encerra a sessão do aparelho, não todas
+A spec §4.3 diz que o reuso de um refresh já trocado revoga **todos** os tokens do usuário. Na prática isso derrubava
+o PC e o celular juntos sem ataque nenhum: duas abas renovando ao mesmo tempo, ou o celular perdendo a resposta da
+renovação (app em segundo plano, API acordando), reenviam o token antigo. Agora, como nos provedores de login:
+- Cada login abre uma **sessão do aparelho** (`familia_id` em `refresh_tokens`); as renovações herdam a sessão.
+- Reuso de um token trocado revoga **a sessão daquele aparelho** (código `REFRESH_REUTILIZADO`); os outros aparelhos
+  continuam logados. Logout também encerra só o aparelho atual.
+- Um token trocado há **até 60 segundos** pode ser reenviado sem alarme (corrida entre abas ou resposta perdida),
+  desde que a sessão do aparelho continue ativa.
+- Trocar a senha (DV24) e excluir a conta continuam encerrando todas as sessões.
+
 ### DV16 — Sem SMTP configurado, e-mails só vão para o log
 Se `Email:Smtp:Host` estiver vazio, a API usa um serviço de e-mail falso que só escreve as mensagens no log. Com o host
 configurado, usa o MailKit. A rotina diária roda às 8h (America/Sao_Paulo).

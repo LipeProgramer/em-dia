@@ -154,15 +154,69 @@ public class AuthTests(IntegrationTestFactory f)
         ApiCliente.CookieRefresh(resp).Should().NotBe(antigo);
     }
 
-    [Fact(DisplayName = "CT11 · Reuso de um refresh já trocado → 401; todos os tokens do usuário revogados")]
+    /// <summary>Executa com "hoje" um dia à frente: passa da tolerância de reuso (60 s) sem vencer os tokens (7 dias).</summary>
+    private async Task DepoisDaTolerancia(Func<Task> acao)
+    {
+        try
+        {
+            f.Relogio.Hoje = RelogioFixo.HojePadrao.AddDays(1);
+            await acao();
+        }
+        finally
+        {
+            f.Relogio.Hoje = RelogioFixo.HojePadrao;
+        }
+    }
+
+    [Fact(DisplayName = "CT11 · Reuso de um refresh já trocado → 401; a sessão daquele aparelho é revogada, a dos outros não (DV25)")]
     public async Task CT11_ReusoDeRefresh()
     {
         var c = await ApiCliente.CriarAsync(f);
         var antigo = c.RefreshCookie;
+        var outroAparelho = ApiCliente.CookieRefresh(await c.EntrarAsync());
         var novo = ApiCliente.CookieRefresh(await c.RefreshAsync(antigo));
 
-        (await c.RefreshAsync(antigo)).StatusCode.Should().Be(HttpStatusCode.Unauthorized);
-        (await c.RefreshAsync(novo)).StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        await DepoisDaTolerancia(async () =>
+        {
+            var reuso = await c.RefreshAsync(antigo);
+            reuso.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+            (await ApiCliente.Json(reuso))["code"]!.GetValue<string>().Should().Be("REFRESH_REUTILIZADO");
+            (await c.RefreshAsync(novo)).StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+            (await c.RefreshAsync(outroAparelho)).StatusCode.Should().Be(HttpStatusCode.OK);
+        });
+    }
+
+    [Fact(DisplayName = "DV25 · PC e celular logados juntos: cada um renova a própria sessão; sair em um não derruba o outro")]
+    public async Task DoisAparelhosAoMesmoTempo()
+    {
+        var c = await ApiCliente.CriarAsync(f);
+        var pc = c.RefreshCookie;
+        var celular = ApiCliente.CookieRefresh(await c.EntrarAsync());
+
+        var pcRenovado = await c.RefreshAsync(pc);
+        var celularRenovado = await c.RefreshAsync(celular);
+        pcRenovado.StatusCode.Should().Be(HttpStatusCode.OK);
+        celularRenovado.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var sairNoPc = new HttpRequestMessage(HttpMethod.Post, "/api/v1/auth/logout");
+        sairNoPc.Headers.Add("Cookie", $"refreshToken={ApiCliente.CookieRefresh(pcRenovado)}");
+        (await c.Http.SendAsync(sairNoPc)).StatusCode.Should().Be(HttpStatusCode.NoContent);
+        (await c.RefreshAsync(ApiCliente.CookieRefresh(celularRenovado))).StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact(DisplayName = "DV25 · Duas abas renovando com o mesmo cookie (até 60 s) → as duas seguem logadas, sem revogar nada")]
+    public async Task DuasAbasRenovandoJuntas()
+    {
+        var c = await ApiCliente.CriarAsync(f);
+        var cookie = c.RefreshCookie;
+
+        var aba1 = await c.RefreshAsync(cookie);
+        var aba2 = await c.RefreshAsync(cookie);
+
+        aba1.StatusCode.Should().Be(HttpStatusCode.OK);
+        aba2.StatusCode.Should().Be(HttpStatusCode.OK);
+        (await c.RefreshAsync(ApiCliente.CookieRefresh(aba1))).StatusCode.Should().Be(HttpStatusCode.OK);
+        (await c.RefreshAsync(ApiCliente.CookieRefresh(aba2))).StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
     [Fact(DisplayName = "App mobile (DV17) · refresh no corpo, rotação e reuso detectado; o navegador nunca recebe o refresh no corpo")]
@@ -185,7 +239,8 @@ public class AuthTests(IntegrationTestFactory f)
 
         var reuso = new HttpRequestMessage(HttpMethod.Post, "/api/v1/auth/refresh");
         reuso.Headers.Add("X-Refresh-Token", refresh1);
-        (await http.SendAsync(reuso)).StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        await DepoisDaTolerancia(async () =>
+            (await http.SendAsync(reuso)).StatusCode.Should().Be(HttpStatusCode.Unauthorized));
 
         // Sem o cabeçalho X-Cliente, o cabeçalho X-Refresh-Token é ignorado e o corpo não traz o refresh
         var web = await c.EntrarAsync();

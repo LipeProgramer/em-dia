@@ -1086,9 +1086,17 @@ namespace EmDia.Infrastructure.Data.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("expira_em");
 
+                    b.Property<Guid>("FamiliaId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("familia_id");
+
                     b.Property<DateTimeOffset?>("RevogadoEm")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("revogado_em");
+
+                    b.Property<DateTimeOffset?>("SubstituidoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("substituido_em");
 
                     b.Property<string>("TokenHash")
                         .IsRequired()
@@ -1101,6 +1109,9 @@ namespace EmDia.Infrastructure.Data.Migrations
                         .HasColumnName("usuario_id");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("FamiliaId")
+                        .HasDatabaseName("ix_refresh_tokens_familia");
 
                     b.HasIndex("TokenHash")
                         .IsUnique()

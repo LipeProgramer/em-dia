@@ -55,6 +55,18 @@ public class RefreshTokenRepository(EmDiaDbContext db) : IRefreshTokenRepository
         foreach (var r in ativos)
             r.Revogar(agora);
     }
+
+    public async Task RevogarFamiliaAsync(Guid familiaId, DateTimeOffset agora, CancellationToken ct = default)
+    {
+        var ativos = await db.RefreshTokens
+            .Where(r => r.FamiliaId == familiaId && r.RevogadoEm == null)
+            .ToListAsync(ct);
+        foreach (var r in ativos)
+            r.Revogar(agora);
+    }
+
+    public Task<bool> FamiliaAtivaAsync(Guid familiaId, DateTimeOffset agora, CancellationToken ct = default) =>
+        db.RefreshTokens.AnyAsync(r => r.FamiliaId == familiaId && r.RevogadoEm == null && r.ExpiraEm > agora, ct);
 }
 
 public class CatalogoRepository(EmDiaDbContext db) : ICatalogoRepository

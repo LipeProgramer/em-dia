@@ -67,7 +67,8 @@ public class AuthService(
     }
 
     /// <summary>
-    /// E03: rotação do refresh token. Reuso de um token já revogado revoga todos os tokens do usuário (spec §4.3).
+    /// E03: rotação do refresh token. Reuso de um token já trocado revoga a sessão daquele aparelho (a família do
+    /// token), e não as dos outros aparelhos; um reenvio até 60 s depois da troca é tolerado (DV25 · spec §4.3).
     /// </summary>
     public async Task<SessaoEmitida<RefreshResponse>> RefreshAsync(string? valor, CancellationToken ct)
     {
@@ -78,22 +79,25 @@ public class AuthService(
         var atual = await refreshTokens.ObterPorHashAsync(tokens.HashRefreshToken(valor), ct)
             ?? throw new UnauthorizedException("REFRESH_INVALIDO", "Sua sessão expirou. Entre de novo.");
 
-        if (atual.Revogado)
+        // Duas abas renovando juntas ou resposta perdida no celular: o token acabou de ser trocado, não é roubo
+        var reenvioTolerado = atual.Revogado && atual.ReusoTolerado(agora)
+            && await refreshTokens.FamiliaAtivaAsync(atual.FamiliaId, agora, ct);
+        if (atual.Revogado && !reenvioTolerado)
         {
-            await refreshTokens.RevogarTodosDoUsuarioAsync(atual.UsuarioId, agora, ct);
+            await refreshTokens.RevogarFamiliaAsync(atual.FamiliaId, agora, ct);
             await uow.SalvarAsync(ct);
             throw new UnauthorizedException("REFRESH_REUTILIZADO", "Sua sessão expirou. Entre de novo.");
         }
 
-        if (!atual.EstaAtivo(agora))
+        if (!reenvioTolerado && !atual.EstaAtivo(agora))
             throw new UnauthorizedException("REFRESH_INVALIDO", "Sua sessão expirou. Entre de novo.");
 
         var usuario = await usuarios.ObterPorIdAsync(atual.UsuarioId, ct)
             ?? throw new UnauthorizedException("REFRESH_INVALIDO", "Sua sessão expirou. Entre de novo.");
 
-        atual.Revogar(agora);
+        atual.Substituir(agora);
         var (accessToken, expiraEm) = tokens.GerarAccessToken(usuario);
-        var (refresh, refreshExpira) = await EmitirRefreshAsync(usuario.Id, ct);
+        var (refresh, refreshExpira) = await EmitirRefreshAsync(usuario.Id, ct, atual.FamiliaId);
         await uow.SalvarAsync(ct);
 
         return new SessaoEmitida<RefreshResponse>(new RefreshResponse(accessToken, expiraEm), refresh, refreshExpira);
@@ -111,10 +115,12 @@ public class AuthService(
         await uow.SalvarAsync(ct);
     }
 
-    private async Task<(string Valor, DateTimeOffset ExpiraEm)> EmitirRefreshAsync(Guid usuarioId, CancellationToken ct)
+    /// <param name="familiaId">Sessão do aparelho (renovação); sem ela (login), abre uma sessão nova.</param>
+    private async Task<(string Valor, DateTimeOffset ExpiraEm)> EmitirRefreshAsync(Guid usuarioId, CancellationToken ct,
+        Guid? familiaId = null)
     {
         var valor = tokens.GerarValorRefreshToken();
-        var rt = new RefreshToken(usuarioId, tokens.HashRefreshToken(valor), relogio.Agora, jwt.Value.RefreshTokenDays);
+        var rt = new RefreshToken(usuarioId, tokens.HashRefreshToken(valor), relogio.Agora, jwt.Value.RefreshTokenDays, familiaId);
         await refreshTokens.AdicionarAsync(rt, ct);
         return (valor, rt.ExpiraEm);
     }

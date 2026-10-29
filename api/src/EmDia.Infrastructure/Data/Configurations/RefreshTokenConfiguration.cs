@@ -16,11 +16,16 @@ public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
         b.Property(r => r.CriadoEm).HasColumnName("criado_em").IsRequired();
         b.Property(r => r.ExpiraEm).HasColumnName("expira_em").IsRequired();
         b.Property(r => r.RevogadoEm).HasColumnName("revogado_em");
+        b.Property(r => r.FamiliaId).HasColumnName("familia_id").IsRequired();
+        b.Property(r => r.SubstituidoEm).HasColumnName("substituido_em");
 
         b.HasIndex(r => r.TokenHash).IsUnique()
          .HasDatabaseName("ix_refresh_tokens_hash");
 
         b.HasIndex(r => r.UsuarioId)
          .HasDatabaseName("ix_refresh_tokens_usuario");
+
+        b.HasIndex(r => r.FamiliaId)
+         .HasDatabaseName("ix_refresh_tokens_familia");
     }
 }

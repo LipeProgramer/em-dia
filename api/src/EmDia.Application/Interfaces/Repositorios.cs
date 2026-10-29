@@ -27,6 +27,12 @@ public interface IRefreshTokenRepository
     Task<RefreshToken?> ObterPorHashAsync(string hash, CancellationToken ct = default);
     Task AdicionarAsync(RefreshToken refreshToken, CancellationToken ct = default);
     Task RevogarTodosDoUsuarioAsync(Guid usuarioId, DateTimeOffset agora, CancellationToken ct = default);
+
+    /// <summary>Encerra a sessão de um aparelho: todos os tokens da família (DV25).</summary>
+    Task RevogarFamiliaAsync(Guid familiaId, DateTimeOffset agora, CancellationToken ct = default);
+
+    /// <summary>A sessão do aparelho ainda tem um token válido (não foi encerrada por logout ou reuso).</summary>
+    Task<bool> FamiliaAtivaAsync(Guid familiaId, DateTimeOffset agora, CancellationToken ct = default);
 }
 
 /// <summary>Pedidos de redefinição de senha (DV24).</summary>

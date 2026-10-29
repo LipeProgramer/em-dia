@@ -95,5 +95,5 @@ cascata. No **Neon**, a tabela `usuarios` não tem mais a conta da demonstraçã
 | E a API com o banco? | Entity Framework Core 10 + Npgsql; migrations versionam o banco e criam o catálogo; repositórios filtram sempre pelo dono (RN12). |
 | Como evitam ataque de força bruta? | 5 tentativas de login por minuto por IP (429) e bloqueio da conta por 15 min após 5 falhas. Além disso, toda a API aceita no máximo 300 requisições por minuto por IP (DV21). |
 | E se alguém tentar ver o item de outra pessoa? | O id do usuário vem só do token; recurso de outro usuário responde **404**. |
-| Como sabem que funciona? | 146 testes automatizados (50 unitários, 66 de integração com PostgreSQL real, 19 do front, 11 do app), cobertura de 97,3% no Domain e CI no GitHub Actions a cada push. |
+| Como sabem que funciona? | 148 testes automatizados (50 unitários, 68 de integração com PostgreSQL real, 19 do front, 11 do app), cobertura de 97,3% no Domain e CI no GitHub Actions a cada push. |
 | Por que Vercel + Render + Neon? | Gratuitos e separados por função. O Vercel repassa `/api/*` para o Render, então o navegador vê um só endereço e o cookie `SameSite=Strict` funciona. |
