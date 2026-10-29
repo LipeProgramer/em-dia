@@ -55,6 +55,23 @@
 - **Como apareceu:** teste de unidade complementar.
 - **Correção:** espaços em branco viram `null`, como no item. ✅
 
+## BUG-15 — Publicação no Render falhava ao subir a API
+- **Como apareceu:** o deploy no Render ficava em "Failed deploy" e a URL respondia "Not Found".
+- **Causa raiz:** (1) no `render.yaml`, o caminho do `Dockerfile` era contado a partir da raiz do repositório, não da
+  pasta `api`; (2) a connection string do Neon foi colada com as aspas do exemplo, e o Npgsql recusava o formato
+  (`Format of the initialization string… index 170`), derrubando a API ao aplicar as migrations.
+- **Correção:** caminhos `./api/Dockerfile` e `./api` no `render.yaml`; connection string sem aspas, documentada em
+  `docs/deploy.md`. Um job do CI passou a montar e subir a imagem Docker com PostgreSQL a cada push. ✅
+
+## BUG-14 — CI do GitHub sempre vermelho
+- **Como apareceu:** os testes de integração passavam no computador e falhavam todos no GitHub Actions; depois, o
+  `expo-doctor` do app passou a falhar sem mudança no código.
+- **Causa raiz:** o Testcontainers criava o banco padrão `postgres`, e o teste começava apagando o banco ao qual estava
+  conectado (`55006: cannot drop the currently open database`); no app, saiu o `react-native` 0.88.1, exigido pelo
+  Expo SDK 58.
+- **Correção:** banco próprio `emdia_test` no contêiner (só o banco externo é recriado) e `npx expo install --fix`.
+  CI verde nos quatro jobs. ✅
+
 ## BUG-13 — Pular todo o check-up mostrava "6 de 6 áreas em dia"
 - **Como apareceu:** teste no celular: pulando todas as perguntas, o resultado dizia que tudo estava em dia.
 - **Causa raiz:** área sem nenhum item era contada como "em dia".

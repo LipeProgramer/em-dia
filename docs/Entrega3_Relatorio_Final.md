@@ -23,7 +23,8 @@
 8. Autenticação, segurança e LGPD
 9. Resultados dos testes
 10. Desvios e bugs
-11. Conclusão e próximos passos
+11. Publicação online
+12. Conclusão, dificuldades e aprendizados
 
 ---
 
@@ -74,6 +75,7 @@ baseada em Clean Architecture. Também há um **app mobile em React Native/Expo*
 | Documentação | Swagger / OpenAPI em `/swagger` |
 | E-mail | MailKit (SMTP) |
 | Testes | xUnit · WebApplicationFactory · Testcontainers (PostgreSQL) · Vitest · Testing Library |
+| Publicação e CI | Docker · GitHub Actions · Vercel (site) · Render (API) · Neon (PostgreSQL) |
 
 **Regra de dependência:** Api → Application → Domain; Infrastructure → Application e Domain. Por isso as regras de
 vencimento são testadas sem banco e sem API.
@@ -244,6 +246,8 @@ navegador, o token de renovação vai no corpo da resposta e fica no **SecureSto
   passo pendente, criar item a partir de modelo e atualizar a quilometragem.
 - **CT08 e CT44:** todas as rotas privadas recusam acesso sem token; nenhuma resposta expõe senha, hash ou refresh token.
 - O resultado de cada caso (U01–U15, CT01–CT51) está em `docs/testes.md`.
+- **CI (GitHub Actions)** a cada push: build e testes da API, imagem Docker da API subindo com PostgreSQL, build e
+  testes do front, e tipos, testes e `expo-doctor` do app.
 
 ---
 
@@ -258,19 +262,60 @@ Principais desvios (lista completa em `docs/desvios.md`):
 - **DV18:** área sem itens não conta como "em dia"; pular o check-up todo mostra o Radar vazio.
 - **DV12:** refazer o check-up reaproveita o veículo de mesmo apelido.
 - **DV17:** no app nativo, o refresh token vai no corpo e fica no SecureStore (o navegador continua só com cookie).
+- **DV19:** publicação atrás de proxy (Vercel → Render): IP real no rate limit e migrations ao subir.
 
 Bugs corrigidos (detalhes em `docs/bugs.md`): data por km calculada com o relógio do servidor; exclusão de conta sem
 apagar os dados (faltavam chaves estrangeiras); conclusão de item com erro 500; erro 400 sem os campos; contador de
 falhas de login sem zerar; foco do check-up; destaque do resultado na área errada; observação em branco no histórico;
-e o app mobile, que usava rotas que não existem na API.
+e o app mobile, que usava rotas que não existem na API. Na reta final: o CI do GitHub, que falhava por causa do banco
+dos testes (BUG-14), e a publicação no Render (BUG-15).
 
 ---
 
-## 11. Conclusão e próximos passos
+## 11. Publicação online
+
+O sistema está publicado com HTTPS, em serviços gratuitos (passo a passo em `docs/deploy.md`):
+
+| Parte | Serviço | Endereço |
+|---|---|---|
+| Site (React) | Vercel | <https://em-dia-projeto-facul.vercel.app> |
+| API (.NET, em contêiner Docker) | Render | <https://emdia-api-felipemsantoss.onrender.com/swagger> |
+| Banco (PostgreSQL 17) | Neon | região AWS US East 1, a mesma da API |
+
+- O Vercel repassa `/api/*` para o Render: o navegador vê um único endereço, e o cookie de renovação
+  (`SameSite=Strict`) continua valendo sem mudar o código do site.
+- A API aplica as migrations e os dados iniciais ao subir; a chave do JWT é gerada pelo Render e nunca entra no
+  repositório.
+- Atrás do proxy, a API lê o IP real do usuário, e o limite de 5 tentativas de login continua valendo por pessoa (DV19).
+- No plano gratuito, a API "dorme" após 15 minutos sem uso e leva cerca de 1 minuto para acordar.
+
+---
+
+## 12. Conclusão, dificuldades e aprendizados
 
 A solução implementa o que a Entrega 2 especificou — contrato da API, modelo de dados, regras de negócio, segurança e
-telas — com 130 testes automatizados aprovados e cobertura de 97% nas regras de negócio. As duas metáforas (Radar e
-Check-up) orientam as telas, e a acessibilidade foi verificada por testes (status com texto e símbolo, uso só com teclado).
+telas — com 130 testes automatizados aprovados, cobertura de 97% nas regras de negócio e o sistema publicado online.
+As duas metáforas (Radar e Check-up) orientam as telas, e a acessibilidade foi verificada por testes (status com texto
+e símbolo, uso só com teclado).
 
-Próximos passos: testes de usabilidade com usuários e métricas de UX; publicação da API e do front com HTTPS e um
-servidor SMTP; e uma versão do app mobile instalável (build com EAS), sem depender do Expo Go.
+**Dificuldades encontradas**
+
+- Manter o código fiel à especificação: rotas, chaves estrangeiras e validações da primeira versão divergiam do
+  contrato e foram reescritas.
+- Datas: "hoje" no fuso de São Paulo e prazos por data ou por km; foi preciso um relógio controlável (`IRelogio`) para
+  os testes não dependerem do dia em que rodam.
+- App no celular: o Expo Go exige as versões exatas do SDK, o app nativo não tem cookies e o teclado do iPhone cobria
+  os botões.
+- Ambiente: testes que passavam no computador e falhavam no GitHub, e erros de configuração na publicação.
+
+**Aprendizados**
+
+- Especificar antes de programar valeu a pena: o contrato da API guiou o front, o app e os testes.
+- Regras de negócio no Domain, sem banco nem API, deixam os testes rápidos e confiáveis.
+- Testes de integração com banco real acham erros que testes isolados não acham (ex.: concluir item com erro 500).
+- Diagnosticar pelos logs e reproduzir o erro antes de corrigir (CI e publicação).
+- Segredos fora do repositório e acessibilidade desde a primeira tela, não no fim.
+
+**Próximos passos:** testes de usabilidade com usuários e métricas de UX; um servidor SMTP para os avisos por e-mail;
+uma versão instalável do app mobile (build com EAS), sem depender do Expo Go; e um plano de hospedagem em que a API
+não durma.

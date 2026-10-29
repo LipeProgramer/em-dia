@@ -27,6 +27,7 @@ Implementação da **Entrega 2 – Especificação técnica da solução** | Out
 | Frontend | React 19 · TypeScript · Vite · React Router |
 | Front: dados e formulários | axios · TanStack Query · React Hook Form · Zod |
 | Testes do front | Vitest · Testing Library |
+| Publicação e CI | Docker · GitHub Actions · Vercel (site) · Render (API) · Neon (PostgreSQL) |
 
 ## Estrutura (spec §1.3)
 
@@ -136,5 +137,7 @@ Passo a passo em [docs/deploy.md](docs/deploy.md) (arquivos usados: `render.yaml
 | [`docs/desvios.md`](docs/desvios.md) | Decisões que se afastam ou complementam a Entrega 2 |
 | [`docs/testes.md`](docs/testes.md) | Resultado de cada caso de teste (U01–U15, CT01–CT51) e cobertura |
 | [`docs/bugs.md`](docs/bugs.md) | Bugs encontrados, causas e correções |
+| [`docs/deploy.md`](docs/deploy.md) | Publicação online: Vercel, Render e Neon |
+| [`docs/roteiro-demonstracao.md`](docs/roteiro-demonstracao.md) | Roteiro da demonstração da Entrega 4 e perguntas prováveis da banca |
 | [`docs/Em_Dia_Entrega3_Relatorio_Final.pdf`](docs/Em_Dia_Entrega3_Relatorio_Final.pdf) | Relatório da Entrega 3 (também em `.md` e `.html`) |
 | `/swagger` | Documentação interativa da API |

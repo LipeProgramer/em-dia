@@ -415,7 +415,8 @@
         <tr><td><strong>8.</strong></td><td>Autenticação, segurança e LGPD</td></tr>
         <tr><td><strong>9.</strong></td><td>Resultados dos testes</td></tr>
         <tr><td><strong>10.</strong></td><td>Desvios e bugs</td></tr>
-        <tr><td><strong>11.</strong></td><td>Conclusão e próximos passos</td></tr>
+        <tr><td><strong>11.</strong></td><td>Publicação online</td></tr>
+        <tr><td><strong>12.</strong></td><td>Conclusão, dificuldades e aprendizados</td></tr>
       </tbody>
     </table>
     <div class="callout">
@@ -471,11 +472,11 @@
         <tr><td>Dados</td><td>Entity Framework Core 10 + Npgsql 10 · PostgreSQL 17</td></tr>
         <tr><td>Validação</td><td>FluentValidation (API) · Zod (front e app)</td></tr>
         <tr><td>Segurança</td><td>JWT Bearer (HS256) · BCrypt (custo 12) · Rate Limiter do ASP.NET Core</td></tr>
-        <tr><td>Documentação</td><td>Swagger / OpenAPI em <code>/swagger</code></td></tr>
-        <tr><td>E-mail</td><td>MailKit (SMTP)</td></tr>
+        <tr><td>Documentação e e-mail</td><td>Swagger / OpenAPI em <code>/swagger</code> · MailKit (SMTP)</td></tr>
         <tr><td>Frontend</td><td>React 19 · TypeScript · Vite · React Router · TanStack Query · React Hook Form · Zod · axios</td></tr>
         <tr><td>App mobile</td><td>React Native · Expo SDK 58 (Expo Go) · React Navigation · expo-secure-store</td></tr>
         <tr><td>Testes</td><td>xUnit · WebApplicationFactory · Testcontainers (PostgreSQL) · Vitest · Testing Library</td></tr>
+        <tr><td>Publicação e CI</td><td>Docker · GitHub Actions · Vercel (site) · Render (API) · Neon (PostgreSQL)</td></tr>
       </tbody>
     </table>
   </div>
@@ -640,7 +641,7 @@
       <div class="card"><h4>Critérios de aceite (§6.6)</h4><p style="font-size:8.5pt">U01–U15 e casos de prioridade alta aprovados; cobertura do <code>EmDia.Domain</code> de <strong>97,3%</strong> das linhas (mínimo 80%); fluxos F1–F4 sem erro; CT08 e CT44 aprovados.</p></div>
       <div class="card"><h4>Destaques</h4><p style="font-size:8.5pt">U02 (km vem primeiro → Atenção em 21/10/2026), U13 (avisos em D, D+3 e D+6), CT11 (reuso de refresh revoga tudo), CT42 (exclusão da conta apaga tudo), CT51 (check-up só com teclado).</p></div>
     </div>
-    <p style="font-size:9pt">O resultado de cada caso (U01–U15, CT01–CT51) está em <code>docs/testes.md</code>. O CI do GitHub roda os testes unitários, de integração (Testcontainers) e do front a cada push.</p>
+    <p style="font-size:9pt">O resultado de cada caso (U01–U15, CT01–CT51) está em <code>docs/testes.md</code>. O CI do GitHub roda a cada push os testes da API, a imagem Docker da API com PostgreSQL, o front e o app (tipos, testes e <code>expo-doctor</code>).</p>
   </div>
 
   <!-- 10. DESVIOS E BUGS -->
@@ -658,6 +659,7 @@
         <tr><td>DV18</td><td>Área sem itens não conta como "em dia"; pular o check-up todo mostra o Radar vazio.</td></tr>
         <tr><td>DV12</td><td>Refazer o check-up reaproveita o veículo de mesmo apelido (CT17).</td></tr>
         <tr><td>DV17</td><td>No app nativo, o refresh token vai no corpo e fica no SecureStore; o navegador continua só com cookie.</td></tr>
+        <tr><td>DV19</td><td>Publicação atrás de proxy (Vercel → Render): IP real no rate limit de login e migrations ao subir.</td></tr>
       </tbody>
     </table>
     <h2>10.2 Bugs corrigidos (detalhes em docs/bugs.md)</h2>
@@ -668,11 +670,49 @@
       <li>Erro 400 sem o campo <code>errors</code>; contador de falhas de login sem zerar após o bloqueio.</li>
       <li>Foco inicial do check-up, destaque do resultado na área errada e observação em branco no histórico.</li>
       <li>App mobile chamando rotas que não existem na API e com bibliotecas fora da versão do Expo Go.</li>
+      <li>CI do GitHub vermelho: banco padrão do Testcontainers apagado pelo próprio teste (BUG-14).</li>
+      <li>Publicação no Render: caminho do Dockerfile e connection string com aspas (BUG-15).</li>
+    </ul>
+  </div>
+
+  <!-- 11. PUBLICAÇÃO E 12. CONCLUSÃO -->
+  <div class="page">
+    <div class="page-header"><span class="page-title">Em Dia · Entrega 3 – Relatório Técnico</span><span>11. Publicação · 12. Conclusão</span></div>
+    <h1>11. Publicação online</h1>
+    <p>O sistema está publicado com HTTPS, em serviços gratuitos (passo a passo em <code>docs/deploy.md</code>):</p>
+    <table>
+      <thead><tr><th style="width:26%">Parte</th><th style="width:16%">Serviço</th><th>Endereço</th></tr></thead>
+      <tbody>
+        <tr><td>Site (React)</td><td>Vercel</td><td>em-dia-projeto-facul.vercel.app</td></tr>
+        <tr><td>API (.NET em Docker)</td><td>Render</td><td>emdia-api-felipemsantoss.onrender.com/swagger</td></tr>
+        <tr><td>Banco (PostgreSQL 17)</td><td>Neon</td><td>AWS US East 1, a mesma região da API</td></tr>
+      </tbody>
+    </table>
+    <ul>
+      <li>O Vercel repassa <code>/api/*</code> para o Render: o navegador vê um único endereço e o cookie de renovação (<code>SameSite=Strict</code>) continua valendo.</li>
+      <li>A API aplica as migrations e os dados iniciais ao subir; a chave do JWT é gerada pelo Render e nunca entra no repositório.</li>
+      <li>Atrás do proxy, a API lê o IP real do usuário: o limite de 5 tentativas de login continua por pessoa (DV19).</li>
+      <li>No plano gratuito, a API "dorme" após 15 minutos sem uso e leva cerca de 1 minuto para acordar.</li>
     </ul>
 
-    <h1 style="margin-top:22px">11. Conclusão e próximos passos</h1>
-    <p>A solução implementa o que a Entrega 2 especificou — contrato da API, modelo de dados, regras de negócio, segurança e telas — com <strong>130 testes automatizados aprovados</strong> e cobertura de 97% nas regras de negócio. As duas metáforas (Radar e Check-up) orientam as telas, e a acessibilidade foi verificada por testes (status com texto e símbolo, uso só com teclado).</p>
-    <p><strong>Próximos passos:</strong> testes de usabilidade com usuários e métricas de UX; publicação da API e do front com HTTPS e um servidor SMTP; e uma versão instalável do app mobile (build com EAS), sem depender do Expo Go.</p>
+    <h1 style="margin-top:22px">12. Conclusão, dificuldades e aprendizados</h1>
+    <p>A solução implementa o que a Entrega 2 especificou — contrato da API, modelo de dados, regras de negócio, segurança e telas — com <strong>130 testes automatizados aprovados</strong>, cobertura de 97% nas regras de negócio e o sistema publicado online. As duas metáforas (Radar e Check-up) orientam as telas, e a acessibilidade foi verificada por testes (status com texto e símbolo, uso só com teclado).</p>
+    <div class="grid-2">
+      <div class="card"><h4>Dificuldades encontradas</h4><ul style="font-size:8.5pt">
+        <li>Manter o código fiel à especificação: rotas, chaves estrangeiras e validações da primeira versão divergiam e foram reescritas.</li>
+        <li>Datas: "hoje" no fuso de São Paulo e prazos por data ou por km; foi preciso um relógio controlável (<code>IRelogio</code>) nos testes.</li>
+        <li>App no celular: versões exatas do Expo Go, sessão sem cookies e teclado do iPhone cobrindo os botões.</li>
+        <li>Ambiente: testes que passavam no computador e falhavam no GitHub; erros de configuração na publicação.</li>
+      </ul></div>
+      <div class="card"><h4>Aprendizados</h4><ul style="font-size:8.5pt">
+        <li>Especificar antes de programar: o contrato da API guiou o front, o app e os testes.</li>
+        <li>Regras no Domain, sem banco nem API, deixam os testes rápidos e confiáveis.</li>
+        <li>Testes de integração com banco real acham erros que testes isolados não acham.</li>
+        <li>Diagnosticar pelos logs e reproduzir o erro antes de corrigir.</li>
+        <li>Segredos fora do repositório e acessibilidade desde a primeira tela.</li>
+      </ul></div>
+    </div>
+    <p><strong>Próximos passos:</strong> testes de usabilidade com usuários e métricas de UX; um servidor SMTP para os avisos por e-mail; uma versão instalável do app mobile (build com EAS); e uma hospedagem em que a API não durma.</p>
   </div>
 
 </body>
