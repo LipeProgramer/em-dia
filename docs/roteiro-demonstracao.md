@@ -91,7 +91,7 @@ cascata. No **Neon**, a tabela `usuarios` não tem mais a conta da demonstraçã
 | Onde ficam as regras de negócio? | Na camada **Domain** (entidades `Item`, `Veiculo` e serviços `RadarDomain`, `AvisoDomain`, `CheckupDomain`), testadas sem banco e sem API. |
 | Como o front fala com a API? | axios em `/api/v1`, JSON; token de acesso só em memória; se der 401, tenta `/auth/refresh` uma vez e repete a chamada. |
 | E a API com o banco? | Entity Framework Core 10 + Npgsql; migrations versionam o banco e criam o catálogo; repositórios filtram sempre pelo dono (RN12). |
-| Como evitam ataque de força bruta? | 5 tentativas de login por minuto por IP (429) e bloqueio da conta por 15 min após 5 falhas. |
+| Como evitam ataque de força bruta? | 5 tentativas de login por minuto por IP (429) e bloqueio da conta por 15 min após 5 falhas. Além disso, toda a API aceita no máximo 300 requisições por minuto por IP (DV21). |
 | E se alguém tentar ver o item de outra pessoa? | O id do usuário vem só do token; recurso de outro usuário responde **404**. |
-| Como sabem que funciona? | 133 testes automatizados (50 unitários, 55 de integração com PostgreSQL real, 17 do front, 11 do app), cobertura de 97,3% no Domain e CI no GitHub Actions a cada push. |
+| Como sabem que funciona? | 134 testes automatizados (50 unitários, 56 de integração com PostgreSQL real, 17 do front, 11 do app), cobertura de 97,3% no Domain e CI no GitHub Actions a cada push. |
 | Por que Vercel + Render + Neon? | Gratuitos e separados por função. O Vercel repassa `/api/*` para o Render, então o navegador vê um só endereço e o cookie `SameSite=Strict` funciona. |

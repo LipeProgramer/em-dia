@@ -107,6 +107,21 @@ public class AuthTests(IntegrationTestFactory f)
         status[5].Should().Be(HttpStatusCode.TooManyRequests);
     }
 
+    [Fact(DisplayName = "DV21 · Limite geral por IP: passou do máximo no minuto → 429 MUITAS_REQUISICOES")]
+    public async Task LimiteGeralPorIp()
+    {
+        var comLimite = f.WithWebHostBuilder(b => b.UseSetting("Security:RequisicoesPorMinuto", "3"));
+        var http = ApiCliente.NovoHttp(comLimite);
+        var respostas = new List<HttpResponseMessage>();
+        for (int i = 0; i < 4; i++)
+            respostas.Add(await http.GetAsync("/api/v1/radar"));
+
+        respostas.Take(3).Should().OnlyContain(r => r.StatusCode == HttpStatusCode.Unauthorized);
+        respostas[3].StatusCode.Should().Be(HttpStatusCode.TooManyRequests);
+        respostas[3].Headers.RetryAfter.Should().NotBeNull();
+        (await ApiCliente.Json(respostas[3]))["code"]!.GetValue<string>().Should().Be("MUITAS_REQUISICOES");
+    }
+
     [Fact(DisplayName = "CT08 · GET /radar sem Authorization → 401")]
     public async Task CT08_SemToken()
     {

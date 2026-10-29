@@ -65,6 +65,7 @@ public class IntegrationTestFactory : WebApplicationFactory<Program>, IAsyncLife
         builder.UseSetting("Cors:Origens:0", "http://localhost:5173");
         // O limite real (5/min) é testado à parte no CT07; aqui ele não pode atrapalhar os outros testes
         builder.UseSetting("Security:LoginTentativasPorMinuto", "100000");
+        builder.UseSetting("Security:RequisicoesPorMinuto", "100000");
 
         builder.ConfigureServices(services =>
         {

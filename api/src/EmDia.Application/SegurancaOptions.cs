@@ -8,6 +8,9 @@ public class SegurancaOptions
     public int MaxFalhasLogin { get; set; } = 5;
     public int BloqueioMinutos { get; set; } = 15;
     public int LoginTentativasPorMinuto { get; set; } = 5;
+
+    /// <summary>Limite geral por IP em toda a API (DV21). Alto o bastante para uma sala inteira no mesmo Wi-Fi.</summary>
+    public int RequisicoesPorMinuto { get; set; } = 300;
 }
 
 /// <summary>Seção "Jwt" do appsettings (spec §4.6). A chave vem de user-secrets ou variável de ambiente.</summary>

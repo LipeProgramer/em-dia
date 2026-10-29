@@ -14,7 +14,7 @@ builder.WebHost.ConfigureKestrel(k => k.Limits.MaxRequestBodySize = 64 * 1024);
 builder.Services
     .AddEmDia(builder.Configuration, builder.Environment)
     .AddAutenticacaoJwt()
-    .AddRateLimitDeLogin()
+    .AddLimitesDeRequisicao()
     .AddCorsFrontend()
     .AddControllersEmDia()
     .AddSwaggerEmDia();
@@ -70,9 +70,9 @@ app.UseSwagger();
 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Em Dia API v1"));
 
 app.UseCors(ServiceCollectionExtensions.PoliticaCors);
+app.UseRateLimiter();   // antes da autenticação: chamadas sem login também contam no limite por IP
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseRateLimiter();
 
 app.MapControllers();
 app.MapGet("/", () => Results.Redirect("/swagger")).AllowAnonymous().ExcludeFromDescription();

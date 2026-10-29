@@ -99,6 +99,13 @@ se chegou por pelo menos um canal (`canal` = Push só para quem desligou o e-mai
 chave do JWT. Como a API dorme no plano gratuito, a rotina também roda quando ela acorda depois das 8h, e um
 agendamento do GitHub Actions a acorda todo dia; os registros em `avisos` impedem envio duplicado.
 
+### DV21 — Limite geral de requisições por IP
+A spec pede limite só no login (5 por minuto por IP, mantido). Para o servidor gratuito não cair nem esgotar a cota com
+uma enxurrada de chamadas, toda a API aceita no máximo **300 requisições por minuto por IP** (`Security:RequisicoesPorMinuto`);
+passou disso, responde 429 com `code` `MUITAS_REQUISICOES` e `Retry-After: 60`. O valor é alto de propósito: numa
+sala de aula, todos no mesmo Wi-Fi saem pelo mesmo IP. O limitador roda antes da autenticação, então chamadas sem
+login também contam.
+
 ### DV16 — Sem SMTP configurado, e-mails só vão para o log
 Se `Email:Smtp:Host` estiver vazio, a API usa um serviço de e-mail falso que só registra as mensagens. Com o host
 configurado, usa o MailKit. A rotina diária roda às 8h (America/Sao_Paulo).

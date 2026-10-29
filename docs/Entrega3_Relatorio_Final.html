@@ -607,7 +607,7 @@
     <table>
       <thead><tr><th style="width:26%">Risco</th><th>Medida</th></tr></thead>
       <tbody>
-        <tr><td>Força bruta</td><td>5 tentativas de login por minuto por IP (429) e bloqueio da conta por 15 minutos após 5 falhas.</td></tr>
+        <tr><td>Força bruta e enxurrada de chamadas</td><td>5 tentativas de login por minuto por IP (429) e bloqueio da conta por 15 minutos após 5 falhas; limite geral de 300 requisições por minuto por IP em toda a API (DV21).</td></tr>
         <tr><td>Senhas</td><td>Mínimo de 8 caracteres com letra e número; BCrypt custo 12.</td></tr>
         <tr><td>Descoberta de contas</td><td>Login com mensagem genérica.</td></tr>
         <tr><td>Dados de outra pessoa</td><td>Id do usuário só a partir do token; consultas filtradas; 404 para recursos alheios.</td></tr>
@@ -632,10 +632,10 @@
       <thead><tr><th>Nível</th><th>Ferramenta</th><th>Testes</th><th>Resultado</th></tr></thead>
       <tbody>
         <tr><td>Unitário (Domain)</td><td>xUnit</td><td>50 (U01–U15 + 35 complementares)</td><td><span class="badge badge-success">50/50</span></td></tr>
-        <tr><td>Integração da API</td><td>xUnit + WebApplicationFactory + PostgreSQL</td><td>55 (CT01–CT46 + extras)</td><td><span class="badge badge-success">55/55</span></td></tr>
+        <tr><td>Integração da API</td><td>xUnit + WebApplicationFactory + PostgreSQL</td><td>56 (CT01–CT46 + extras)</td><td><span class="badge badge-success">56/56</span></td></tr>
         <tr><td>Frontend web</td><td>Vitest + Testing Library</td><td>17 (CT47–CT51 + validações)</td><td><span class="badge badge-success">17/17</span></td></tr>
         <tr><td>App mobile</td><td>Vitest</td><td>11 (validações e datas)</td><td><span class="badge badge-success">11/11</span></td></tr>
-        <tr><td><strong>Total</strong></td><td></td><td><strong>133</strong></td><td><span class="badge badge-success">133/133</span></td></tr>
+        <tr><td><strong>Total</strong></td><td></td><td><strong>134</strong></td><td><span class="badge badge-success">134/134</span></td></tr>
       </tbody>
     </table>
     <div class="grid-2">
@@ -697,7 +697,7 @@
     </ul>
 
     <h1 style="margin-top:22px">12. Conclusão, dificuldades e aprendizados</h1>
-    <p>A solução implementa o que a Entrega 2 especificou — contrato da API, modelo de dados, regras de negócio, segurança e telas — com <strong>133 testes automatizados aprovados</strong>, cobertura de 97% nas regras de negócio e o sistema publicado online. As duas metáforas (Radar e Check-up) orientam as telas, e a acessibilidade foi verificada por testes (status com texto e símbolo, uso só com teclado).</p>
+    <p>A solução implementa o que a Entrega 2 especificou — contrato da API, modelo de dados, regras de negócio, segurança e telas — com <strong>134 testes automatizados aprovados</strong>, cobertura de 97% nas regras de negócio e o sistema publicado online. As duas metáforas (Radar e Check-up) orientam as telas, e a acessibilidade foi verificada por testes (status com texto e símbolo, uso só com teclado).</p>
     <div class="grid-2">
       <div class="card"><h4>Dificuldades encontradas</h4><ul style="font-size:8.5pt">
         <li>Manter o código fiel à especificação: rotas, chaves estrangeiras e validações da primeira versão divergiam e foram reescritas.</li>

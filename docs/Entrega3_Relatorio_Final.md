@@ -216,7 +216,7 @@ navegador, o token de renovação vai no corpo da resposta e fica no **SecureSto
 
 | Risco | Medida |
 |---|---|
-| Força bruta | 5 tentativas de login por minuto por IP (429) e bloqueio da conta por 15 minutos após 5 falhas |
+| Força bruta e enxurrada de chamadas | 5 tentativas de login por minuto por IP (429) e bloqueio da conta por 15 minutos após 5 falhas; limite geral de 300 requisições por minuto por IP em toda a API (DV21) |
 | Senhas | Mínimo de 8 caracteres com letra e número; BCrypt custo 12 |
 | Descoberta de contas | Login com mensagem genérica |
 | Acesso a dados alheios | Id do usuário só a partir do token; consultas filtradas; 404 para recursos alheios |
@@ -238,10 +238,10 @@ navegador, o token de renovação vai no corpo da resposta e fica no **SecureSto
 | Nível | Ferramenta | Testes | Resultado |
 |---|---|---|---|
 | Unitário (Domain) | xUnit | 50 (U01–U15 + 35 complementares) | ✅ 50/50 |
-| Integração da API | xUnit + WebApplicationFactory + PostgreSQL | 55 (CT01–CT46 + extras) | ✅ 55/55 |
+| Integração da API | xUnit + WebApplicationFactory + PostgreSQL | 56 (CT01–CT46 + extras) | ✅ 56/56 |
 | Frontend web | Vitest + Testing Library | 17 (CT47–CT51 + validações) | ✅ 17/17 |
 | App mobile | Vitest | 11 (validações e datas) | ✅ 11/11 |
-| **Total** | | **133** | **✅ 133/133** |
+| **Total** | | **134** | **✅ 134/134** |
 
 - **Cobertura do `EmDia.Domain`:** 97,3% das linhas e 89,5% dos ramos (critério: ≥ 80%).
 - **Fluxos F1–F4** executados de ponta a ponta com a API e o front rodando juntos: primeiro acesso, concluir item com
@@ -296,7 +296,7 @@ O sistema está publicado com HTTPS, em serviços gratuitos (passo a passo em `d
 ## 12. Conclusão, dificuldades e aprendizados
 
 A solução implementa o que a Entrega 2 especificou — contrato da API, modelo de dados, regras de negócio, segurança e
-telas — com 133 testes automatizados aprovados, cobertura de 97% nas regras de negócio e o sistema publicado online.
+telas — com 134 testes automatizados aprovados, cobertura de 97% nas regras de negócio e o sistema publicado online.
 As duas metáforas (Radar e Check-up) orientam as telas, e a acessibilidade foi verificada por testes (status com texto
 e símbolo, uso só com teclado).
 
