@@ -81,7 +81,7 @@ Crie uma conta de envio e, no Render, em **Environment**, adicione as variáveis
 | Variável | Brevo (grátis, 300 e-mails/dia) | Gmail (com verificação em 2 etapas) |
 |---|---|---|
 | `Email__Smtp__Host` | `smtp-relay.brevo.com` | `smtp.gmail.com` |
-| `Email__Smtp__Porta` | `587` | `587` |
+| `Email__Smtp__Porta` | **`2525`** (o Render grátis bloqueia a 587) | `587` (não funciona no Render grátis) |
 | `Email__Smtp__Usuario` | o login SMTP mostrado no Brevo | o seu endereço Gmail |
 | `Email__Smtp__Senha` | a chave SMTP do Brevo | uma **senha de app** do Google (não a senha da conta) |
 | `Email__Remetente` | um remetente verificado no Brevo | o mesmo endereço Gmail |
@@ -98,7 +98,8 @@ se o endereço do site mudar). Sem SMTP configurado, o e-mail (com o link) só a
    remetente (ex.: o seu Gmail) e confirme pelo link que o Brevo manda. Esse é o `Email__Remetente`.
 3. **SMTP & API → SMTP**: copie o **Login** (`Email__Smtp__Usuario`) e gere uma **SMTP key**
    (`Email__Smtp__Senha`).
-4. No Render, em **Environment**, adicione as 5 variáveis da tabela e salve.
+4. No Render, em **Environment**, adicione as 5 variáveis da tabela e salve. Use a **porta 2525**: o plano gratuito do
+   Render bloqueia as portas de e-mail 25, 465 e 587 (o envio fica esperando até dar "The operation has timed out").
 5. Teste: no site, **Entrar → Esqueci minha senha** com o seu e-mail. Confira também o spam; com remetente Gmail
    enviado pelo Brevo, os primeiros e-mails costumam cair lá.
 

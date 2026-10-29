@@ -153,7 +153,7 @@ recebe um link para criar uma senha nova:
 - Ao trocar a senha, todas as sessões abertas são encerradas e o bloqueio por tentativas erradas é desfeito.
 - O endereço do link vem da configuração (`Site:Url`, ou a origem do CORS), nunca do cabeçalho Host da requisição,
   que um atacante poderia trocar para receber o link.
-- O e-mail usa o mesmo SMTP dos avisos (DV16). O app Expo (DV15) não tem a função: ele roda com a API local, e o link
+- O e-mail usa o mesmo SMTP dos avisos (DV16), pelo Brevo na porta 2525 (o Render gratuito bloqueia a 587). O app Expo (DV15) não tem a função: ele roda com a API local, e o link
   do e-mail abre o site publicado.
 
 ### DV16 — Sem SMTP configurado, e-mails só vão para o log

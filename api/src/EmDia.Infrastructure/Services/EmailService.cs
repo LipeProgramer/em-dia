@@ -24,7 +24,8 @@ public class EmailService : IEmailService
         msg.Subject = assunto;
         msg.Body = new TextPart("html") { Text = corpo };
 
-        using var client = new SmtpClient();
+        // 20 s em vez dos 2 min padrão: uma porta bloqueada (o Render grátis bloqueia a 587) aparece logo no log
+        using var client = new SmtpClient { Timeout = 20_000 };
         await client.ConnectAsync(
             _config["Email:Smtp:Host"] ?? "localhost",
             int.Parse(_config["Email:Smtp:Porta"] ?? "587"),
