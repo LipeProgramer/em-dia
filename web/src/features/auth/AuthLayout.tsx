@@ -1,7 +1,7 @@
 import { useEffect, type ReactNode } from 'react';
 import logo from '../../assets/logo.png';
 
-const VERDE = '#153f38';
+const VERDE = '#16564c'; // o mesmo --verde-auth do app.css
 
 /**
  * Enquanto uma tela de entrada está aberta, a página inteira fica verde: no celular, a área atrás do relógio e o

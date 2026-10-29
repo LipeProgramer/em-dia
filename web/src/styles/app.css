@@ -122,10 +122,11 @@ img { max-width: 100%; }
 .progresso-barra { height: 100%; background: var(--color-primary); transition: width .3s; }
 
 /* ── Autenticação ─────────────────────────────────────────────────────── */
-/* Telas de entrada: a página toda fica verde (topo do iPhone e "arrastar para baixo" sem faixa clara) */
-html.pagina-auth, html.pagina-auth body { background: #153f38; }
+/* Telas de entrada: a página toda fica com um verde só, igual em cima, embaixo e ao arrastar a tela no iPhone */
+:root { --verde-auth: #16564c; }
+html.pagina-auth, html.pagina-auth body { background: var(--verde-auth); }
 .auth {
-  min-height: 100dvh; display: grid; place-items: center; background: linear-gradient(160deg, #153f38, #176d61);
+  min-height: 100dvh; display: grid; place-items: center; background: var(--verde-auth);
   /* Respeita o relógio e a barrinha do iPhone (viewport-fit=cover) */
   padding: max(var(--space-md), env(safe-area-inset-top)) var(--space-md) max(var(--space-md), env(safe-area-inset-bottom));
 }
