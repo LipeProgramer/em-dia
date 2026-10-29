@@ -51,6 +51,33 @@ jobs:
           name: test-results-api
           path: api/TestResults/
 
+  api-docker:
+    name: API — Imagem Docker (deploy no Render)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build da imagem
+        run: docker build -t emdia-api ./api
+
+      # Sobe a imagem como no Render: banco vazio, migrations ao iniciar e atrás de proxy
+      - name: Subir com PostgreSQL e testar
+        run: |
+          docker network create emdia
+          docker run -d --name db --network emdia -e POSTGRES_USER=emdia -e POSTGRES_PASSWORD=emdia -e POSTGRES_DB=emdia postgres:17
+          sleep 8
+          docker run -d --name api --network emdia -p 8080:8080 \
+            -e ASPNETCORE_ENVIRONMENT=Production \
+            -e "ConnectionStrings__Default=Host=db;Database=emdia;Username=emdia;Password=emdia" \
+            -e Jwt__Key=chave-de-teste-do-ci-com-mais-de-trinta-e-dois-bytes \
+            -e Proxy__Confiar=true -e Database__MigrarAoIniciar=true emdia-api
+          for i in $(seq 1 30); do curl -sf http://localhost:8080/swagger/v1/swagger.json > /dev/null && break; sleep 2; done
+          curl -sf -X POST http://localhost:8080/api/v1/auth/registrar \
+            -H "Content-Type: application/json" -H "X-Forwarded-Proto: https" -H "X-Forwarded-For: 200.1.1.1" \
+            -d '{"nome":"CI","email":"ci@teste.com","senha":"senhaForte1","confirmarSenha":"senhaForte1"}'
+          docker logs api 2>&1 | tail -20
+
   frontend-build-test:
     name: Frontend — Build e testes
     runs-on: ubuntu-latest
