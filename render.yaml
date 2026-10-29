@@ -8,7 +8,7 @@ services:
     # Caminhos contados a partir da raiz do repositório
     dockerfilePath: ./api/Dockerfile
     dockerContext: ./api
-    healthCheckPath: /swagger/v1/swagger.json
+    healthCheckPath: /health
     envVars:
       - key: ASPNETCORE_ENVIRONMENT
         value: Production
@@ -27,3 +27,6 @@ services:
         value: "true"
       - key: Database__MigrarAoIniciar
         value: "true"
+      # Endereço do site usado no link de "Esqueci minha senha" (DV24); sem ele, usa Cors__Origens__0
+      - key: Site__Url
+        value: https://em-dia-projeto-facul.vercel.app

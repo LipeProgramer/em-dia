@@ -1032,6 +1032,46 @@ namespace EmDia.Infrastructure.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("EmDia.Domain.Entities.RedefinicaoSenha", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CriadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("criado_em");
+
+                    b.Property<DateTimeOffset>("ExpiraEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expira_em");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("token_hash");
+
+                    b.Property<DateTimeOffset?>("UsadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("usado_em");
+
+                    b.Property<Guid>("UsuarioId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("usuario_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique()
+                        .HasDatabaseName("ix_redefinicoes_senha_hash");
+
+                    b.HasIndex("UsuarioId")
+                        .HasDatabaseName("ix_redefinicoes_senha_usuario");
+
+                    b.ToTable("redefinicoes_senha", (string)null);
+                });
+
             modelBuilder.Entity("EmDia.Domain.Entities.RefreshToken", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1271,6 +1311,15 @@ namespace EmDia.Infrastructure.Data.Migrations
                     b.HasOne("EmDia.Domain.Entities.Usuario", null)
                         .WithOne("Preferencias")
                         .HasForeignKey("EmDia.Domain.Entities.PreferenciasAviso", "UsuarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("EmDia.Domain.Entities.RedefinicaoSenha", b =>
+                {
+                    b.HasOne("EmDia.Domain.Entities.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

@@ -24,3 +24,15 @@ public class JwtOptions
     public int RefreshTokenDays { get; set; } = 7;
     public string Key { get; set; } = string.Empty;
 }
+
+/// <summary>
+/// Seção "Site": endereço público do site, usado no link de redefinição de senha (DV24). Vem da configuração, nunca
+/// do cabeçalho Host da requisição (que um atacante poderia trocar para receber o link). Sem ela, usa a primeira
+/// origem do CORS.
+/// </summary>
+public class SiteOptions
+{
+    public const string Secao = "Site";
+
+    public string Url { get; set; } = "http://localhost:5173";
+}

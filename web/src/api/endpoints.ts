@@ -13,6 +13,8 @@ export const authApi = {
   login: (dados: { email: string; senha: string }) =>
     api.post<LoginResponse>('/auth/login', dados).then((r) => r.data),
   logout: () => api.post('/auth/logout'),
+  esqueciSenha: (email: string) => api.post('/auth/esqueci-senha', { email }),
+  redefinirSenha: (token: string, novaSenha: string) => api.post('/auth/redefinir-senha', { token, novaSenha }),
 };
 
 export const usuariosApi = {

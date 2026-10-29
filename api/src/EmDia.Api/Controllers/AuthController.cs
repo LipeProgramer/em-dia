@@ -16,7 +16,7 @@ namespace EmDia.Api.Controllers;
 /// gravados em logs e no histórico do navegador.
 /// </summary>
 [Route("api/v1/auth")]
-public class AuthController(AuthService auth, IWebHostEnvironment env) : ApiControllerBase
+public class AuthController(AuthService auth, RecuperacaoSenhaService recuperacao, IWebHostEnvironment env) : ApiControllerBase
 {
     private bool ClienteMobile =>
         string.Equals(Request.Headers["X-Cliente"], "mobile", StringComparison.OrdinalIgnoreCase);
@@ -112,6 +112,69 @@ public class AuthController(AuthService auth, IWebHostEnvironment env) : ApiCont
         Response.EmitirCookieRefresh(sessao.RefreshToken, sessao.RefreshExpiraEm, env);
         return Ok(sessao.Resposta);
     }
+
+    /// <summary>Extra (DV24) · Esqueci minha senha: envia o link de redefinição por e-mail (corpo JSON).</summary>
+    /// <remarks>A resposta é sempre 204, exista ou não uma conta com o e-mail, para não revelar quem é cadastrado.
+    /// O link vale 30 minutos e uma vez só; um pedido novo invalida o anterior (no máximo 1 por minuto por conta).
+    /// Mesmo limite do login: 5 por minuto por IP.</remarks>
+    /// <param name="req">E-mail da conta</param>
+    /// <param name="ct"></param>
+    /// <response code="204">Pedido recebido. Se houver conta, o e-mail chega em instantes (confira o spam).</response>
+    /// <response code="400">E-mail inválido.</response>
+    /// <response code="429">MUITAS_TENTATIVAS: mais de 5 pedidos em 1 minuto.</response>
+    [HttpPost("esqueci-senha"), AllowAnonymous, EnableRateLimiting(RateLimitExtensions.PoliticaLogin)]
+    [ProducesResponseType(StatusCodes.Status204NoContent), ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> EsqueciSenha(EsqueciSenhaRequest req, CancellationToken ct)
+    {
+        await recuperacao.SolicitarAsync(req, ct);
+        return NoContent();
+    }
+
+    /// <summary>Extra (DV24) por parâmetro · Esqueci minha senha (sem JSON).</summary>
+    /// <remarks>Mesmas regras do POST /api/v1/auth/esqueci-senha.</remarks>
+    /// <param name="email">E-mail da conta</param>
+    /// <param name="ct"></param>
+    /// <response code="204">Pedido recebido. Se houver conta, o e-mail chega em instantes (confira o spam).</response>
+    /// <response code="400">Faltou o e-mail ("Campo obrigatório.") ou ele é inválido.</response>
+    /// <response code="429">MUITAS_TENTATIVAS: mais de 5 pedidos em 1 minuto.</response>
+    [HttpPost("esqueci-senha/rapido"), AllowAnonymous, EnableRateLimiting(RateLimitExtensions.PoliticaLogin)]
+    [ProducesResponseType(StatusCodes.Status204NoContent), ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public Task<IActionResult> EsqueciSenhaPorParametro([FromQuery, BindRequired] string email, CancellationToken ct) =>
+        EsqueciSenha(new EsqueciSenhaRequest(email), ct);
+
+    /// <summary>Extra (DV24) · Redefinir a senha com o código do link (corpo JSON).</summary>
+    /// <remarks>O código é o valor de "token" no link do e-mail (…/redefinir-senha?token=CÓDIGO). Depois da troca,
+    /// todas as sessões abertas são encerradas e é preciso entrar com a nova senha.</remarks>
+    /// <param name="req">Código do link e a nova senha</param>
+    /// <param name="ct"></param>
+    /// <response code="204">Senha trocada. Entre com a nova senha.</response>
+    /// <response code="400">Faltou o código ou a senha não segue a regra (8 a 64 caracteres, com letra e número).</response>
+    /// <response code="422">LINK_INVALIDO: o link expirou, já foi usado ou foi substituído por um pedido mais novo.</response>
+    [HttpPost("redefinir-senha"), AllowAnonymous, EnableRateLimiting(RateLimitExtensions.PoliticaLogin)]
+    [ProducesResponseType(StatusCodes.Status204NoContent), ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity), ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> RedefinirSenha(RedefinirSenhaRequest req, CancellationToken ct)
+    {
+        await recuperacao.RedefinirAsync(req, ct);
+        Response.ApagarCookieRefresh(env);
+        return NoContent();
+    }
+
+    /// <summary>Extra (DV24) por parâmetros · Redefinir a senha (sem JSON).</summary>
+    /// <param name="token">Código do link do e-mail (o valor depois de "token=")</param>
+    /// <param name="novaSenha">Nova senha: 8 a 64 caracteres, com letra e número (vai no cabeçalho, não no endereço)</param>
+    /// <param name="ct"></param>
+    /// <response code="204">Senha trocada. Entre com a nova senha.</response>
+    /// <response code="400">Faltou um campo ("Campo obrigatório.") ou a senha não segue a regra.</response>
+    /// <response code="422">LINK_INVALIDO: o link expirou, já foi usado ou foi substituído por um pedido mais novo.</response>
+    [HttpPost("redefinir-senha/rapido"), AllowAnonymous, EnableRateLimiting(RateLimitExtensions.PoliticaLogin)]
+    [ProducesResponseType(StatusCodes.Status204NoContent), ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity), ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public Task<IActionResult> RedefinirSenhaPorParametros([FromQuery, BindRequired] string token,
+        [FromHeader(Name = "novaSenha"), BindRequired] string novaSenha, CancellationToken ct) =>
+        RedefinirSenha(new RedefinirSenhaRequest(token, novaSenha), ct);
 
     /// <summary>E04 · Sair.</summary>
     /// <remarks>Revoga o token de renovação atual e apaga o cookie. O token de acesso some sozinho em até 15 minutos.</remarks>

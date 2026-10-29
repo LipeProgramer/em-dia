@@ -53,6 +53,26 @@ public class LoginRequestValidator : AbstractValidator<LoginRequest>
     }
 }
 
+public class EsqueciSenhaRequestValidator : AbstractValidator<EsqueciSenhaRequest>
+{
+    public EsqueciSenhaRequestValidator()
+    {
+        RuleFor(x => x.Email).NotEmpty().WithMessage(Mensagens.Email).EmailAddress().WithMessage(Mensagens.Email);
+    }
+}
+
+public class RedefinirSenhaRequestValidator : AbstractValidator<RedefinirSenhaRequest>
+{
+    public RedefinirSenhaRequestValidator()
+    {
+        RuleFor(x => x.Token).NotEmpty().WithMessage("Abra o link que enviamos por e-mail.");
+        RuleFor(x => x.NovaSenha)
+            .NotEmpty().WithMessage(Mensagens.Senha)
+            .Length(8, 64).WithMessage(Mensagens.Senha)
+            .Must(s => s is not null && s.Any(char.IsLetter) && s.Any(char.IsDigit)).WithMessage(Mensagens.Senha);
+    }
+}
+
 public class PreferenciasValidator : AbstractValidator<PreferenciasDto>
 {
     public PreferenciasValidator()

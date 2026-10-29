@@ -33,6 +33,7 @@ Tempo previsto: **8 a 10 minutos**. Os slides que acompanham estão na apresenta
 | 1.4 | No **Neon → Tables → usuarios**, atualize | O usuário apareceu no banco: **Usuário → Front → API → Banco**. A coluna `senha_hash` não tem a senha. |
 | 1.5 | Saia (**Perfil → Sair**) e entre com a **senha errada** | `POST /auth/login` → **401** "E-mail ou senha inválidos." Mensagem genérica, para não revelar quais e-mails existem. |
 | 1.6 | Entre com a senha certa | **200** com o token de acesso (15 min) e o cookie de renovação `HttpOnly` (7 dias). |
+| 1.7 | (Extra) Saia e clique em **Esqueci minha senha** com o e-mail da conta → abra o e-mail e toque em **Criar nova senha** | **DV24**: resposta igual com ou sem conta; o link vale 30 minutos e uma vez só, e trocar a senha encerra todas as sessões. Precisa do SMTP configurado no Render. |
 
 ## Parte 2 — Check-up e Radar (≈ 2 min) · *sugestão: Felipe Nadab (front)*
 
@@ -94,5 +95,5 @@ cascata. No **Neon**, a tabela `usuarios` não tem mais a conta da demonstraçã
 | E a API com o banco? | Entity Framework Core 10 + Npgsql; migrations versionam o banco e criam o catálogo; repositórios filtram sempre pelo dono (RN12). |
 | Como evitam ataque de força bruta? | 5 tentativas de login por minuto por IP (429) e bloqueio da conta por 15 min após 5 falhas. Além disso, toda a API aceita no máximo 300 requisições por minuto por IP (DV21). |
 | E se alguém tentar ver o item de outra pessoa? | O id do usuário vem só do token; recurso de outro usuário responde **404**. |
-| Como sabem que funciona? | 141 testes automatizados (50 unitários, 63 de integração com PostgreSQL real, 17 do front, 11 do app), cobertura de 97,3% no Domain e CI no GitHub Actions a cada push. |
+| Como sabem que funciona? | 146 testes automatizados (50 unitários, 66 de integração com PostgreSQL real, 19 do front, 11 do app), cobertura de 97,3% no Domain e CI no GitHub Actions a cada push. |
 | Por que Vercel + Render + Neon? | Gratuitos e separados por função. O Vercel repassa `/api/*` para o Render, então o navegador vê um só endereço e o cookie `SameSite=Strict` funciona. |

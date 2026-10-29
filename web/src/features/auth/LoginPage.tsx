@@ -17,6 +17,8 @@ export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [erroApi, setErroApi] = useState<string | null>(null);
+  // Aviso vindo de outra tela (ex.: "Senha alterada" depois de redefinir a senha)
+  const aviso = (location.state as { aviso?: string } | null)?.aviso;
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<Form>({
     resolver: zodResolver(loginSchema),
   });
@@ -37,6 +39,8 @@ export function LoginPage() {
       <form onSubmit={enviar} noValidate className="form">
         <Field label="E-mail" type="email" autoComplete="email" erro={errors.email?.message} {...register('email')} />
         <Field label="Senha" type="password" autoComplete="current-password" erro={errors.senha?.message} {...register('senha')} />
+        <Link className="auth-esqueci" to="/esqueci-senha">Esqueci minha senha</Link>
+        {aviso && !erroApi && <Alerta tipo="sucesso">{aviso}</Alerta>}
         {erroApi && <Alerta>{erroApi}</Alerta>}
         <Button type="submit" carregando={isSubmitting}>Entrar</Button>
       </form>

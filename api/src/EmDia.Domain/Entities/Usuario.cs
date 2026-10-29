@@ -54,4 +54,11 @@ public class Usuario
     }
 
     public void RegistrarCheckup(DateTimeOffset agora) => UltimoCheckupEm = agora;
+
+    /// <summary>Nova senha pelo link de redefinição (DV24): também desfaz o bloqueio por tentativas erradas.</summary>
+    public void RedefinirSenha(string novoHash)
+    {
+        SenhaHash = novoHash;
+        RegistrarLoginComSucesso();
+    }
 }

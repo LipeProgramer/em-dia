@@ -2,6 +2,7 @@ import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom';
 import { useSession } from '../features/auth/useSession.tsx';
 import { LoginPage } from '../features/auth/LoginPage.tsx';
 import { CadastroPage } from '../features/auth/CadastroPage.tsx';
+import { EsqueciSenhaPage, RedefinirSenhaPage } from '../features/auth/RecuperarSenhaPages.tsx';
 import { CheckupProvider } from '../features/checkup/CheckupContext.tsx';
 import { PerguntaPage } from '../features/checkup/PerguntaPage.tsx';
 import { DadosPage } from '../features/checkup/DadosPage.tsx';
@@ -48,6 +49,9 @@ export function AppRoutes() {
         <Route path="/entrar" element={<LoginPage />} />
         <Route path="/cadastro" element={<CadastroPage />} />
       </Route>
+      {/* Fora da rota pública: o link do e-mail abre mesmo com outra sessão aberta neste aparelho */}
+      <Route path="/esqueci-senha" element={<EsqueciSenhaPage />} />
+      <Route path="/redefinir-senha" element={<RedefinirSenhaPage />} />
 
       <Route element={<PrivateRoute />}>
         <Route element={<CheckupGate />}>

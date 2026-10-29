@@ -128,6 +128,7 @@ img { max-width: 100%; }
 .auth-nome { font-weight: 800; margin: 0; }
 .auth-slogan, .auth-subtitulo { margin: 0; color: var(--color-text-secondary); }
 .auth-troca { text-align: center; margin: var(--space-sm) 0 0; }
+.auth-esqueci { align-self: flex-end; font-size: var(--text-sm, 0.875rem); font-weight: 600; margin-top: calc(-1 * var(--space-xs, 4px)); }
 
 /* ── Check-up ─────────────────────────────────────────────────────────── */
 .checkup { max-width: 520px; margin: 0 auto; padding: var(--space-lg) var(--space-md); min-height: 100dvh; display: flex; flex-direction: column; gap: var(--space-lg); }

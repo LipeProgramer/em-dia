@@ -20,6 +20,12 @@ namespace EmDia.Application.DTOs.Auth
     /// <summary>E03 · POST /auth/refresh</summary>
     public record RefreshResponse(string AccessToken, DateTimeOffset ExpiraEm);
 
+    /// <summary>Extra (DV24) · POST /auth/esqueci-senha: envia o link de redefinição para este e-mail, se houver conta.</summary>
+    public record EsqueciSenhaRequest(string Email);
+
+    /// <summary>Extra (DV24) · POST /auth/redefinir-senha: código do link recebido por e-mail e a nova senha.</summary>
+    public record RedefinirSenhaRequest(string Token, string NovaSenha);
+
     /// <summary>Resultado interno do login/refresh: resposta + valor do refresh token para o cookie.</summary>
     public record SessaoEmitida<T>(T Resposta, string RefreshToken, DateTimeOffset RefreshExpiraEm);
 }

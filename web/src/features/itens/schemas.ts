@@ -36,6 +36,15 @@ export const cadastroSchema = z.object({
   confirmarSenha: z.string(),
 }).refine((d) => d.senha === d.confirmarSenha, { path: ['confirmarSenha'], message: 'As senhas não são iguais.' });
 
+export const esqueciSenhaSchema = z.object({
+  email: z.string().trim().min(1, msg.email).pipe(z.email(msg.email)),
+});
+
+export const redefinirSenhaSchema = z.object({
+  senha: senhaSchema,
+  confirmarSenha: z.string(),
+}).refine((d) => d.senha === d.confirmarSenha, { path: ['confirmarSenha'], message: 'As senhas não são iguais.' });
+
 export const loginSchema = z.object({
   email: z.string().trim().min(1, msg.email).pipe(z.email(msg.email)),
   senha: z.string().min(1, 'Informe a senha.'),

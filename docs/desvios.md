@@ -141,8 +141,23 @@ levava perto de 1 minuto. Sem mudar o contrato:
 - O BCrypt continua com **custo 12** (spec §4.3): o cálculo da senha é lento de propósito (dificulta ataques), então
   login e cadastro são as chamadas mais demoradas na CPU fraca.
 
+### DV24 — Esqueci minha senha (extra)
+A spec não prevê recuperar a senha. Como extra, em **Entrar → Esqueci minha senha** a pessoa informa o e-mail e
+recebe um link para criar uma senha nova:
+- Rotas `POST /auth/esqueci-senha` e `POST /auth/redefinir-senha` (e as versões `.../rapido`), abertas e com o mesmo
+  limite do login (5 por minuto por IP). Telas `/esqueci-senha` e `/redefinir-senha` no site.
+- A resposta do pedido é sempre **204**, exista ou não a conta, e o e-mail sai em segundo plano: ninguém descobre
+  quais e-mails estão cadastrados. No máximo um pedido por minuto por conta, para não lotar a caixa de entrada.
+- O link vale **30 minutos** e **uma vez só**; um pedido novo invalida o anterior. Como no token de renovação, o banco
+  guarda só o hash SHA-256 do código (tabela a mais, `redefinicoes_senha`, apagada em cascata com o usuário).
+- Ao trocar a senha, todas as sessões abertas são encerradas e o bloqueio por tentativas erradas é desfeito.
+- O endereço do link vem da configuração (`Site:Url`, ou a origem do CORS), nunca do cabeçalho Host da requisição,
+  que um atacante poderia trocar para receber o link.
+- O e-mail usa o mesmo SMTP dos avisos (DV16). O app Expo (DV15) não tem a função: ele roda com a API local, e o link
+  do e-mail abre o site publicado.
+
 ### DV16 — Sem SMTP configurado, e-mails só vão para o log
-Se `Email:Smtp:Host` estiver vazio, a API usa um serviço de e-mail falso que só registra as mensagens. Com o host
+Se `Email:Smtp:Host` estiver vazio, a API usa um serviço de e-mail falso que só escreve as mensagens no log. Com o host
 configurado, usa o MailKit. A rotina diária roda às 8h (America/Sao_Paulo).
 
 ---

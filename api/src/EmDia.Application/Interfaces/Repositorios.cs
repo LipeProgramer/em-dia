@@ -29,6 +29,17 @@ public interface IRefreshTokenRepository
     Task RevogarTodosDoUsuarioAsync(Guid usuarioId, DateTimeOffset agora, CancellationToken ct = default);
 }
 
+/// <summary>Pedidos de redefinição de senha (DV24).</summary>
+public interface IRedefinicaoSenhaRepository
+{
+    Task<RedefinicaoSenha?> ObterPorHashAsync(string hash, CancellationToken ct = default);
+
+    /// <summary>Pedidos ainda não usados do usuário (para gastar os antigos quando chega um novo).</summary>
+    Task<IReadOnlyList<RedefinicaoSenha>> ListarAbertasAsync(Guid usuarioId, CancellationToken ct = default);
+
+    Task AdicionarAsync(RedefinicaoSenha redefinicao, CancellationToken ct = default);
+}
+
 public interface ICatalogoRepository
 {
     Task<IReadOnlyList<Categoria>> ListarCategoriasAsync(CancellationToken ct = default);

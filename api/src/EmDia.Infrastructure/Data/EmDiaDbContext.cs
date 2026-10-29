@@ -26,6 +26,9 @@ public class EmDiaDbContext : DbContext
     // ── Extra: notificações no celular (DV20) ────────────────────────────────
     public DbSet<InscricaoPush> InscricoesPush => Set<InscricaoPush>();
 
+    // ── Extra: esqueci minha senha (DV24) ─────────────────────────────────────
+    public DbSet<RedefinicaoSenha> RedefinicoesSenha => Set<RedefinicaoSenha>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // Aplica todas as configurações (IEntityTypeConfiguration<T>)

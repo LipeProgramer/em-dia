@@ -154,6 +154,18 @@ public class AvisoRepository(EmDiaDbContext db) : IAvisoRepository
         await db.Avisos.AddAsync(aviso, ct);
 }
 
+public class RedefinicaoSenhaRepository(EmDiaDbContext db) : IRedefinicaoSenhaRepository
+{
+    public Task<RedefinicaoSenha?> ObterPorHashAsync(string hash, CancellationToken ct = default) =>
+        db.RedefinicoesSenha.FirstOrDefaultAsync(r => r.TokenHash == hash, ct);
+
+    public async Task<IReadOnlyList<RedefinicaoSenha>> ListarAbertasAsync(Guid usuarioId, CancellationToken ct = default) =>
+        await db.RedefinicoesSenha.Where(r => r.UsuarioId == usuarioId && r.UsadoEm == null).ToListAsync(ct);
+
+    public async Task AdicionarAsync(RedefinicaoSenha redefinicao, CancellationToken ct = default) =>
+        await db.RedefinicoesSenha.AddAsync(redefinicao, ct);
+}
+
 public class InscricaoPushRepository(EmDiaDbContext db) : IInscricaoPushRepository
 {
     public Task<InscricaoPush?> ObterPorEndpointAsync(string endpoint, CancellationToken ct = default) =>

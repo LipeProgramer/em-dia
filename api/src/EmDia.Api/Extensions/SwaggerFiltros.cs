@@ -39,6 +39,9 @@ public class ExemplosSwagger : ISchemaFilter
         [typeof(AtualizarKmRequest)] = """{ "kmAtual": 52000 }""",
         [typeof(PreferenciasDto)] = """{ "receberEmail": true, "maxReavisos": 2, "intervaloReavisoDias": 3, "modoFocoPadrao": false }""",
         [typeof(ExcluirContaRequest)] = """{ "senha": "Demo2026a" }""",
+        [typeof(EsqueciSenhaRequest)] = """{ "email": "demo.banca@emdia.dev" }""",
+        // O código vem do link do e-mail; o exemplo só mostra o formato
+        [typeof(RedefinirSenhaRequest)] = """{ "token": "COLE-AQUI-O-CODIGO-DO-LINK", "novaSenha": "NovaSenha2026" }""",
     };
 
     public void Apply(OpenApiSchema schema, SchemaFilterContext context)

@@ -88,6 +88,20 @@ Crie uma conta de envio e, no Render, em **Environment**, adicione as variáveis
 
 Salve com **Save, rebuild, and deploy**. Cada usuário escolhe no Perfil se quer receber por e-mail.
 
+O mesmo SMTP envia o link de **Esqueci minha senha** (DV24), que chega no e-mail de quem pediu. O link abre o site
+definido em `Site__Url` (no `render.yaml`: `https://em-dia-projeto-facul.vercel.app`; confira em **Environment**
+se o endereço do site mudar). Sem SMTP configurado, o e-mail (com o link) só aparece em **Logs** no Render.
+
+**Passo a passo no Brevo (grátis):**
+1. Crie a conta em <https://www.brevo.com> e confirme o e-mail.
+2. **Senders, Domains & Dedicated IPs → Senders → Add a sender**: cadastre o e-mail que vai aparecer como
+   remetente (ex.: o seu Gmail) e confirme pelo link que o Brevo manda. Esse é o `Email__Remetente`.
+3. **SMTP & API → SMTP**: copie o **Login** (`Email__Smtp__Usuario`) e gere uma **SMTP key**
+   (`Email__Smtp__Senha`).
+4. No Render, em **Environment**, adicione as 5 variáveis da tabela e salve.
+5. Teste: no site, **Entrar → Esqueci minha senha** com o seu e-mail. Confira também o spam; com remetente Gmail
+   enviado pelo Brevo, os primeiros e-mails costumam cair lá.
+
 ### Notificação no celular (Web Push)
 
 Não precisa configurar nada no servidor: as chaves VAPID são derivadas da chave do JWT (DV20). Cada pessoa ativa no

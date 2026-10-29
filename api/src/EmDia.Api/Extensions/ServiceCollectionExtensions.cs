@@ -31,6 +31,8 @@ public static class ServiceCollectionExtensions
     {
         services.Configure<JwtOptions>(config.GetSection(JwtOptions.Secao));
         services.Configure<SegurancaOptions>(config.GetSection(SegurancaOptions.Secao));
+        services.Configure<SiteOptions>(o => o.Url =
+            new[] { config["Site:Url"], config["Cors:Origens:0"] }.FirstOrDefault(u => !string.IsNullOrWhiteSpace(u)) ?? o.Url);
 
         services.AddDbContext<EmDiaDbContext>((sp, o) => o.UseNpgsql(
             sp.GetRequiredService<IConfiguration>().GetConnectionString("Default")
@@ -48,6 +50,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IHistoricoRepository, HistoricoRepository>();
         services.AddScoped<IAvisoRepository, AvisoRepository>();
         services.AddScoped<IInscricaoPushRepository, InscricaoPushRepository>();
+        services.AddScoped<IRedefinicaoSenhaRepository, RedefinicaoSenhaRepository>();
 
         // Services (casos de uso)
         services.AddScoped<AuthService>();
@@ -59,6 +62,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<VeiculoService>();
         services.AddScoped<HistoricoService>();
         services.AddScoped<NotificacoesService>();
+        services.AddScoped<RecuperacaoSenhaService>();
         services.AddValidatorsFromAssemblyContaining<RegistrarRequestValidator>(ServiceLifetime.Scoped);
 
         // Segurança, relógio e e-mail
