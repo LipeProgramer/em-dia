@@ -106,6 +106,17 @@ passou disso, responde 429 com `code` `MUITAS_REQUISICOES` e `Retry-After: 60`. 
 sala de aula, todos no mesmo Wi-Fi saem pelo mesmo IP. O limitador roda antes da autenticação, então chamadas sem
 login também contam.
 
+### DV22 — Teste pelo Swagger sem digitar JSON
+Para a demonstração, o Swagger ficou fácil de usar sem erro de digitação, sem mudar o contrato E01–E25 (o site e o app
+continuam enviando JSON):
+- **`POST /api/v1/itens/rapido`** (extra): cria um item com cada campo como **parâmetro** — `nome`, `categoriaId` e
+  `tipoVencimento` obrigatórios (lista de opções), datas no formato `aaaa-mm-dd`, `antecedenciaDias` padrão 30 e
+  `passos` um por linha. Mesmas validações e regras do E15; faltou um obrigatório → 400 "Campo obrigatório.".
+- **Exemplos válidos** em todos os corpos JSON (cadastro, login, check-up, item, concluir, veículo, km, preferências):
+  "Try it out" → "Execute" funciona sem editar; um teste de integração envia cada exemplo para a API.
+- O filtro `status` de `GET /itens` virou **lista de opções** (Vencido, Atencao, EmDia, Encerrado).
+- No site, o detalhe do item mostra o **id flutuante com botão Copiar**, para colar em `GET /api/v1/itens/{id}`.
+
 ### DV16 — Sem SMTP configurado, e-mails só vão para o log
 Se `Email:Smtp:Host` estiver vazio, a API usa um serviço de e-mail falso que só registra as mensagens. Com o host
 configurado, usa o MailKit. A rotina diária roda às 8h (America/Sao_Paulo).

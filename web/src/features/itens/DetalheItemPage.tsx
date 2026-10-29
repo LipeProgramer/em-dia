@@ -130,6 +130,31 @@ export function DetalheItemPage() {
         <Button variante="perigo" carregando={excluir.isPending} onClick={() => excluir.mutate()}>Excluir</Button>
         <Button variante="secundario" onClick={() => setExcluindo(false)}>Cancelar</Button>
       </Dialog>
+
+      <IdFlutuante id={item.id} />
     </div>
+  );
+}
+
+/** Id do item sempre à vista, com botão de copiar, para usar em GET /api/v1/itens/{id} no Swagger (DV22). */
+function IdFlutuante({ id }: { id: string }) {
+  const [copiado, setCopiado] = useState(false);
+
+  const copiar = async () => {
+    try {
+      await navigator.clipboard.writeText(id);
+      setCopiado(true);
+      setTimeout(() => setCopiado(false), 2000);
+    } catch {
+      window.prompt('Copie o id do item:', id);
+    }
+  };
+
+  return (
+    <aside className="id-flutuante" aria-label="Id do item para usar no Swagger">
+      <span className="id-flutuante-rotulo">ID do item</span>
+      <code className="id-flutuante-valor">{id}</code>
+      <button type="button" className="id-flutuante-copiar" onClick={copiar}>{copiado ? 'Copiado!' : 'Copiar'}</button>
+    </aside>
   );
 }

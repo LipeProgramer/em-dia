@@ -105,6 +105,11 @@ O Swagger fica em `https://emdia-api-felipemsantoss.onrender.com/swagger` e perm
 
 O token vale 15 minutos; depois disso, faça login de novo e troque no **Authorize**.
 
+Todos os corpos JSON já vêm com um **exemplo válido**: é só **Try it out → Execute**. Para criar item sem mexer em
+JSON, use **`POST /api/v1/itens/rapido`**: cada campo é um parâmetro (os obrigatórios têm `*`, o tipo de vencimento é
+uma lista). Copie o `id` da resposta — ou do botão **Copiar** no detalhe do item no site — e use em
+`GET /api/v1/itens/{id}`, `PUT`, `DELETE` e `POST /api/v1/itens/{id}/concluir`.
+
 ## Se der erro
 
 | Sintoma | Causa provável | O que fazer |

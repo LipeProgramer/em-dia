@@ -213,6 +213,21 @@ img { max-width: 100%; }
 .acoes-secundarias { display: flex; gap: var(--space-md); align-items: center; }
 .acoes-secundarias a { min-height: 44px; display: inline-flex; align-items: center; }
 
+/* Id do item flutuante (para copiar e usar no Swagger) — acima do menu inferior no celular */
+.id-flutuante {
+  position: fixed; z-index: 15; right: var(--space-md); bottom: calc(76px + env(safe-area-inset-bottom));
+  display: flex; align-items: center; gap: 8px; max-width: calc(100vw - 2 * var(--space-md));
+  padding: 8px 8px 8px 12px; background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: var(--radius-md); box-shadow: var(--shadow-soft); font-size: 0.75rem;
+}
+.id-flutuante-rotulo { color: var(--color-text-muted); white-space: nowrap; }
+.id-flutuante-valor { font-family: ui-monospace, Consolas, monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.id-flutuante-copiar {
+  min-height: 32px; padding: 0 12px; border: 0; border-radius: var(--radius-full);
+  background: var(--color-primary); color: #fff; font-weight: 600; cursor: pointer; white-space: nowrap;
+}
+@media (min-width: 900px) { .id-flutuante { bottom: var(--space-lg); right: var(--space-lg); } }
+
 /* ── Janela (dialog) ─────────────────────────────────────────────────── */
 .dialog { border: 0; border-radius: var(--radius-lg); padding: var(--space-lg); width: min(92vw, 460px); box-shadow: var(--shadow-pop); color: inherit; }
 .dialog[open] { display: flex; flex-direction: column; gap: var(--space-md); }

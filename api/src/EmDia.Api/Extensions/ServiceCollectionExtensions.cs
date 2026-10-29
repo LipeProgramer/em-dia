@@ -25,6 +25,7 @@ namespace EmDia.Api.Extensions;
 public static class ServiceCollectionExtensions
 {
     public const string PoliticaCors = "frontend";
+    private const string CampoObrigatorio = "Campo obrigatório.";
 
     public static IServiceCollection AddEmDia(this IServiceCollection services, IConfiguration config, IHostEnvironment env)
     {
@@ -148,7 +149,8 @@ public static class ServiceCollectionExtensions
     /// <summary>Controllers com JSON em camelCase, enums como texto e erros de modelo no formato ProblemDetails.</summary>
     public static IServiceCollection AddControllersEmDia(this IServiceCollection services)
     {
-        services.AddControllers()
+        services.AddControllers(o =>
+                o.ModelBindingMessageProvider.SetMissingBindRequiredValueAccessor(_ => CampoObrigatorio))
             .AddJsonOptions(o =>
                 o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(allowIntegerValues: false)))
             .ConfigureApiBehaviorOptions(o =>
@@ -158,7 +160,9 @@ public static class ServiceCollectionExtensions
                         .Where(e => e.Value?.Errors.Count > 0)
                         .ToDictionary(
                             e => ErrorHandlingMiddleware.CamelCase(e.Key.TrimStart('$', '.')) is { Length: > 0 } k ? k : "corpo",
-                            e => e.Value!.Errors.Select(_ => "Valor inválido.").Distinct().ToArray());
+                            e => e.Value!.Errors
+                                .Select(x => x.ErrorMessage == CampoObrigatorio ? CampoObrigatorio : "Valor inválido.")
+                                .Distinct().ToArray());
                     return new BadRequestObjectResult(ErrorHandlingMiddleware.DadosInvalidos(erros))
                     {
                         ContentTypes = { "application/problem+json" }
@@ -196,6 +200,10 @@ public static class ServiceCollectionExtensions
             });
             var xml = Path.Combine(AppContext.BaseDirectory, "EmDia.Api.xml");
             if (File.Exists(xml)) c.IncludeXmlComments(xml);
+
+            // Exemplos válidos nos corpos e lista de opções nos filtros: testar pelo Swagger sem erro de digitação
+            c.SchemaFilter<ExemplosSwagger>();
+            c.OperationFilter<OpcoesDeFiltroSwagger>();
         });
         return services;
     }
