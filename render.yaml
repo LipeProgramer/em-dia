@@ -5,9 +5,9 @@ services:
     runtime: docker
     plan: free
     region: virginia
-    rootDir: api
-    dockerfilePath: ./Dockerfile
-    dockerContext: .
+    # Caminhos contados a partir da raiz do repositório
+    dockerfilePath: ./api/Dockerfile
+    dockerContext: ./api
     healthCheckPath: /swagger/v1/swagger.json
     envVars:
       - key: ASPNETCORE_ENVIRONMENT
