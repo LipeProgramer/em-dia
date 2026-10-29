@@ -197,3 +197,26 @@ public class AtualizarKmRequestValidator : AbstractValidator<AtualizarKmRequest>
         RuleFor(x => x.KmAtual).GreaterThanOrEqualTo(0).WithMessage(Mensagens.KmNegativa);
     }
 }
+
+/// <summary>
+/// Inscrição de notificações: o endereço precisa ser HTTPS de um serviço de push conhecido (Google, Mozilla,
+/// Microsoft ou Apple). Assim a API nunca envia requisições para endereços escolhidos pelo usuário (SSRF).
+/// </summary>
+public class InscricaoPushRequestValidator : AbstractValidator<DTOs.Notificacoes.InscricaoPushRequest>
+{
+    private static readonly string[] ServicosPush =
+        ["fcm.googleapis.com", "push.services.mozilla.com", "notify.windows.com", "push.apple.com"];
+
+    public InscricaoPushRequestValidator()
+    {
+        RuleFor(x => x.Endpoint).NotEmpty().MaximumLength(1000)
+            .Must(EnderecoDeServicoPush).WithMessage("Endereço de notificação inválido.");
+        RuleFor(x => x.P256dh).NotEmpty().MaximumLength(200).WithMessage("Chave de notificação inválida.");
+        RuleFor(x => x.Auth).NotEmpty().MaximumLength(100).WithMessage("Chave de notificação inválida.");
+    }
+
+    public static bool EnderecoDeServicoPush(string? endpoint) =>
+        Uri.TryCreate(endpoint, UriKind.Absolute, out var uri)
+        && uri.Scheme == Uri.UriSchemeHttps
+        && ServicosPush.Any(s => uri.Host == s || uri.Host.EndsWith("." + s, StringComparison.OrdinalIgnoreCase));
+}

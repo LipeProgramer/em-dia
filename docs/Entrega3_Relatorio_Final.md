@@ -84,7 +84,7 @@ vencimento são testadas sem banco e sem API.
 
 ## 3. Banco de dados
 
-PostgreSQL criado e versionado por migrations do EF Core (`CriacaoInicial`, `AjustesEntrega2` e `CheckupPorArea`). São **12 tabelas**
+PostgreSQL criado e versionado por migrations do EF Core (`CriacaoInicial`, `AjustesEntrega2` e `CheckupPorArea`). São **12 tabelas** da especificação, mais `inscricoes_push` (extra, notificações no celular · DV20),
 em quatro grupos, com nomes em português no formato `snake_case`:
 
 | Grupo | Tabelas |
@@ -178,6 +178,8 @@ Todas ficam na camada Domain (`Item`, `Veiculo`, `RadarDomain`, `AvisoDomain`, `
 - Cada envio fica em `avisos`, único por (item, vencimento, número): rodar a rotina duas vezes no dia não duplica e-mails;
   uma falha de envio é refeita no dia seguinte.
 - O e-mail é curto, positivo e traz o próximo passo pequeno. Sem SMTP configurado, as mensagens só vão para o log.
+- **Extra (DV20):** quem ativa no Perfil recebe o mesmo aviso como **notificação no celular** (Web Push), também no
+  site instalado na tela de início. No servidor gratuito, a rotina roda quando a API acorda depois das 8h.
 
 ---
 
@@ -236,10 +238,10 @@ navegador, o token de renovação vai no corpo da resposta e fica no **SecureSto
 | Nível | Ferramenta | Testes | Resultado |
 |---|---|---|---|
 | Unitário (Domain) | xUnit | 50 (U01–U15 + 35 complementares) | ✅ 50/50 |
-| Integração da API | xUnit + WebApplicationFactory + PostgreSQL | 52 (CT01–CT46 + extras) | ✅ 52/52 |
+| Integração da API | xUnit + WebApplicationFactory + PostgreSQL | 55 (CT01–CT46 + extras) | ✅ 55/55 |
 | Frontend web | Vitest + Testing Library | 17 (CT47–CT51 + validações) | ✅ 17/17 |
 | App mobile | Vitest | 11 (validações e datas) | ✅ 11/11 |
-| **Total** | | **130** | **✅ 130/130** |
+| **Total** | | **133** | **✅ 133/133** |
 
 - **Cobertura do `EmDia.Domain`:** 97,3% das linhas e 89,5% dos ramos (critério: ≥ 80%).
 - **Fluxos F1–F4** executados de ponta a ponta com a API e o front rodando juntos: primeiro acesso, concluir item com
@@ -294,7 +296,7 @@ O sistema está publicado com HTTPS, em serviços gratuitos (passo a passo em `d
 ## 12. Conclusão, dificuldades e aprendizados
 
 A solução implementa o que a Entrega 2 especificou — contrato da API, modelo de dados, regras de negócio, segurança e
-telas — com 130 testes automatizados aprovados, cobertura de 97% nas regras de negócio e o sistema publicado online.
+telas — com 133 testes automatizados aprovados, cobertura de 97% nas regras de negócio e o sistema publicado online.
 As duas metáforas (Radar e Check-up) orientam as telas, e a acessibilidade foi verificada por testes (status com texto
 e símbolo, uso só com teclado).
 

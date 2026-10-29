@@ -234,6 +234,50 @@ namespace EmDia.Infrastructure.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("EmDia.Domain.Entities.InscricaoPush", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Auth")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("auth");
+
+                    b.Property<DateTimeOffset>("CriadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("criado_em");
+
+                    b.Property<string>("Endpoint")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("endpoint");
+
+                    b.Property<string>("P256dh")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("p256dh");
+
+                    b.Property<Guid>("UsuarioId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("usuario_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Endpoint")
+                        .IsUnique()
+                        .HasDatabaseName("ix_inscricoes_push_endpoint");
+
+                    b.HasIndex("UsuarioId")
+                        .HasDatabaseName("ix_inscricoes_push_usuario");
+
+                    b.ToTable("inscricoes_push", (string)null);
+                });
+
             modelBuilder.Entity("EmDia.Domain.Entities.Item", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1159,6 +1203,15 @@ namespace EmDia.Infrastructure.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Item");
+                });
+
+            modelBuilder.Entity("EmDia.Domain.Entities.InscricaoPush", b =>
+                {
+                    b.HasOne("EmDia.Domain.Entities.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("EmDia.Domain.Entities.Item", b =>

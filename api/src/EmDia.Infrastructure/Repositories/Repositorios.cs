@@ -153,3 +153,14 @@ public class AvisoRepository(EmDiaDbContext db) : IAvisoRepository
     public async Task AdicionarAsync(Aviso aviso, CancellationToken ct = default) =>
         await db.Avisos.AddAsync(aviso, ct);
 }
+
+public class InscricaoPushRepository(EmDiaDbContext db) : IInscricaoPushRepository
+{
+    public Task<InscricaoPush?> ObterPorEndpointAsync(string endpoint, CancellationToken ct = default) =>
+        db.InscricoesPush.FirstOrDefaultAsync(i => i.Endpoint == endpoint, ct);
+
+    public async Task AdicionarAsync(InscricaoPush inscricao, CancellationToken ct = default) =>
+        await db.InscricoesPush.AddAsync(inscricao, ct);
+
+    public void Remover(InscricaoPush inscricao) => db.InscricoesPush.Remove(inscricao);
+}

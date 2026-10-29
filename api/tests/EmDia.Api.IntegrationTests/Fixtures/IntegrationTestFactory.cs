@@ -25,6 +25,7 @@ public class IntegrationTestFactory : WebApplicationFactory<Program>, IAsyncLife
 
     public RelogioFixo Relogio { get; } = new();
     public EmailServiceFake Emails { get; } = new();
+    public PushServiceFake Notificacoes { get; } = new();
 
     public async Task InitializeAsync()
     {
@@ -71,6 +72,8 @@ public class IntegrationTestFactory : WebApplicationFactory<Program>, IAsyncLife
             services.AddSingleton<IRelogio>(Relogio);
             services.RemoveAll<IEmailService>();
             services.AddSingleton<IEmailService>(Emails);
+            services.RemoveAll<IPushService>();
+            services.AddSingleton<IPushService>(Notificacoes);
         });
     }
 }

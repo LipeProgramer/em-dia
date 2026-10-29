@@ -57,6 +57,7 @@ Tempo previsto: **8 a 10 minutos**. Os slides que acompanham estão na apresenta
 | 3.6 | Atualize com um valor **maior** | Os itens do veículo (ex.: troca de óleo) **recalculam o status** pela km. |
 | 3.7 | Abra um item → **Editar**, mude o intervalo → **Salvar** | **Alteração** (`PUT /itens/{id}`); o próximo vencimento é recalculado (RN01). |
 | 3.8 | **Perfil → Salvar preferências** (ex.: antecedência) | **Alteração** de preferências de aviso (`PUT /usuarios/me/preferencias`). |
+| 3.9 | (Opcional, no celular) **Perfil → Notificações no celular → Enviar notificação de teste** | **Extra (DV20):** a notificação aparece na tela do celular; a rotina das 8h usa o mesmo caminho para avisar dos prazos. |
 
 ## Parte 4 — Exclusões e tratamento de erros (≈ 1,5 min) · *sugestão: Felipe Moreira (API)*
 
@@ -92,5 +93,5 @@ cascata. No **Neon**, a tabela `usuarios` não tem mais a conta da demonstraçã
 | E a API com o banco? | Entity Framework Core 10 + Npgsql; migrations versionam o banco e criam o catálogo; repositórios filtram sempre pelo dono (RN12). |
 | Como evitam ataque de força bruta? | 5 tentativas de login por minuto por IP (429) e bloqueio da conta por 15 min após 5 falhas. |
 | E se alguém tentar ver o item de outra pessoa? | O id do usuário vem só do token; recurso de outro usuário responde **404**. |
-| Como sabem que funciona? | 130 testes automatizados (50 unitários, 52 de integração com PostgreSQL real, 17 do front, 11 do app), cobertura de 97,3% no Domain e CI no GitHub Actions a cada push. |
+| Como sabem que funciona? | 133 testes automatizados (50 unitários, 55 de integração com PostgreSQL real, 17 do front, 11 do app), cobertura de 97,3% no Domain e CI no GitHub Actions a cada push. |
 | Por que Vercel + Render + Neon? | Gratuitos e separados por função. O Vercel repassa `/api/*` para o Render, então o navegador vê um só endereço e o cookie `SameSite=Strict` funciona. |

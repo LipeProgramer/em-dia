@@ -62,7 +62,37 @@ login (`SameSite=Strict`) funciona e não é preciso mexer no código do site.
 - **Acorde a API.** No plano gratuito do Render, a API "dorme" depois de 15 minutos sem uso e leva perto de 1 minuto
   para acordar. Uns 2 minutos antes, abra `https://emdia-api-felipemsantoss.onrender.com/swagger` e espere carregar.
   Sem isso, o primeiro cadastro ou login pode dar "Algo deu errado".
-- O e-mail de avisos não está configurado: os avisos só aparecem no log do Render (**Logs**). Isso é esperado (DV16).
+- Sem as variáveis de e-mail (abaixo), os avisos por e-mail só aparecem no log do Render (**Logs**) (DV16).
+
+## Avisos de vencimento: e-mail e celular
+
+A rotina de avisos roda todo dia depois das 8h (Brasília). Como a API dorme no plano gratuito, o agendamento
+`.github/workflows/avisos.yml` (GitHub Actions) acorda a API às 8h15 e às 12h; ao acordar depois das 8h, ela roda a
+rotina do dia. Rodar mais de uma vez não duplica nada (cada aviso fica gravado em `avisos`).
+
+### E-mail (SMTP)
+
+Crie uma conta de envio e, no Render, em **Environment**, adicione as variáveis (os valores ficam só lá):
+
+| Variável | Brevo (grátis, 300 e-mails/dia) | Gmail (com verificação em 2 etapas) |
+|---|---|---|
+| `Email__Smtp__Host` | `smtp-relay.brevo.com` | `smtp.gmail.com` |
+| `Email__Smtp__Porta` | `587` | `587` |
+| `Email__Smtp__Usuario` | o login SMTP mostrado no Brevo | o seu endereço Gmail |
+| `Email__Smtp__Senha` | a chave SMTP do Brevo | uma **senha de app** do Google (não a senha da conta) |
+| `Email__Remetente` | um remetente verificado no Brevo | o mesmo endereço Gmail |
+
+Salve com **Save, rebuild, and deploy**. Cada usuário escolhe no Perfil se quer receber por e-mail.
+
+### Notificação no celular (Web Push)
+
+Não precisa configurar nada no servidor: as chaves VAPID são derivadas da chave do JWT (DV20). Cada pessoa ativa no
+próprio aparelho, em **Perfil → Notificações no celular → Ativar notificações**:
+
+- **iPhone (iOS 16.4 ou mais novo):** primeiro **Safari → Compartilhar → Adicionar à Tela de Início**; abra o Em Dia
+  pelo ícone da tela de início e ative lá. No Safari comum o iPhone não deixa ativar.
+- **Android:** funciona no Chrome direto ou no app instalado.
+- O botão **Enviar notificação de teste** confere na hora se o aparelho está recebendo.
 
 ## Testar pelo Swagger
 
@@ -97,3 +127,5 @@ Definida no `render.yaml`. Os valores secretos ficam só no painel do Render:
 | `Cors__Origens__0` | endereço do Vercel | Origem permitida, caso o site chame a API direto. |
 | `Proxy__Confiar` | `true` | Lê o IP real do usuário e o HTTPS vindos do Vercel/Render (rate limit de login por IP). |
 | `Database__MigrarAoIniciar` | `true` | Aplica as migrations e os dados iniciais ao subir. |
+| `Email__Smtp__*`, `Email__Remetente` | *(secretos, opcionais)* | Envio dos avisos por e-mail (seção acima). |
+| `Push__VapidPrivada` | *(opcional)* | Chave VAPID própria (32 bytes em base64url); sem ela, é derivada da chave do JWT. |

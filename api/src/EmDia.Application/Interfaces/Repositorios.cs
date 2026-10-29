@@ -75,3 +75,10 @@ public interface IAvisoRepository
     Task<IReadOnlyList<Aviso>> ListarPorItemAsync(Guid itemId, CancellationToken ct = default);
     Task AdicionarAsync(Aviso aviso, CancellationToken ct = default);
 }
+
+public interface IInscricaoPushRepository
+{
+    Task<InscricaoPush?> ObterPorEndpointAsync(string endpoint, CancellationToken ct = default);
+    Task AdicionarAsync(InscricaoPush inscricao, CancellationToken ct = default);
+    void Remover(InscricaoPush inscricao);
+}

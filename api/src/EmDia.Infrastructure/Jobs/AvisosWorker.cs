@@ -32,6 +32,24 @@ public class AvisosWorker : BackgroundService
     {
         _logger.LogInformation("AvisosWorker iniciado.");
 
+        // Num servidor que "dorme" (plano gratuito), a API pode não estar no ar às 8h. Ao acordar depois das 8h,
+        // a rotina do dia roda logo; os avisos já enviados ficam em `avisos`, então nada é duplicado.
+        try
+        {
+            await Task.Delay(TimeSpan.FromSeconds(20), stoppingToken);
+            var agoraSp = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, FusoSP);
+            if (agoraSp.Hour >= 8)
+                await ExecutarAgoraAsync(stoppingToken);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro na rotina de avisos ao iniciar.");
+        }
+
         while (!stoppingToken.IsCancellationRequested)
         {
             var delay = CalcularProximaExecucaoAs8h();

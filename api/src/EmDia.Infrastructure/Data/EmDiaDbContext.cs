@@ -23,6 +23,9 @@ public class EmDiaDbContext : DbContext
     public DbSet<Historico> Historicos => Set<Historico>();
     public DbSet<Aviso> Avisos => Set<Aviso>();
 
+    // ── Extra: notificações no celular (DV20) ────────────────────────────────
+    public DbSet<InscricaoPush> InscricoesPush => Set<InscricaoPush>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // Aplica todas as configurações (IEntityTypeConfiguration<T>)

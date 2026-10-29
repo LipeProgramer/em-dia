@@ -13,14 +13,15 @@ namespace EmDia.Infrastructure.Jobs;
 public record ResultadoRotinaAvisos(int TotalProcessados, int TotalEnviados, int TotalErros);
 
 /// <summary>
-/// Rotina diária de avisos por e-mail (RN08/RN09 · RF10/RF11).
-/// Para cada usuário que aceita e-mail, avalia os itens ativos e envia no máximo um aviso por item e dia.
-/// Cada envio é registrado em <c>avisos</c> (único por item, vencimento e número), o que evita duplicidade
-/// mesmo se a rotina rodar duas vezes no mesmo dia.
+/// Rotina diária de avisos por e-mail (RN08/RN09 · RF10/RF11) e, para quem ativou, notificação no celular (DV20).
+/// Para cada usuário que aceita e-mail ou tem aparelho inscrito, avalia os itens ativos e envia no máximo um aviso
+/// por item e dia. Cada envio é registrado em <c>avisos</c> (único por item, vencimento e número), o que evita
+/// duplicidade mesmo se a rotina rodar várias vezes no mesmo dia.
 /// </summary>
 public class RotinaAvisosService(
     EmDiaDbContext db,
     IEmailService email,
+    IPushService push,
     IRelogio relogio,
     ILogger<RotinaAvisosService> logger)
 {
@@ -29,9 +30,10 @@ public class RotinaAvisosService(
         var hoje = relogio.Hoje;
         int processados = 0, enviados = 0, erros = 0;
 
+        var comAparelho = (await db.InscricoesPush.Select(i => i.UsuarioId).Distinct().ToListAsync(ct)).ToHashSet();
         var usuarios = await db.Usuarios
             .Include(u => u.Preferencias)
-            .Where(u => u.Preferencias != null && u.Preferencias.ReceberEmail)
+            .Where(u => u.Preferencias != null && (u.Preferencias.ReceberEmail || comAparelho.Contains(u.Id)))
             .ToListAsync(ct);
 
         foreach (var usuario in usuarios)
@@ -59,24 +61,49 @@ public class RotinaAvisosService(
                 var aviso = avisos.FirstOrDefault(a => a.VencimentoReferencia == referencia && a.Numero == decisao.Numero);
                 if (aviso is null)
                 {
-                    aviso = new Aviso(item.Id, decisao.Tipo, CanalAviso.Email, referencia, decisao.Numero,
+                    var canal = prefs.ReceberEmail ? CanalAviso.Email : CanalAviso.Push;
+                    aviso = new Aviso(item.Id, decisao.Tipo, canal, referencia, decisao.Numero,
                         relogio.Agora, sucesso: false);
                     db.Avisos.Add(aviso);
                 }
 
-                try
+                // O aviso conta como entregue se chegou por pelo menos um dos canais
+                var entregue = false;
+                string? falha = null;
+                if (prefs.ReceberEmail)
                 {
-                    await email.EnviarAsync(usuario.Email, Assunto(item, status, decisao),
-                        Corpo(usuario, item, veiculo, hoje), ct);
-                    aviso.RegistrarResultado(true, null, relogio.Agora);
-                    enviados++;
+                    try
+                    {
+                        await email.EnviarAsync(usuario.Email, Assunto(item, status, decisao),
+                            Corpo(usuario, item, veiculo, hoje), ct);
+                        entregue = true;
+                    }
+                    catch (Exception ex) when (ex is not OperationCanceledException)
+                    {
+                        falha = ex.Message;
+                        logger.LogError(ex, "Falha ao enviar aviso do item {ItemId}", item.Id);
+                    }
                 }
-                catch (Exception ex) when (ex is not OperationCanceledException)
+
+                if (comAparelho.Contains(usuario.Id))
                 {
-                    erros++;
-                    logger.LogError(ex, "Falha ao enviar aviso do item {ItemId}", item.Id);
-                    aviso.RegistrarResultado(false, ex.Message, relogio.Agora);
+                    try
+                    {
+                        if (await push.EnviarAsync(usuario.Id, Notificacao(item, status, decisao, veiculo, hoje), ct) > 0)
+                            entregue = true;
+                        else
+                            falha ??= "Nenhum aparelho recebeu a notificação.";
+                    }
+                    catch (Exception ex) when (ex is not OperationCanceledException)
+                    {
+                        falha ??= ex.Message;
+                        logger.LogError(ex, "Falha ao enviar notificação do item {ItemId}", item.Id);
+                    }
                 }
+
+                aviso.RegistrarResultado(entregue, entregue ? null : falha, relogio.Agora);
+                if (entregue) enviados++;
+                else erros++;
 
                 await db.SaveChangesAsync(ct);
             }
@@ -93,6 +120,16 @@ public class RotinaAvisosService(
         return decisao.Tipo == TipoAviso.Antecipado
             ? $"Em Dia · {item.Nome} {situacao}"
             : $"Em Dia · Lembrete: {item.Nome} {situacao}";
+    }
+
+    /// <summary>Notificação no celular: o mesmo aviso do e-mail, em uma linha; tocar abre o item.</summary>
+    private static NotificacaoPush Notificacao(Item item, StatusItem status, DeveAvisar decisao, Veiculo? veiculo, DateOnly hoje)
+    {
+        var titulo = Assunto(item, status, decisao).Replace("Em Dia · ", "");
+        var passo = item.Passos.FirstOrDefault(p => !p.Concluido)?.Descricao;
+        var prazo = item.TextoPrazo(hoje, veiculo);
+        var corpo = $"{char.ToUpper(prazo[0])}{prazo[1..]}." + (passo is null ? "" : $" Próximo passo: {passo}");
+        return new NotificacaoPush(titulo, corpo, $"/itens/{item.Id}");
     }
 
     /// <summary>Texto curto, positivo e sem culpa (RN15).</summary>

@@ -10,5 +10,7 @@ public enum TipoAviso : short
 /// <summary>Canal pelo qual o aviso é enviado (spec §2.6).</summary>
 public enum CanalAviso : short
 {
-    Email = 1
+    Email = 1,
+    /// <summary>Só notificação no celular, para quem desligou o e-mail (extra · DV20).</summary>
+    Push = 2
 }

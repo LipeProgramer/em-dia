@@ -7,6 +7,11 @@ import { AppRoutes } from './routes/AppRoutes.tsx';
 import './styles/tokens.css';
 import './styles/app.css';
 
+// Service worker das notificações no celular (public/sw.js)
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => { /* sem notificações neste navegador */ });
+}
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: { retry: 1, refetchOnWindowFocus: false, staleTime: 30_000 },

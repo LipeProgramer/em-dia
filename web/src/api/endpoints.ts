@@ -22,6 +22,14 @@ export const usuariosApi = {
   excluirConta: (senha: string) => api.delete('/usuarios/me', { data: { senha } }),
 };
 
+/** Extra (DV20) · notificações no celular. */
+export const pushApi = {
+  chavePublica: () => api.get<{ chavePublica: string }>('/push/chave-publica').then((r) => r.data.chavePublica),
+  inscrever: (dados: { endpoint: string; p256dh: string; auth: string }) => api.post('/push/inscricoes', dados),
+  remover: (endpoint: string) => api.delete('/push/inscricoes', { data: { endpoint } }),
+  testar: () => api.post<{ enviadas: number }>('/push/teste').then((r) => r.data.enviadas),
+};
+
 export const catalogoApi = {
   categorias: () => api.get<Categoria[]>('/categorias').then((r) => r.data),
   modelos: (categoriaId?: number) =>

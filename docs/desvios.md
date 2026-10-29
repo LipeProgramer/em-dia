@@ -89,6 +89,16 @@ A spec não define a hospedagem. O site fica no Vercel, que repassa `/api/*` par
 servidor: `Proxy:Confiar` lê `X-Forwarded-For`/`X-Forwarded-Proto` (IP real no rate limit de login) e
 `Database:MigrarAoIniciar` aplica as migrations ao subir. Passo a passo em `docs/deploy.md`.
 
+### DV20 — Notificações no celular (Web Push) e rotina ao acordar (extra)
+A spec prevê avisos só por e-mail. Como extra, o site instalado no celular recebe **notificações** (Web Push): uma
+tabela a mais, `inscricoes_push` (aparelhos inscritos, apagados em cascata com o usuário), e rotas fora de E01–E25:
+`GET /push/chave-publica`, `POST` e `DELETE /push/inscricoes` e `POST /push/teste`. Só são aceitos endereços HTTPS dos
+serviços de push conhecidos (Google, Mozilla, Microsoft e Apple), para a API nunca chamar endereços escolhidos pelo
+usuário. A rotina das 8h envia o mesmo aviso por e-mail (se ligado) e para os aparelhos; o aviso conta como entregue
+se chegou por pelo menos um canal (`canal` = Push só para quem desligou o e-mail). As chaves VAPID são derivadas da
+chave do JWT. Como a API dorme no plano gratuito, a rotina também roda quando ela acorda depois das 8h, e um
+agendamento do GitHub Actions a acorda todo dia; os registros em `avisos` impedem envio duplicado.
+
 ### DV16 — Sem SMTP configurado, e-mails só vão para o log
 Se `Email:Smtp:Host` estiver vazio, a API usa um serviço de e-mail falso que só registra as mensagens. Com o host
 configurado, usa o MailKit. A rotina diária roda às 8h (America/Sao_Paulo).

@@ -240,3 +240,18 @@ namespace EmDia.Application.DTOs.Historico
         DateOnly? VencimentoAnterior,
         DateOnly? ProximoVencimento);
 }
+
+namespace EmDia.Application.DTOs.Notificacoes
+{
+    /// <summary>GET /push/chave-publica · chave VAPID que o navegador usa para se inscrever (extra · DV20).</summary>
+    public record ChavePublicaResponse(string ChavePublica);
+
+    /// <summary>POST /push/inscricoes · dados de <c>PushSubscription.toJSON()</c> do navegador.</summary>
+    public record InscricaoPushRequest(string Endpoint, string P256dh, string Auth);
+
+    /// <summary>DELETE /push/inscricoes</summary>
+    public record RemoverInscricaoRequest(string Endpoint);
+
+    /// <summary>POST /push/teste · quantos aparelhos receberam.</summary>
+    public record TesteNotificacaoResponse(int Enviadas);
+}

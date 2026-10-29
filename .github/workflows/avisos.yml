@@ -1,0 +1,30 @@
+name: Rotina de avisos
+
+# No plano gratuito do Render a API "dorme" sem uso. Este agendamento acorda a API todo dia depois das 8h
+# (horário de Brasília); ao acordar, ela roda a rotina de avisos do dia (e-mail e notificação no celular).
+on:
+  schedule:
+    - cron: "15 11 * * *"   # 8h15 em Brasília
+    - cron: "0 15 * * *"    # 12h, caso o primeiro horário atrase
+  workflow_dispatch:
+
+jobs:
+  acordar-api:
+    name: Acordar a API
+    runs-on: ubuntu-latest
+    env:
+      API_URL: https://emdia-api-felipemsantoss.onrender.com
+    steps:
+      - name: Chamar a API até ela responder
+        run: |
+          for i in $(seq 1 20); do
+            if curl -sf -m 60 "$API_URL/swagger/v1/swagger.json" > /dev/null; then
+              echo "API no ar (tentativa $i)."
+              # Mantém a API acordada enquanto a rotina roda (ela começa 20 s depois de subir)
+              sleep 90
+              curl -sf -m 60 "$API_URL/swagger/v1/swagger.json" > /dev/null || true
+              exit 0
+            fi
+            sleep 15
+          done
+          echo "A API não respondeu." && exit 1

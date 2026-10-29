@@ -12,6 +12,7 @@ import { Icon } from '../../components/Icon.tsx';
 import { aplicarErrosDaApi } from '../../utils/erros.ts';
 import { useSession } from '../auth/useSession.tsx';
 import { excluirContaSchema, preferenciasSchema } from '../itens/schemas.ts';
+import { NotificacoesCard } from './NotificacoesCard.tsx';
 
 type PrefForm = z.input<typeof preferenciasSchema>;
 
@@ -108,6 +109,7 @@ export function PerfilPage() {
           </nav>
 
           <PreferenciasForm inicial={me.data.preferencias} />
+          <NotificacoesCard />
 
           <div className="perfil-sair">
             <Button variante="secundario" icone="logout" onClick={async () => { await sair(); navigate('/entrar'); }}>Sair</Button>

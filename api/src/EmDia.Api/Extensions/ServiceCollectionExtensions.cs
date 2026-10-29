@@ -46,6 +46,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IItemRepository, ItemRepository>();
         services.AddScoped<IHistoricoRepository, HistoricoRepository>();
         services.AddScoped<IAvisoRepository, AvisoRepository>();
+        services.AddScoped<IInscricaoPushRepository, InscricaoPushRepository>();
 
         // Services (casos de uso)
         services.AddScoped<AuthService>();
@@ -56,6 +57,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ItemService>();
         services.AddScoped<VeiculoService>();
         services.AddScoped<HistoricoService>();
+        services.AddScoped<NotificacoesService>();
         services.AddValidatorsFromAssemblyContaining<RegistrarRequestValidator>(ServiceLifetime.Scoped);
 
         // Segurança, relógio e e-mail
@@ -67,6 +69,10 @@ public static class ServiceCollectionExtensions
             services.AddSingleton<IEmailService, EmailServiceFake>(); // sem SMTP configurado, só registra em log
         else
             services.AddScoped<IEmailService, EmailService>();
+
+        // Notificações no celular (Web Push · DV20): chaves VAPID derivadas da chave do JWT
+        services.AddSingleton<ChavesVapid>();
+        services.AddScoped<IPushService, PushService>();
 
         // Rotina diária de avisos (BackgroundService)
         services.AddScoped<RotinaAvisosService>();
