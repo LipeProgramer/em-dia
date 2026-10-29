@@ -83,6 +83,12 @@ devolvem o token de renovação **no corpo**; o app o guarda no **SecureStore** 
 `X-Refresh-Token`. Rotação e detecção de reuso continuam iguais. Sem esse cabeçalho (navegador), nada muda: o token
 de renovação vai só no cookie HttpOnly e o cabeçalho `X-Refresh-Token` é ignorado. Coberto por um teste de integração.
 
+### DV19 — Publicação atrás de proxy (Vercel → Render)
+A spec não define a hospedagem. O site fica no Vercel, que repassa `/api/*` para a API no Render; assim o navegador vê um
+único endereço e o cookie `SameSite=Strict` continua valendo. Duas opções, desligadas por padrão, foram adicionadas para o
+servidor: `Proxy:Confiar` lê `X-Forwarded-For`/`X-Forwarded-Proto` (IP real no rate limit de login) e
+`Database:MigrarAoIniciar` aplica as migrations ao subir. Passo a passo em `docs/deploy.md`.
+
 ### DV16 — Sem SMTP configurado, e-mails só vão para o log
 Se `Email:Smtp:Host` estiver vazio, a API usa um serviço de e-mail falso que só registra as mensagens. Com o host
 configurado, usa o MailKit. A rotina diária roda às 8h (America/Sao_Paulo).

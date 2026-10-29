@@ -112,6 +112,11 @@ cd ../web
 npx vitest run
 ```
 
+## Publicar online
+
+Site no **Vercel**, API no **Render** (Docker) e banco no **Neon**, todos no plano gratuito.
+Passo a passo em [docs/deploy.md](docs/deploy.md) (arquivos usados: `render.yaml`, `api/Dockerfile` e `web/vercel.json`).
+
 ## Rotas principais
 
 | API (prefixo `/api/v1`) | Tela |
