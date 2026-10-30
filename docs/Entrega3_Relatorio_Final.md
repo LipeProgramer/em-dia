@@ -317,6 +317,4 @@ e símbolo, uso só com teclado).
 - Diagnosticar pelos logs e reproduzir o erro antes de corrigir (CI e publicação).
 - Segredos fora do repositório e acessibilidade desde a primeira tela, não no fim.
 
-**Próximos passos:** testes de usabilidade com usuários e métricas de UX; um servidor SMTP para os avisos por e-mail;
-uma versão instalável do app mobile (build com EAS), sem depender do Expo Go; e um plano de hospedagem em que a API
-não durma.
+**Próximos passos:** aplicativo na App Store e no Google Play; conexão com a carteira de motorista, para trazer a data de vencimento automaticamente; e versão paga a partir de 5 itens cadastrados.
