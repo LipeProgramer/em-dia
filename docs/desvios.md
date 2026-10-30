@@ -178,6 +178,12 @@ Pedido do grupo para deixar o uso mais direto. Muda o que o **site** mostra; a A
   passo e a frase final.
 - O histórico ainda mostra valor e observação de conclusões antigas. O app Expo (DV15) não mudou.
 
+### DV27 — Testes de ponta a ponta com Cypress (extra)
+A spec prevê testes de unidade, de integração e de tela. Como extra, a pasta `e2e/` traz 17 testes em Cypress que abrem o
+site e fazem o caminho inteiro, do cadastro à exclusão da conta, para mostrar o sistema sendo testado na apresentação.
+Ficam em uma pasta com dependências próprias, fora do site e do CI: o Cypress tem centenas de MB. Por isso não entram
+no total de testes do relatório.
+
 ### DV16 — Sem SMTP configurado, e-mails só vão para o log
 Se `Email:Smtp:Host` estiver vazio, a API usa um serviço de e-mail falso que só escreve as mensagens no log. Com o host
 configurado, usa o MailKit. A rotina diária roda às 8h (America/Sao_Paulo).

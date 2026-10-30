@@ -93,6 +93,12 @@ check-up, aviso e exceções — todos ✅.
 | CT45 | Erro inesperado | 500 genérico, sem stack trace | ✅ |
 | CT46 | Outra origem (CORS) | Sem `Access-Control-Allow-Origin` | ✅ |
 
+## Ponta a ponta (extra · DV27)
+
+17 testes em Cypress (`e2e/cypress/e2e/fluxo-completo.cy.js`) percorrem o site com a API e o banco reais: cadastro com
+validação, check-up, Radar e modo foco, criar, editar, filtrar, concluir e excluir item, histórico, regras do veículo, login
+e exclusão da conta. Rodam sob demanda, fora do CI, e não entram no total acima. Como rodar: `e2e/README.md`.
+
 ## Frontend (CT47–CT51)
 
 | ID | Cenário | Status |

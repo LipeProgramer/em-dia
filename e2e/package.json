@@ -1,0 +1,16 @@
+{
+  "name": "em-dia-e2e",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Testes de ponta a ponta do Em Dia com Cypress: abrem o site de verdade e clicam como uma pessoa.",
+  "scripts": {
+    "abrir": "cross-env \"ELECTRON_EXTRA_LAUNCH_ARGS=--no-sandbox --disable-gpu-sandbox\" cypress open --e2e --browser edge",
+    "rodar": "cross-env \"ELECTRON_EXTRA_LAUNCH_ARGS=--no-sandbox --disable-gpu-sandbox\" cypress run --headed --browser edge",
+    "rodar:sem-janela": "cross-env \"ELECTRON_EXTRA_LAUNCH_ARGS=--no-sandbox --disable-gpu-sandbox\" cypress run --browser edge"
+  },
+  "devDependencies": {
+    "cross-env": "^10.1.0",
+    "cypress": "^16.2.1"
+  }
+}

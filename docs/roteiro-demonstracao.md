@@ -85,6 +85,12 @@ cascata. No **Neon**, a tabela `usuarios` não tem mais a conta da demonstraçã
 
 ---
 
+## Extra: testes rodando sozinhos (≈ 1 min)
+
+Com o sistema ligado no PC, na pasta `e2e`, rode `npm run abrir`, escolha **E2E Testing**, depois **Edge** e
+`fluxo-completo.cy.js`. O Cypress faz o caminho inteiro, do cadastro à exclusão da conta, e marca cada teste. Se preferir não
+arriscar ao vivo, mostre o vídeo gravado por `npm run rodar` (`e2e/cypress/videos/`). Veja `e2e/README.md`.
+
 ## Perguntas prováveis da banca
 
 | Pergunta | Resposta curta |

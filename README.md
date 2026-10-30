@@ -27,6 +27,7 @@ Implementação da **Entrega 2 – Especificação técnica da solução** | Out
 | Frontend | React 19 · TypeScript · Vite · React Router |
 | Front: dados e formulários | axios · TanStack Query · React Hook Form · Zod |
 | Testes do front | Vitest · Testing Library |
+| Testes de ponta a ponta | Cypress (pasta `e2e/`) |
 | Publicação e CI | Docker · GitHub Actions · Vercel (site) · Render (API) · Neon (PostgreSQL) |
 
 ## Estrutura (spec §1.3)
@@ -49,6 +50,7 @@ em-dia/
 │   ├── routes/       AppRoutes, PrivateRoute, PublicRoute, CheckupGate
 │   ├── styles/       tokens.css, app.css
 │   └── test/         CT47–CT51 e validações (Vitest)
+├── e2e/              Testes de ponta a ponta com Cypress
 ├── docs/             desvios, testes, bugs
 └── docker-compose.yml  PostgreSQL local (porta 5433)
 ```
@@ -213,6 +215,9 @@ dotnet test tests/EmDia.Api.IntegrationTests
 # Na pasta web
 npx vitest run
 ```
+
+**Ver o sistema sendo testado sozinho (Cypress):** veja [`e2e/README.md`](e2e/README.md). O Cypress abre o site e faz o
+caminho inteiro, do cadastro à exclusão da conta, e grava um vídeo.
 
 ## Publicar online
 
