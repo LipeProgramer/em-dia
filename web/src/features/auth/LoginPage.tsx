@@ -5,7 +5,6 @@ import type { z } from 'zod';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { mensagemDeErro } from '../../api/client.ts';
 import { Alerta, Button, Field } from '../../components/ui.tsx';
-import { VIDEO_DEMONSTRACAO } from '../../utils/links.ts';
 import { loginSchema } from '../itens/schemas.ts';
 import { useSession } from './useSession.tsx';
 import { AuthLayout } from './AuthLayout.tsx';
@@ -46,9 +45,6 @@ export function LoginPage() {
         <Button type="submit" carregando={isSubmitting}>Entrar</Button>
       </form>
       <p className="auth-troca">Ainda não tem conta? <Link to="/cadastro">Criar conta</Link></p>
-      <p className="auth-troca">
-        <a href={VIDEO_DEMONSTRACAO} target="_blank" rel="noopener noreferrer">Ver vídeo da demonstração</a>
-      </p>
     </AuthLayout>
   );
 }
