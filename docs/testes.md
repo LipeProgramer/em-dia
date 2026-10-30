@@ -9,7 +9,7 @@
 |---|---|---|---|
 | Unitário (regras do Domain) | `EmDia.Domain.Tests` · xUnit | 50 (U01–U15 + 35 complementares) | ✅ 50/50 |
 | Integração da API | `EmDia.Api.IntegrationTests` · xUnit + WebApplicationFactory + PostgreSQL | 68 (CT01–CT46 + extras de E08–E10, E13, E22/E24, E25, check-up sem respostas, sessão do app mobile, notificações no celular, limite geral por IP e testes pelo Swagger por parâmetros , verificação /health , esqueci minha senha e sessões por aparelho) | ✅ 68/68 |
-| Frontend | `web/src/test` · Vitest + Testing Library | 19 (CT47–CT51 + validações e esqueci minha senha) | ✅ 19/19 |
+| Frontend | `web/src/test` · Vitest + Testing Library | 21 (CT47–CT51 + validações, esqueci minha senha e editar item) | ✅ 21/21 |
 | App mobile | `mobile/src/test` · Vitest | 11 (validações, datas e tema) | ✅ 11/11 |
 | Integração front–API | Roteiro manual (navegador) | Fluxos F1–F4 | ✅ 4/4 |
 

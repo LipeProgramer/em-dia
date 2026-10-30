@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { mensagemDeErro } from '../../api/client.ts';
 import { catalogoApi, itensApi, veiculosApi } from '../../api/endpoints.ts';
-import type { ItemDetalhe, Modelo, SalvarItemRequest } from '../../api/types.ts';
+import type { Categoria, ItemDetalhe, Modelo, SalvarItemRequest, Veiculo } from '../../api/types.ts';
 import { Alerta, Button, ErrorState, Field, PageHeader, Skeleton } from '../../components/ui.tsx';
 import { aplicarErrosDaApi } from '../../utils/erros.ts';
 import { hojeIso, tiposVencimento } from '../../utils/formato.ts';
@@ -70,16 +70,33 @@ function paraRequest(v: ItemValido, modeloId?: string): SalvarItemRequest {
 const camposDoForm = ['nome', 'categoriaId', 'tipoVencimento', 'dataBase', 'dataVencimento', 'intervaloDias',
   'intervaloKm', 'kmBase', 'garantiaFabricanteMeses', 'veiculoId', 'antecedenciaDias', 'observacao', 'passos'];
 
-/** Formulário de item (T09 e T11): campos aparecem e ficam obrigatórios conforme o tipo. */
-function ItemFormulario({ inicial, modeloId, enviar, rotuloEnviar }: {
+interface PropsDoFormulario {
   inicial: ItemForm;
   modeloId?: string;
   enviar: (dados: SalvarItemRequest) => Promise<void>;
   rotuloEnviar: string;
-}) {
-  const [erroApi, setErroApi] = useState<string | null>(null);
+}
+
+/**
+ * Carrega as opções antes de montar o formulário: um select só mostra o valor inicial se a opção já existir
+ * quando ele é montado (senão, categoria e veículo do item aparecem como "Escolha…").
+ */
+function ItemFormulario(props: PropsDoFormulario) {
   const categorias = useQuery({ queryKey: ['categorias'], queryFn: catalogoApi.categorias, staleTime: Infinity });
   const veiculos = useQuery({ queryKey: chaves.veiculos, queryFn: veiculosApi.listar });
+
+  if (categorias.isPending || veiculos.isPending) return <Skeleton />;
+  if (categorias.isError) return <ErrorState tentarDeNovo={() => categorias.refetch()} />;
+  if (veiculos.isError) return <ErrorState tentarDeNovo={() => veiculos.refetch()} />;
+  return <CamposDoItem {...props} categorias={categorias.data} veiculos={veiculos.data} />;
+}
+
+/** Formulário de item (T09 e T11): campos aparecem e ficam obrigatórios conforme o tipo. */
+function CamposDoItem({ inicial, modeloId, enviar, rotuloEnviar, categorias, veiculos }: PropsDoFormulario & {
+  categorias: Categoria[];
+  veiculos: Veiculo[];
+}) {
+  const [erroApi, setErroApi] = useState<string | null>(null);
 
   // O formulário só é montado com os dados já carregados; trocar de modelo remonta o componente (key).
   const { register, handleSubmit, control, setError, formState: { errors, isSubmitting } } =
@@ -105,7 +122,7 @@ function ItemFormulario({ inicial, modeloId, enviar, rotuloEnviar }: {
         <select id="categoria" aria-invalid={!!errors.categoriaId} aria-describedby={errors.categoriaId ? 'categoria-erro' : undefined}
                 {...register('categoriaId')}>
           <option value="">Escolha…</option>
-          {categorias.data?.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+          {categorias.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
         </select>
         {errors.categoriaId && <p id="categoria-erro" className="field-erro">{errors.categoriaId.message}</p>}
       </div>
@@ -127,10 +144,10 @@ function ItemFormulario({ inicial, modeloId, enviar, rotuloEnviar }: {
           <select id="veiculo" aria-invalid={!!errors.veiculoId} aria-describedby={errors.veiculoId ? 'veiculo-erro' : undefined}
                   {...register('veiculoId')}>
             <option value="">Escolha…</option>
-            {veiculos.data?.map((v) => <option key={v.id} value={v.id}>{v.apelido} ({v.kmAtual.toLocaleString('pt-BR')} km)</option>)}
+            {veiculos.map((v) => <option key={v.id} value={v.id}>{v.apelido} ({v.kmAtual.toLocaleString('pt-BR')} km)</option>)}
           </select>
           {errors.veiculoId && <p id="veiculo-erro" className="field-erro">{errors.veiculoId.message}</p>}
-          {veiculos.data?.length === 0 && <p className="field-ajuda">Cadastre um veículo em <Link to="/perfil/veiculos">Perfil › Veículos</Link>.</p>}
+          {veiculos.length === 0 && <p className="field-ajuda">Cadastre um veículo em <Link to="/perfil/veiculos">Perfil › Veículos</Link>.</p>}
         </div>
       )}
 

@@ -83,3 +83,10 @@
   usava enums numéricos e bibliotecas nativas de SDKs antigos, que o Expo Go (SDK 58) não carrega.
 - **Correção:** camada de dados e telas reescritas sobre o contrato E01–E25; dependências alinhadas com
   `expo install --fix`; endereço da API descoberto pelo IP do Metro; sessão com SecureStore (DV17). ✅
+
+## BUG-16 — Editar item mostrava categoria e veículo como "Escolha…"
+- **Como apareceu:** ao levar as telas para o Figma: abrindo `/itens/{id}/editar` direto pelo endereço, os campos
+  apareciam vazios. O valor salvo continuava certo (salvar sem mexer não alterava nada), mas parecia perdido.
+- **Causa:** o formulário abria antes de as listas de categorias e veículos chegarem, e um select só mostra o valor
+  inicial se a opção já existir.
+- **Correção:** o formulário só abre depois de carregar as opções. Dois testes do site cobrem o caso. ✅
