@@ -12,6 +12,7 @@ import { Icon } from '../../components/Icon.tsx';
 import { aplicarErrosDaApi } from '../../utils/erros.ts';
 import { useSession } from '../auth/useSession.tsx';
 import { excluirContaSchema, preferenciasSchema } from '../itens/schemas.ts';
+import { VIDEO_DEMONSTRACAO } from '../../utils/links.ts';
 import { NotificacoesCard } from './NotificacoesCard.tsx';
 
 type PrefForm = z.input<typeof preferenciasSchema>;
@@ -106,6 +107,9 @@ export function PerfilPage() {
           <nav className="menu-perfil" aria-label="Opções do perfil">
             <Link to="/checkup"><Icon name="sparkles" size={18} /> Refazer o check-up</Link>
             <Link to="/perfil/veiculos"><Icon name="car" size={18} /> Meus veículos</Link>
+            <a href={VIDEO_DEMONSTRACAO} target="_blank" rel="noopener noreferrer">
+              <Icon name="monitor" size={18} /> Ver vídeo da demonstração
+            </a>
           </nav>
 
           <PreferenciasForm inicial={me.data.preferencias} />
