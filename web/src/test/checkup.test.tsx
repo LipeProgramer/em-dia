@@ -56,4 +56,32 @@ describe('Check-up (T03)', () => {
 
     expect(await screen.findByText('Completar dados')).toBeInTheDocument();
   });
+
+  it('clicar em uma área vai para a primeira pergunta dela, para frente e para trás, sem responder nada', async () => {
+    const user = userEvent.setup();
+    render(
+      <Providers rota="/checkup">
+        <CheckupProvider>
+          <Routes><Route path="/checkup" element={<PerguntaPage />} /></Routes>
+        </CheckupProvider>
+      </Providers>,
+    );
+
+    await screen.findByRole('heading', { name: 'Você tem carro ou moto?' });
+    expect(screen.queryByRole('button', { name: /Pular a área/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Pular esta pergunta' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Veículo' })).toHaveAttribute('aria-current', 'step');
+
+    await user.click(screen.getByRole('button', { name: 'Saúde' }));
+    expect(await screen.findByRole('heading', { name: 'Você tem pet?' })).toHaveFocus();
+    expect(screen.getByRole('button', { name: 'Saúde' })).toHaveAttribute('aria-current', 'step');
+    expect(screen.getByRole('button', { name: 'Pergunta anterior' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Veículo' })).not.toHaveClass('feita');
+
+    await user.click(screen.getByRole('button', { name: 'Veículo' }));
+    expect(await screen.findByRole('heading', { name: 'Você tem carro ou moto?' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Sim' }));
+    await screen.findByRole('heading', { name: 'Você tem CNH?' });
+    expect(screen.getByRole('button', { name: 'Veículo' })).toHaveClass('feita');
+  });
 });

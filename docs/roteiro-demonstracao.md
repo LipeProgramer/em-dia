@@ -40,7 +40,7 @@ Tempo previsto: **8 a 10 minutos**. Os slides que acompanham estão na apresenta
 | Passo | Ação | O que mostrar e falar |
 |---|---|---|
 | 2.1 | O portão leva ao **check-up** | Primeiro acesso: 17 perguntas sim/não **por área** (Veículo → Garantias), com a trilha das áreas. |
-| 2.2 | **Sim** em "Você tem carro ou moto?" e em mais 2 ou 3 perguntas; use **Pular a área** em uma | Perguntas vêm da API (`GET /checkup/perguntas`), cadastradas no banco. |
+| 2.2 | **Sim** em "Você tem carro ou moto?" e em mais 2 ou 3 perguntas; clique em outra área na trilha de cima para ir direto a ela | Perguntas vêm da API (`GET /checkup/perguntas`), cadastradas no banco. |
 | 2.3 | Em **Ver resultado**, deixe uma data **no passado** (ex.: IPVA vencido) | **Validação de datas e km**; os campos aparecem agrupados por área. |
 | 2.4 | Resultado | `POST /checkup` cria todos os itens **numa só transação**. "X de 6 áreas em dia"; área sem itens aparece como **Sem itens** (não conta como em dia). |
 | 2.5 | **Ver meu radar** | **Radar em 4 anéis (RN03):** centro = vencido, até 30 dias, 31 a 90, mais de 90. Status com **cor + símbolo + texto** (acessibilidade). |
@@ -95,5 +95,5 @@ cascata. No **Neon**, a tabela `usuarios` não tem mais a conta da demonstraçã
 | E a API com o banco? | Entity Framework Core 10 + Npgsql; migrations versionam o banco e criam o catálogo; repositórios filtram sempre pelo dono (RN12). |
 | Como evitam ataque de força bruta? | 5 tentativas de login por minuto por IP (429) e bloqueio da conta por 15 min após 5 falhas. Além disso, toda a API aceita no máximo 300 requisições por minuto por IP (DV21). |
 | E se alguém tentar ver o item de outra pessoa? | O id do usuário vem só do token; recurso de outro usuário responde **404**. |
-| Como sabem que funciona? | 153 testes automatizados (50 unitários, 69 de integração com PostgreSQL real, 23 do front, 11 do app), cobertura de 97,3% no Domain e CI no GitHub Actions a cada push. |
+| Como sabem que funciona? | 154 testes automatizados (50 unitários, 69 de integração com PostgreSQL real, 24 do front, 11 do app), cobertura de 97,3% no Domain e CI no GitHub Actions a cada push. |
 | Por que Vercel + Render + Neon? | Gratuitos e separados por função. O Vercel repassa `/api/*` para o Render, então o navegador vê um só endereço e o cookie `SameSite=Strict` funciona. |

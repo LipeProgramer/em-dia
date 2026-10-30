@@ -7,7 +7,7 @@ import { useCheckup } from './CheckupContext.tsx';
 
 /**
  * T03 · Check-up por área: Veículo → Documentos → Casa → Saúde → Finanças → Garantias, uma pergunta sim/não
- * por tela (RNF02/RNF03). Dá para pular uma pergunta ou a área inteira. Tudo funciona só com Tab e Enter;
+ * por tela (RNF02/RNF03). Dá para ir a qualquer área pela trilha e pular uma pergunta. Tudo funciona só com Tab e Enter;
  * o foco vai para a nova pergunta.
  */
 export function PerguntaPage() {
@@ -28,7 +28,6 @@ export function PerguntaPage() {
   const areas = [...new Set(perguntas.map((p) => p.categoriaId))];
   const areaAtual = pergunta.categoriaId;
   const posicaoArea = areas.indexOf(areaAtual);
-  const daArea = perguntas.filter((p) => p.categoriaId === areaAtual);
   const nomeArea = categorias[areaAtual]?.nome ?? 'Área';
 
   const irPara = (proximo: number) => {
@@ -41,12 +40,12 @@ export function PerguntaPage() {
     irPara(indice + 1);
   };
 
-  /** Pula o resto da área: as perguntas que faltam ficam sem resposta. */
-  const pularArea = () => {
-    for (const p of daArea.filter((p) => perguntas.indexOf(p) >= indice)) responder(p.codigo, null);
-    const proxima = perguntas.findIndex((p, i) => i > indice && p.categoriaId !== areaAtual);
-    irPara(proxima === -1 ? total : proxima);
-  };
+  /** Vai para a primeira pergunta da área, sem responder nada. */
+  const irParaArea = (id: number) => setIndice(perguntas.findIndex((p) => p.categoriaId === id));
+
+  /** O check só aparece quando todas as perguntas da área têm resposta (dá para chegar a uma área sem passar pelas outras). */
+  const areaRespondida = (id: number) =>
+    perguntas.filter((p) => p.categoriaId === id).every((p) => respostas[p.codigo] !== undefined);
 
   const respostaAtual = respostas[pergunta.codigo];
 
@@ -55,13 +54,18 @@ export function PerguntaPage() {
       <header className="checkup-topo">
         <p className="checkup-marca">Check-up</p>
         <ol className="trilha-areas" aria-label="Áreas do check-up">
-          {areas.map((id, i) => (
-            <li key={id} className={i < posicaoArea ? 'feita' : i === posicaoArea ? 'atual' : ''}
-                aria-current={i === posicaoArea ? 'step' : undefined}>
-              <Icon name={i < posicaoArea ? 'check' : categorias[id]?.icone ?? 'folder'} size={16} />
-              <span>{categorias[id]?.nome}</span>
-            </li>
-          ))}
+          {areas.map((id) => {
+            const feita = areaRespondida(id);
+            return (
+              <li key={id}>
+                <button type="button" onClick={() => irParaArea(id)} aria-current={id === areaAtual ? 'step' : undefined}
+                        className={id === areaAtual ? 'atual' : feita ? 'feita' : ''}>
+                  <Icon name={feita ? 'check' : categorias[id]?.icone ?? 'folder'} size={16} />
+                  <span>{categorias[id]?.nome}</span>
+                </button>
+              </li>
+            );
+          })}
         </ol>
         <p className="checkup-contador">
           Área {posicaoArea + 1} de {areas.length} · <strong>{nomeArea}</strong> · Pergunta {indice + 1} de {total}
@@ -79,7 +83,6 @@ export function PerguntaPage() {
         <Button onClick={() => avancar(true)} aria-pressed={respostaAtual === true}>Sim</Button>
         <Button variante="secundario" onClick={() => avancar(false)} aria-pressed={respostaAtual === false}>Não</Button>
         <Button variante="texto" onClick={() => avancar(null)}>Pular esta pergunta</Button>
-        <Button variante="texto" onClick={pularArea}>Pular a área {nomeArea}</Button>
         {indice > 0 && (
           <Button variante="texto" icone="arrow-left" onClick={() => setIndice(indice - 1)}>Pergunta anterior</Button>
         )}

@@ -40,7 +40,7 @@ O que foi entregue:
 - **Radar em 4 anéis (RN03):** centro = vencido; anel 1 = até 30 dias; anel 2 = 31 a 90 dias; anel externo = mais de
   90 dias. Seis fatias, uma por área. Cada ponto tem forma, cor e texto próprios.
 - **Modo foco (RN04):** só os 3 itens mais urgentes — vencidos primeiro (os mais atrasados antes), depois os de menor prazo.
-- **Check-up:** 17 perguntas sim/não organizadas por área (Veículo, Documentos, Casa, Saúde, Finanças e Garantias), uma por tela, com a opção de pular a área; depois, datas, km e veículo; por fim, o resultado por área
+- **Check-up:** 17 perguntas sim/não organizadas por área (Veículo, Documentos, Casa, Saúde, Finanças e Garantias), uma por tela, com a trilha de áreas clicável; depois, datas, km e veículo; por fim, o resultado por área
   ("4 de 6 áreas em dia"). Área sem itens aparece como "Sem itens" e não conta como em dia. Não duplica itens ao ser refeito (RN10).
 - **Itens com 4 tipos de vencimento (RN01):** data única, recorrente por tempo, uso ou tempo (km ou dias, o que vier
   primeiro) e garantia (compra + garantia do fabricante + 90 dias).
@@ -238,9 +238,9 @@ navegador, o token de renovação vai no corpo da resposta e fica no **SecureSto
 |---|---|---|---|
 | Unitário (Domain) | xUnit | 50 (U01–U15 + 35 complementares) | ✅ 50/50 |
 | Integração da API | xUnit + WebApplicationFactory + PostgreSQL | 69 (CT01–CT46 + extras) | ✅ 69/69 |
-| Frontend web | Vitest + Testing Library | 23 (CT47–CT51 + validações) | ✅ 23/23 |
+| Frontend web | Vitest + Testing Library | 24 (CT47–CT51 + validações) | ✅ 24/24 |
 | App mobile | Vitest | 11 (validações e datas) | ✅ 11/11 |
-| **Total** | | **153** | **✅ 153/153** |
+| **Total** | | **154** | **✅ 154/154** |
 
 - **Cobertura do `EmDia.Domain`:** 97,3% das linhas e 89,5% dos ramos (critério: ≥ 80%).
 - **Fluxos F1–F4** executados de ponta a ponta com a API e o front rodando juntos: primeiro acesso, concluir item com
@@ -295,7 +295,7 @@ O sistema está publicado com HTTPS, em serviços gratuitos (passo a passo em `d
 ## 12. Conclusão, dificuldades e aprendizados
 
 A solução implementa o que a Entrega 2 especificou — contrato da API, modelo de dados, regras de negócio, segurança e
-telas — com 153 testes automatizados aprovados, cobertura de 97% nas regras de negócio e o sistema publicado online.
+telas — com 154 testes automatizados aprovados, cobertura de 97% nas regras de negócio e o sistema publicado online.
 As duas metáforas (Radar e Check-up) orientam as telas, e a acessibilidade foi verificada por testes (status com texto
 e símbolo, uso só com teclado).
 

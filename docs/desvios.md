@@ -41,7 +41,7 @@ A tabela de dados iniciais (§2.7) cita `TEM_CARRO / TEM_MOTO` para os modelos d
 
 ### DV10 — Check-up por área, com modelos complementares
 A §2.7 lista "exemplos". O check-up foi organizado **por área**, na ordem do Radar (Veículo → Documentos → Casa →
-Saúde → Finanças → Garantias), com uma trilha das áreas, a área atual em destaque e a opção "Pular a área".
+Saúde → Finanças → Garantias), com uma trilha das áreas, clicável para ir a qualquer área, e a área atual em destaque.
 São **17 perguntas** e **19 modelos** prontos; além dos exemplos da §2.7, foram adicionados: Licenciamento e Seguro do
 veículo; Passaporte e Certificado digital; Contrato de aluguel e Limpeza do ar-condicionado; Consulta de rotina, Dentista
 e Exame de vista; Declaração do Imposto de Renda, IPTU e Seguro de vida; Garantia de eletrodoméstico.

@@ -442,7 +442,7 @@
     <div class="grid-2">
       <div class="card"><h4>Radar em 4 anéis (RN03)</h4><p style="font-size:8.5pt">Centro = vencido; anel 1 = até 30 dias; anel 2 = 31 a 90; anel externo = mais de 90. Seis fatias, uma por área. Cada ponto tem forma, cor e texto próprios.</p></div>
       <div class="card"><h4>Modo foco (RN04)</h4><p style="font-size:8.5pt">Só os 3 itens mais urgentes: vencidos primeiro (os mais atrasados antes), depois os de menor prazo.</p></div>
-      <div class="card"><h4>Check-up</h4><p style="font-size:8.5pt">17 perguntas sim/não organizadas por área (Veículo, Documentos, Casa, Saúde, Finanças e Garantias), uma por tela, com a opção de pular a área; depois datas, km e veículo; por fim o resultado por área ("4 de 6 áreas em dia"). Área sem itens aparece como "Sem itens" e não conta como em dia. Não duplica itens ao ser refeito (RN10).</p></div>
+      <div class="card"><h4>Check-up</h4><p style="font-size:8.5pt">17 perguntas sim/não organizadas por área (Veículo, Documentos, Casa, Saúde, Finanças e Garantias), uma por tela, com a trilha de áreas clicável; depois datas, km e veículo; por fim o resultado por área ("4 de 6 áreas em dia"). Área sem itens aparece como "Sem itens" e não conta como em dia. Não duplica itens ao ser refeito (RN10).</p></div>
       <div class="card"><h4>Quatro tipos de vencimento (RN01)</h4><p style="font-size:8.5pt">Data única, recorrente por tempo, uso ou tempo (km ou dias, o que vier primeiro) e garantia (compra + fabricante + 90 dias).</p></div>
       <div class="card"><h4>Concluir e renovar (RN05–RN07)</h4><p style="font-size:8.5pt">Histórico, novo prazo e mensagem positiva; a km do veículo nunca diminui.</p></div>
       <div class="card"><h4>Avisos e LGPD</h4><p style="font-size:8.5pt">Rotina diária às 8h com aviso antecipado e reavisos limitados (RN08/RN09). Exclusão da conta e de todos os dados com confirmação de senha (RF18).</p></div>
@@ -633,9 +633,9 @@
       <tbody>
         <tr><td>Unitário (Domain)</td><td>xUnit</td><td>50 (U01–U15 + 35 complementares)</td><td><span class="badge badge-success">50/50</span></td></tr>
         <tr><td>Integração da API</td><td>xUnit + WebApplicationFactory + PostgreSQL</td><td>69 (CT01–CT46 + extras)</td><td><span class="badge badge-success">69/69</span></td></tr>
-        <tr><td>Frontend web</td><td>Vitest + Testing Library</td><td>23 (CT47–CT51 + validações)</td><td><span class="badge badge-success">23/23</span></td></tr>
+        <tr><td>Frontend web</td><td>Vitest + Testing Library</td><td>24 (CT47–CT51 + validações)</td><td><span class="badge badge-success">24/24</span></td></tr>
         <tr><td>App mobile</td><td>Vitest</td><td>11 (validações e datas)</td><td><span class="badge badge-success">11/11</span></td></tr>
-        <tr><td><strong>Total</strong></td><td></td><td><strong>153</strong></td><td><span class="badge badge-success">153/153</span></td></tr>
+        <tr><td><strong>Total</strong></td><td></td><td><strong>154</strong></td><td><span class="badge badge-success">154/154</span></td></tr>
       </tbody>
     </table>
     <div class="grid-2">
@@ -697,7 +697,7 @@
     </ul>
 
     <h1 style="margin-top:22px">12. Conclusão, dificuldades e aprendizados</h1>
-    <p>A solução implementa o que a Entrega 2 especificou — contrato da API, modelo de dados, regras de negócio, segurança e telas — com <strong>153 testes automatizados aprovados</strong>, cobertura de 97% nas regras de negócio e o sistema publicado online. As duas metáforas (Radar e Check-up) orientam as telas, e a acessibilidade foi verificada por testes (status com texto e símbolo, uso só com teclado).</p>
+    <p>A solução implementa o que a Entrega 2 especificou — contrato da API, modelo de dados, regras de negócio, segurança e telas — com <strong>154 testes automatizados aprovados</strong>, cobertura de 97% nas regras de negócio e o sistema publicado online. As duas metáforas (Radar e Check-up) orientam as telas, e a acessibilidade foi verificada por testes (status com texto e símbolo, uso só com teclado).</p>
     <div class="grid-2">
       <div class="card"><h4>Dificuldades encontradas</h4><ul style="font-size:8.5pt">
         <li>Manter o código fiel à especificação: rotas, chaves estrangeiras e validações da primeira versão divergiam e foram reescritas.</li>
