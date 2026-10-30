@@ -438,13 +438,13 @@
   <div class="page">
     <div class="page-header"><span class="page-title">Em Dia · Entrega 3 – Relatório Técnico</span><span>1. Introdução</span></div>
     <h1>1. Introdução e visão geral da solução</h1>
-    <p>O <strong>Em Dia</strong> reúne os prazos da vida prática de adultos com TDAH — documentos, veículo, casa, saúde, finanças e garantias — e avisa antes do vencimento, com tempo visível, passos pequenos e avisos que insistem. Esta entrega implementa a solução especificada na <strong>Entrega 2</strong>, seguindo o contrato da API, o modelo de dados, as regras de negócio, a segurança e as telas daquele documento. As diferenças estão registradas na seção 10.</p>
+    <p>O <strong>Em Dia</strong> reúne os prazos da vida prática de adultos com TDAH — documentos, veículo, casa, saúde, finanças e garantias — e avisa antes do vencimento, com tempo visível, conclusão simples e avisos que insistem. Esta entrega implementa a solução especificada na <strong>Entrega 2</strong>, seguindo o contrato da API, o modelo de dados, as regras de negócio, a segurança e as telas daquele documento. As diferenças estão registradas na seção 10.</p>
     <div class="grid-2">
       <div class="card"><h4>Radar em 4 anéis (RN03)</h4><p style="font-size:8.5pt">Centro = vencido; anel 1 = até 30 dias; anel 2 = 31 a 90; anel externo = mais de 90. Seis fatias, uma por área. Cada ponto tem forma, cor e texto próprios.</p></div>
       <div class="card"><h4>Modo foco (RN04)</h4><p style="font-size:8.5pt">Só os 3 itens mais urgentes: vencidos primeiro (os mais atrasados antes), depois os de menor prazo.</p></div>
       <div class="card"><h4>Check-up</h4><p style="font-size:8.5pt">17 perguntas sim/não organizadas por área (Veículo, Documentos, Casa, Saúde, Finanças e Garantias), uma por tela, com a opção de pular a área; depois datas, km e veículo; por fim o resultado por área ("4 de 6 áreas em dia"). Área sem itens aparece como "Sem itens" e não conta como em dia. Não duplica itens ao ser refeito (RN10).</p></div>
       <div class="card"><h4>Quatro tipos de vencimento (RN01)</h4><p style="font-size:8.5pt">Data única, recorrente por tempo, uso ou tempo (km ou dias, o que vier primeiro) e garantia (compra + fabricante + 90 dias).</p></div>
-      <div class="card"><h4>Concluir e renovar (RN05–RN07)</h4><p style="font-size:8.5pt">Histórico, novo prazo, passos desmarcados e mensagem positiva; passos pendentes pedem confirmação; a km do veículo nunca diminui.</p></div>
+      <div class="card"><h4>Concluir e renovar (RN05–RN07)</h4><p style="font-size:8.5pt">Histórico, novo prazo e mensagem positiva; a km do veículo nunca diminui.</p></div>
       <div class="card"><h4>Avisos e LGPD</h4><p style="font-size:8.5pt">Rotina diária às 8h com aviso antecipado e reavisos limitados (RN08/RN09). Exclusão da conta e de todos os dados com confirmação de senha (RF18).</p></div>
     </div>
     <div class="callout">
@@ -556,7 +556,7 @@
         <tr><td>RN03</td><td>Centro, até 30 dias, 31 a 90 dias, mais de 90 dias.</td></tr>
         <tr><td>RN04</td><td>Modo foco: 3 itens mais urgentes.</td></tr>
         <tr><td>RN05</td><td>Concluir: histórico, nova base, novo prazo e passos desmarcados; data única encerra ou recebe nova validade; garantia encerra.</td></tr>
-        <tr><td>RN06</td><td>Passos pendentes sem confirmação → <code>PASSOS_PENDENTES</code> (422).</td></tr>
+        <tr><td>RN06</td><td>Passos pendentes sem confirmação → <code>PASSOS_PENDENTES</code> (422); o site já envia confirmado (DV26).</td></tr>
         <tr><td>RN07</td><td>A km do veículo nunca diminui; concluir com km maior atualiza o veículo.</td></tr>
         <tr><td>RN08 / RN09</td><td>Aviso antecipado e reavisos a cada intervalo, até o máximo por ciclo; o ciclo recomeça a cada novo vencimento.</td></tr>
         <tr><td>RN10</td><td>O check-up não duplica item do mesmo modelo e veículo.</td></tr>
@@ -573,7 +573,7 @@
       <li><code>AvisosWorker</code> (BackgroundService) dispara a rotina às <strong>8h de America/Sao_Paulo</strong>.</li>
       <li>Para cada usuário com e-mail ativado, envia o aviso antecipado (número 0) quando o item entra em Atenção ou Vencido e, sem conclusão, reavisos a cada <code>intervalo_reaviso_dias</code>, até <code>max_reavisos</code> por ciclo.</li>
       <li>Cada envio fica em <code>avisos</code>, único por (item, vencimento, número): rodar duas vezes no dia não duplica e-mails; uma falha de envio é refeita no dia seguinte.</li>
-      <li>O e-mail é curto, positivo e traz o próximo passo pequeno. Sem SMTP configurado, as mensagens só vão para o log.</li>
+      <li>O e-mail é curto e positivo: traz só o item, o prazo e a data (DV26). Sem SMTP configurado, as mensagens só vão para o log.</li>
       <li><strong>Extra (DV20):</strong> quem ativa no Perfil recebe o mesmo aviso como <strong>notificação no celular</strong> (Web Push), também no site instalado na tela de início. No servidor gratuito, a rotina roda quando a API acorda depois das 8h.</li>
     </ul>
   </div>
@@ -585,7 +585,7 @@
     <h2>7.1 Telas (T01–T15) e navegação</h2>
     <p>Entrar, criar conta, check-up (perguntas, completar dados, resultado), Radar, modo foco, itens, novo item, detalhe, editar, concluir (janela), histórico, perfil e veículos — nas rotas da spec §5.1. Menu inferior no celular (lateral no computador): <strong>Radar · Itens · + Novo · Histórico · Perfil</strong>. Rotas privadas levam ao login, e o <strong>portão do check-up</strong> leva ao check-up enquanto ele não for feito.</p>
     <h2>7.2 Integração com a API</h2>
-    <p>Cliente axios com o token de acesso só em memória; em 401, uma tentativa de <code>/auth/refresh</code> e a requisição é repetida; se falhar, volta ao login. TanStack Query guarda Radar e itens e recarrega depois de cada ação. Marcar passo usa atualização otimista. Erros 400 vão para os campos; 422 <code>PASSOS_PENDENTES</code> vira a pergunta "Concluir mesmo assim?".</p>
+    <p>Cliente axios com o token de acesso só em memória; em 401, uma tentativa de <code>/auth/refresh</code> e a requisição é repetida; se falhar, volta ao login. TanStack Query guarda Radar e itens e recarrega depois de cada ação. Erros 400 vão para os campos; 422 vira mensagem na tela.</p>
     <h2>7.3 Acessibilidade (RNF02 / RNF03)</h2>
     <ul>
       <li>Status sempre com <strong>cor + símbolo + texto</strong>; pontos do Radar com forma diferente por status e descrição para leitores de tela.</li>
@@ -596,7 +596,7 @@
     <p>O app em <code>mobile/</code> usa a mesma API e as mesmas validações. No <strong>Expo Go</strong>, descobre sozinho o IP do computador pela rede Wi-Fi (o mesmo do servidor Metro) e chama a API em <code>http://&lt;IP&gt;:5196</code>. Como o app nativo não tem cookies de navegador, o token de renovação vai no corpo da resposta e fica no <strong>SecureStore</strong> do aparelho (DV17).</p>
     <div class="callout">
       <div class="callout-title">Fluxos verificados (F1–F4)</div>
-      Primeiro acesso (cadastro → check-up → resultado → Radar), concluir item com passo pendente, criar item a partir de modelo e atualizar a quilometragem — executados com a API e o front rodando juntos, também na largura de celular.
+      Primeiro acesso (cadastro → check-up → resultado → Radar), concluir item, criar item a partir de modelo e atualizar a quilometragem — executados com a API e o front rodando juntos, também na largura de celular.
     </div>
   </div>
 
@@ -632,10 +632,10 @@
       <thead><tr><th>Nível</th><th>Ferramenta</th><th>Testes</th><th>Resultado</th></tr></thead>
       <tbody>
         <tr><td>Unitário (Domain)</td><td>xUnit</td><td>50 (U01–U15 + 35 complementares)</td><td><span class="badge badge-success">50/50</span></td></tr>
-        <tr><td>Integração da API</td><td>xUnit + WebApplicationFactory + PostgreSQL</td><td>68 (CT01–CT46 + extras)</td><td><span class="badge badge-success">68/68</span></td></tr>
-        <tr><td>Frontend web</td><td>Vitest + Testing Library</td><td>21 (CT47–CT51 + validações)</td><td><span class="badge badge-success">21/21</span></td></tr>
+        <tr><td>Integração da API</td><td>xUnit + WebApplicationFactory + PostgreSQL</td><td>69 (CT01–CT46 + extras)</td><td><span class="badge badge-success">69/69</span></td></tr>
+        <tr><td>Frontend web</td><td>Vitest + Testing Library</td><td>23 (CT47–CT51 + validações)</td><td><span class="badge badge-success">23/23</span></td></tr>
         <tr><td>App mobile</td><td>Vitest</td><td>11 (validações e datas)</td><td><span class="badge badge-success">11/11</span></td></tr>
-        <tr><td><strong>Total</strong></td><td></td><td><strong>150</strong></td><td><span class="badge badge-success">150/150</span></td></tr>
+        <tr><td><strong>Total</strong></td><td></td><td><strong>153</strong></td><td><span class="badge badge-success">153/153</span></td></tr>
       </tbody>
     </table>
     <div class="grid-2">
@@ -697,7 +697,7 @@
     </ul>
 
     <h1 style="margin-top:22px">12. Conclusão, dificuldades e aprendizados</h1>
-    <p>A solução implementa o que a Entrega 2 especificou — contrato da API, modelo de dados, regras de negócio, segurança e telas — com <strong>150 testes automatizados aprovados</strong>, cobertura de 97% nas regras de negócio e o sistema publicado online. As duas metáforas (Radar e Check-up) orientam as telas, e a acessibilidade foi verificada por testes (status com texto e símbolo, uso só com teclado).</p>
+    <p>A solução implementa o que a Entrega 2 especificou — contrato da API, modelo de dados, regras de negócio, segurança e telas — com <strong>153 testes automatizados aprovados</strong>, cobertura de 97% nas regras de negócio e o sistema publicado online. As duas metáforas (Radar e Check-up) orientam as telas, e a acessibilidade foi verificada por testes (status com texto e símbolo, uso só com teclado).</p>
     <div class="grid-2">
       <div class="card"><h4>Dificuldades encontradas</h4><ul style="font-size:8.5pt">
         <li>Manter o código fiel à especificação: rotas, chaves estrangeiras e validações da primeira versão divergiam e foram reescritas.</li>

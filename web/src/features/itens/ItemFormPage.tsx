@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useFieldArray, useForm, useWatch } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useNavigate, useParams } from 'react-router-dom';
@@ -68,7 +68,7 @@ function paraRequest(v: ItemValido, modeloId?: string): SalvarItemRequest {
 }
 
 const camposDoForm = ['nome', 'categoriaId', 'tipoVencimento', 'dataBase', 'dataVencimento', 'intervaloDias',
-  'intervaloKm', 'kmBase', 'garantiaFabricanteMeses', 'veiculoId', 'antecedenciaDias', 'observacao', 'passos'];
+  'intervaloKm', 'kmBase', 'garantiaFabricanteMeses', 'veiculoId', 'antecedenciaDias'];
 
 interface PropsDoFormulario {
   inicial: ItemForm;
@@ -99,9 +99,9 @@ function CamposDoItem({ inicial, modeloId, enviar, rotuloEnviar, categorias, vei
   const [erroApi, setErroApi] = useState<string | null>(null);
 
   // O formulário só é montado com os dados já carregados; trocar de modelo remonta o componente (key).
+  // Passos e observação não aparecem no site (DV26): os valores iniciais seguem no envio, sem perder o que já existe.
   const { register, handleSubmit, control, setError, formState: { errors, isSubmitting } } =
     useForm<ItemForm, unknown, ItemValido>({ resolver: zodResolver(itemSchema), defaultValues: inicial });
-  const passos = useFieldArray({ control, name: 'passos' });
   const tipo = useWatch({ control, name: 'tipoVencimento' });
 
   const salvar = handleSubmit(async (v) => {
@@ -172,25 +172,6 @@ function CamposDoItem({ inicial, modeloId, enviar, rotuloEnviar, categorias, vei
 
       <Field label="Avisar com quantos dias de antecedência?" type="number" inputMode="numeric" min={0} max={365}
              erro={errors.antecedenciaDias?.message} {...register('antecedenciaDias')} />
-
-      <fieldset className="grupo">
-        <legend>Passos pequenos</legend>
-        {passos.fields.map((campo, i) => (
-          <div className="passo-editavel" key={campo.id}>
-            <Field label={`Passo ${i + 1}`} erro={errors.passos?.[i]?.descricao?.message} {...register(`passos.${i}.descricao`)} />
-            <button type="button" className="btn-icone" aria-label={`Remover passo ${i + 1}`} onClick={() => passos.remove(i)}>×</button>
-          </div>
-        ))}
-        {errors.passos?.message && <p className="field-erro">{errors.passos.message}</p>}
-        {passos.fields.length < 10 && (
-          <Button type="button" variante="texto" icone="plus" onClick={() => passos.append({ descricao: '' })}>Adicionar passo</Button>
-        )}
-      </fieldset>
-
-      <div className="field">
-        <label htmlFor="observacao">Observação (opcional)</label>
-        <textarea id="observacao" rows={2} maxLength={500} {...register('observacao')} />
-      </div>
 
       {erroApi && <Alerta>{erroApi}</Alerta>}
       <Button type="submit" carregando={isSubmitting}>{rotuloEnviar}</Button>

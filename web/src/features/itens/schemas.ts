@@ -130,16 +130,12 @@ export const itemSchema = z.object({
 export const concluirSchema = (opcoes: { exigeKm: boolean; kmMinima?: number | null }) => z.object({
   dataConclusao: z.string().min(1, 'Informe a data da conclusão.').refine(naoFutura, msg.dataFutura),
   km: numeroOpcional(),
-  valorGasto: numeroOpcional(),
-  observacao: z.string().max(500, 'A observação deve ter até 500 caracteres.').optional(),
   novaDataVencimento: dataOpcional,
 }).superRefine((d, ctx) => {
   if (opcoes.exigeKm && d.km === undefined)
     ctx.addIssue({ code: 'custom', path: ['km'], message: 'Informe a quilometragem.' });
   if (d.km !== undefined && opcoes.kmMinima != null && d.km < opcoes.kmMinima)
     ctx.addIssue({ code: 'custom', path: ['km'], message: `A km não pode ser menor que ${opcoes.kmMinima.toLocaleString('pt-BR')}.` });
-  if (d.valorGasto !== undefined && d.valorGasto < 0)
-    ctx.addIssue({ code: 'custom', path: ['valorGasto'], message: 'O valor deve ser maior ou igual a 0.' });
   if (d.novaDataVencimento && d.novaDataVencimento <= hojeIso())
     ctx.addIssue({ code: 'custom', path: ['novaDataVencimento'], message: 'A nova validade precisa ser uma data futura.' });
 });

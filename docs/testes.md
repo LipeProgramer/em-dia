@@ -8,8 +8,8 @@
 | Nível | Projeto / ferramenta | Testes | Resultado |
 |---|---|---|---|
 | Unitário (regras do Domain) | `EmDia.Domain.Tests` · xUnit | 50 (U01–U15 + 35 complementares) | ✅ 50/50 |
-| Integração da API | `EmDia.Api.IntegrationTests` · xUnit + WebApplicationFactory + PostgreSQL | 68 (CT01–CT46 + extras de E08–E10, E13, E22/E24, E25, check-up sem respostas, sessão do app mobile, notificações no celular, limite geral por IP e testes pelo Swagger por parâmetros , verificação /health , esqueci minha senha e sessões por aparelho) | ✅ 68/68 |
-| Frontend | `web/src/test` · Vitest + Testing Library | 21 (CT47–CT51 + validações, esqueci minha senha e editar item) | ✅ 21/21 |
+| Integração da API | `EmDia.Api.IntegrationTests` · xUnit + WebApplicationFactory + PostgreSQL | 69 (CT01–CT46 + extras de E08–E10, E13, E22/E24, E25, check-up sem respostas, sessão do app mobile, notificações no celular, limite geral por IP e testes pelo Swagger por parâmetros , verificação /health , esqueci minha senha, sessões por aparelho e texto dos avisos) | ✅ 69/69 |
+| Frontend | `web/src/test` · Vitest + Testing Library | 23 (CT47–CT51 + validações, esqueci minha senha, editar e detalhe do item) | ✅ 23/23 |
 | App mobile | `mobile/src/test` · Vitest | 11 (validações, datas e tema) | ✅ 11/11 |
 | Integração front–API | Roteiro manual (navegador) | Fluxos F1–F4 | ✅ 4/4 |
 
@@ -98,7 +98,7 @@ check-up, aviso e exceções — todos ✅.
 | ID | Cenário | Status |
 |---|---|---|
 | CT47 | Senha sem número → erro abaixo do campo, foco no campo, API não chamada (`cadastro.test.tsx`) | ✅ |
-| CT48 | 422 `PASSOS_PENDENTES` → "Concluir mesmo assim?" → reenvia com confirmação (`concluir.test.tsx`) | ✅ |
+| CT48 | Conclui direto, sem pedir valor, observação nem confirmação de passos (DV26 · `concluir.test.tsx`) | ✅ |
 | CT49 | Token expira → refresh transparente; se falhar, volta ao login (`sessao.test.ts`) | ✅ |
 | CT50 | Vencido com cor + símbolo + texto no Radar e na lista (`radar.test.tsx`) | ✅ |
 | CT51 | Check-up só com Tab e Enter; foco na pergunta (`checkup.test.tsx`) | ✅ |

@@ -94,8 +94,6 @@ img { max-width: 100%; }
 .check input { width: 22px; height: 22px; accent-color: var(--color-primary); }
 .grupo { border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: var(--space-md); margin: 0; display: flex; flex-direction: column; gap: var(--space-sm); background: var(--color-surface); }
 .grupo legend { font-weight: 700; padding: 0 6px; }
-.passo-editavel { display: flex; align-items: flex-end; gap: 4px; }
-.passo-editavel .field { flex: 1; }
 
 .alerta { display: flex; gap: 8px; align-items: flex-start; padding: 12px; border-radius: var(--radius-md); font-weight: 500; }
 .alerta-erro { background: #fdecea; color: var(--color-error); }
@@ -214,9 +212,6 @@ html.pagina-auth, html.pagina-auth body { background: var(--verde-auth); }
 .detalhe-dados div { display: flex; justify-content: space-between; gap: 12px; }
 .detalhe-dados dt { color: var(--color-text-muted); }
 .detalhe-dados dd { margin: 0; font-weight: 600; text-align: right; }
-.passos ul { display: flex; flex-direction: column; margin-top: 8px; }
-.contagem { font-weight: 500; color: var(--color-text-muted); font-size: var(--font-size-md); }
-.passo input:checked + span { text-decoration: line-through; color: var(--color-text-muted); }
 .historico-curto ul { display: flex; flex-direction: column; gap: 4px; color: var(--color-text-secondary); }
 .acoes-secundarias { display: flex; gap: var(--space-md); align-items: center; }
 .acoes-secundarias a { min-height: 44px; display: inline-flex; align-items: center; }
@@ -241,8 +236,8 @@ html.pagina-auth, html.pagina-auth body { background: var(--verde-auth); }
 .dialog[open] { display: flex; flex-direction: column; gap: var(--space-md); }
 .dialog::backdrop { background: rgba(16, 51, 46, .45); }
 .dialog-topo { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-.dialog > .btn, .confirmacao .btn { width: 100%; }
-.confirmacao, .comemoracao { display: flex; flex-direction: column; gap: var(--space-sm); text-align: center; }
+.dialog > .btn { width: 100%; }
+.comemoracao { display: flex; flex-direction: column; gap: var(--space-sm); text-align: center; }
 .comemoracao-emoji { font-size: 2.5rem; margin: 0; }
 
 /* ── Histórico e perfil ──────────────────────────────────────────────── */

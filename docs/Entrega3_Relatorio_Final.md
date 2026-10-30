@@ -31,7 +31,7 @@
 ## 1. Introdução e visão geral da solução
 
 O **Em Dia** reúne os prazos da vida prática de adultos com TDAH — documentos, veículo, casa, saúde, finanças e
-garantias — e avisa antes do vencimento, com tempo visível, passos pequenos e avisos que insistem. Esta entrega
+garantias — e avisa antes do vencimento, com tempo visível, conclusão simples e avisos que insistem. Esta entrega
 implementa a solução especificada na **Entrega 2**, seguindo o contrato da API, o modelo de dados, as regras de
 negócio, a segurança e as telas daquele documento. As diferenças estão registradas na seção 10.
 
@@ -43,9 +43,8 @@ O que foi entregue:
 - **Check-up:** 17 perguntas sim/não organizadas por área (Veículo, Documentos, Casa, Saúde, Finanças e Garantias), uma por tela, com a opção de pular a área; depois, datas, km e veículo; por fim, o resultado por área
   ("4 de 6 áreas em dia"). Área sem itens aparece como "Sem itens" e não conta como em dia. Não duplica itens ao ser refeito (RN10).
 - **Itens com 4 tipos de vencimento (RN01):** data única, recorrente por tempo, uso ou tempo (km ou dias, o que vier
-  primeiro) e garantia (compra + garantia do fabricante + 90 dias). Passos pequenos com caixa de marcar.
-- **Concluir e renovar (RN05–RN07):** histórico, novo prazo, passos desmarcados e mensagem positiva; passos pendentes
-  pedem confirmação.
+  primeiro) e garantia (compra + garantia do fabricante + 90 dias).
+- **Concluir e renovar (RN05–RN07):** histórico, novo prazo e mensagem positiva.
 - **Veículos e quilometragem:** a km nunca diminui; atualizar a km recalcula o status dos itens do veículo.
 - **Avisos por e-mail (RN08/RN09):** rotina diária às 8h, aviso antecipado e reavisos limitados.
 - **Conta e LGPD (RF18):** exclusão da conta e de todos os dados, com confirmação de senha.
@@ -157,7 +156,7 @@ Todas ficam na camada Domain (`Item`, `Veiculo`, `RadarDomain`, `AvisoDomain`, `
 | RN03 | `CalcularAnel`: centro, até 30, 31 a 90, mais de 90 dias |
 | RN04 | `RadarDomain.AplicarModoFoco`: 3 itens mais urgentes |
 | RN05 | `Item.Concluir`: histórico, nova base, novo prazo, passos desmarcados; data única encerra ou recebe nova validade; garantia encerra |
-| RN06 | Passos pendentes sem confirmação → `PASSOS_PENDENTES` (422) |
+| RN06 | Passos pendentes sem confirmação → `PASSOS_PENDENTES` (422); o site já envia confirmado (DV26) |
 | RN07 | `Veiculo.AtualizarKm`: a km nunca diminui; concluir com km maior atualiza o veículo |
 | RN08/RN09 | `AvisoDomain.VerificarAviso`: aviso antecipado e reavisos a cada intervalo, até o máximo por ciclo |
 | RN10 | `CheckupDomain.ItemJaExiste`: não duplica item do mesmo modelo e veículo |
@@ -177,7 +176,7 @@ Todas ficam na camada Domain (`Item`, `Veiculo`, `RadarDomain`, `AvisoDomain`, `
 - O ciclo é o vencimento de referência: ao concluir, o prazo muda e a contagem recomeça.
 - Cada envio fica em `avisos`, único por (item, vencimento, número): rodar a rotina duas vezes no dia não duplica e-mails;
   uma falha de envio é refeita no dia seguinte.
-- O e-mail é curto, positivo e traz o próximo passo pequeno. Sem SMTP configurado, as mensagens só vão para o log.
+- O e-mail é curto e positivo: traz só o item, o prazo e a data (DV26). Sem SMTP configurado, as mensagens só vão para o log.
 - **Extra (DV20):** quem ativa no Perfil recebe o mesmo aviso como **notificação no celular** (Web Push), também no
   site instalado na tela de início. No servidor gratuito, a rotina roda quando a API acorda depois das 8h.
 
@@ -238,14 +237,14 @@ navegador, o token de renovação vai no corpo da resposta e fica no **SecureSto
 | Nível | Ferramenta | Testes | Resultado |
 |---|---|---|---|
 | Unitário (Domain) | xUnit | 50 (U01–U15 + 35 complementares) | ✅ 50/50 |
-| Integração da API | xUnit + WebApplicationFactory + PostgreSQL | 68 (CT01–CT46 + extras) | ✅ 68/68 |
-| Frontend web | Vitest + Testing Library | 21 (CT47–CT51 + validações) | ✅ 21/21 |
+| Integração da API | xUnit + WebApplicationFactory + PostgreSQL | 69 (CT01–CT46 + extras) | ✅ 69/69 |
+| Frontend web | Vitest + Testing Library | 23 (CT47–CT51 + validações) | ✅ 23/23 |
 | App mobile | Vitest | 11 (validações e datas) | ✅ 11/11 |
-| **Total** | | **150** | **✅ 150/150** |
+| **Total** | | **153** | **✅ 153/153** |
 
 - **Cobertura do `EmDia.Domain`:** 97,3% das linhas e 89,5% dos ramos (critério: ≥ 80%).
 - **Fluxos F1–F4** executados de ponta a ponta com a API e o front rodando juntos: primeiro acesso, concluir item com
-  passo pendente, criar item a partir de modelo e atualizar a quilometragem.
+  criar item a partir de modelo e atualizar a quilometragem.
 - **CT08 e CT44:** todas as rotas privadas recusam acesso sem token; nenhuma resposta expõe senha, hash ou refresh token.
 - O resultado de cada caso (U01–U15, CT01–CT51) está em `docs/testes.md`.
 - **CI (GitHub Actions)** a cada push: build e testes da API, imagem Docker da API subindo com PostgreSQL, build e
@@ -296,7 +295,7 @@ O sistema está publicado com HTTPS, em serviços gratuitos (passo a passo em `d
 ## 12. Conclusão, dificuldades e aprendizados
 
 A solução implementa o que a Entrega 2 especificou — contrato da API, modelo de dados, regras de negócio, segurança e
-telas — com 150 testes automatizados aprovados, cobertura de 97% nas regras de negócio e o sistema publicado online.
+telas — com 153 testes automatizados aprovados, cobertura de 97% nas regras de negócio e o sistema publicado online.
 As duas metáforas (Radar e Check-up) orientam as telas, e a acessibilidade foi verificada por testes (status com texto
 e símbolo, uso só com teclado).
 

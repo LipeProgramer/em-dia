@@ -167,6 +167,17 @@ renovação (app em segundo plano, API acordando), reenviam o token antigo. Agor
   desde que a sessão do aparelho continue ativa.
 - Trocar a senha (DV24) e excluir a conta continuam encerrando todas as sessões.
 
+### DV26 — Site sem passos, valor gasto e observação; avisos só até a data
+Pedido do grupo para deixar o uso mais direto. Muda o que o **site** mostra; a API e o banco seguem o contrato E01–E25:
+- **Detalhe do item:** sem a seção de passos.
+- **Novo item e editar item:** sem "Passos pequenos" e "Observação". O que o item já tinha (inclusive os passos copiados
+  do modelo · RN14) continua salvo e é reenviado sem alteração.
+- **Concluir:** pede só a data (e a km, ou a nova validade, quando o tipo exige). Sem valor gasto e observação. Como os
+  passos não aparecem, o site envia `confirmarPassosPendentes: true`; a regra RN06 continua na API e nos testes dela.
+- **Avisos (e-mail e celular):** terminam no prazo e na data, ex.: "CNH: vence amanhã (30/10/2026)". Saíram o próximo
+  passo e a frase final.
+- O histórico ainda mostra valor e observação de conclusões antigas. O app Expo (DV15) não mudou.
+
 ### DV16 — Sem SMTP configurado, e-mails só vão para o log
 Se `Email:Smtp:Host` estiver vazio, a API usa um serviço de e-mail falso que só escreve as mensagens no log. Com o host
 configurado, usa o MailKit. A rotina diária roda às 8h (America/Sao_Paulo).

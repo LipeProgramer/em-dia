@@ -28,6 +28,7 @@ const atrasada = <T,>(valor: T) => new Promise<T>((ok) => setTimeout(() => ok(va
 
 describe('Editar item (T11)', () => {
   beforeEach(() => {
+    editar.mockReset();
     obter.mockResolvedValue(item);
     editar.mockResolvedValue(item);
     categorias.mockImplementation(() => atrasada([
@@ -48,6 +49,24 @@ describe('Editar item (T11)', () => {
     await screen.findByRole('option', { name: 'Documentos' });
     await waitFor(() => expect(categoria).toHaveValue('1'));
     expect(screen.getByLabelText('Veículo')).toHaveValue('v1');
+  });
+
+  it('não pede passos nem observação, e salvar não apaga os que o item já tinha (DV26)', async () => {
+    obter.mockResolvedValue({ ...item, observacao: 'Oficina do João', passos: [{ id: 'p1', descricao: 'Levar o carro', concluido: false }] });
+    const user = userEvent.setup();
+    render(
+      <Providers rota="/itens/i1/editar">
+        <Routes><Route path="/itens/:id/editar" element={<EditarItemPage />} /></Routes>
+      </Providers>,
+    );
+
+    await screen.findByRole('option', { name: 'Documentos' });
+    expect(screen.queryByText('Passos pequenos')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/Observação/)).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Salvar alterações' }));
+
+    await waitFor(() => expect(editar).toHaveBeenCalled());
+    expect(editar.mock.calls.at(-1)![1]).toMatchObject({ observacao: 'Oficina do João', passos: ['Levar o carro'] });
   });
 
   it('salvar sem mexer mantém a categoria e o veículo', async () => {

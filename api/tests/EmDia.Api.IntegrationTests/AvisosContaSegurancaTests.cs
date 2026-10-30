@@ -54,6 +54,25 @@ public class AvisosContaSegurancaTests(IntegrationTestFactory f)
         avisos[0].Sucesso.Should().BeTrue();
     }
 
+    [Fact(DisplayName = "DV26 · E-mail e notificação param no prazo e na data, sem próximo passo, mesmo com passos pendentes")]
+    public async Task Aviso_SoAteAData()
+    {
+        var c = await ApiCliente.CriarAsync(f);
+        (await c.Post("/api/v1/push/inscricoes", new
+        {
+            endpoint = $"https://fcm.googleapis.com/fcm/send/{Guid.NewGuid():N}", p256dh = "chave", auth = "segredo"
+        })).StatusCode.Should().Be(HttpStatusCode.NoContent);
+        await c.CriarDataUnicaAsync("2026-11-01", nome: "CNH", passos: ["Agendar exame médico"], antecedencia: 30);
+
+        await RodarRotinaAsync(RelogioFixo.HojePadrao);
+
+        var email = f.Emails.EmailsEnviados.Last(e => e.Destinatario == c.Email).Corpo;
+        email.Should().Contain("<strong>CNH</strong>: faltam 17 dias (01/11/2026).");
+        email.Should().NotContain("passo").And.NotContain("Agendar").And.NotContain("Radar");
+        f.Notificacoes.Enviadas.Last(n => n.UsuarioId == c.UsuarioId).Notificacao.Corpo
+            .Should().Be("Faltam 17 dias (01/11/2026).");
+    }
+
     [Fact(DisplayName = "CT39 · Rotina executada 2 vezes no mesmo dia → apenas 1 e-mail")]
     public async Task CT39_SemDuplicar()
     {

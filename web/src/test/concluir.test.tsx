@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import type { ItemDetalhe } from '../api/types.ts';
-import { erroDaApi, Providers } from './utils.tsx';
+import { Providers } from './utils.tsx';
 
 const concluir = vi.fn();
 vi.mock('../api/endpoints.ts', () => ({ itensApi: { concluir: (...a: unknown[]) => concluir(...a) } }));
@@ -16,25 +16,20 @@ const item = {
 } as unknown as ItemDetalhe;
 
 describe('Concluir (T12)', () => {
-  it('CT48 · API responde 422 PASSOS_PENDENTES → pergunta "Concluir mesmo assim?"; ao confirmar, reenvia', async () => {
-    concluir
-      .mockRejectedValueOnce(erroDaApi(422, {
-        title: 'Regra de negócio', status: 422, code: 'PASSOS_PENDENTES',
-        detail: 'Este item ainda tem 1 passo sem marcar. Quer concluir mesmo assim?',
-      }))
-      .mockResolvedValueOnce({ item, historicoId: 'h1', mensagem: 'Boa! Próximo prazo: 13/04/2027.' });
+  it('CT48 · Conclui direto, sem perguntar sobre passos (DV26); não pede valor gasto nem observação', async () => {
+    concluir.mockResolvedValueOnce({ item, historicoId: 'h1', mensagem: 'Boa! Próximo prazo: 13/04/2027.' });
     const user = userEvent.setup();
     render(<Providers><ConcluirDialog item={item} aberto aoFechar={() => {}} /></Providers>);
 
+    expect(screen.queryByLabelText(/Valor gasto/)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/Observação/)).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Concluir' }));
 
-    expect(await screen.findByText('Este item ainda tem 1 passo sem marcar. Quer concluir mesmo assim?')).toBeInTheDocument();
-    expect(concluir).toHaveBeenLastCalledWith('i1', expect.objectContaining({ confirmarPassosPendentes: false }));
-
-    await user.click(screen.getByRole('button', { name: 'Concluir mesmo assim' }));
-
     expect(await screen.findByText('Boa! Próximo prazo: 13/04/2027.')).toBeInTheDocument();
-    expect(concluir).toHaveBeenLastCalledWith('i1', expect.objectContaining({ confirmarPassosPendentes: true }));
+    expect(concluir).toHaveBeenCalledTimes(1);
+    expect(concluir).toHaveBeenLastCalledWith('i1', expect.objectContaining({
+      confirmarPassosPendentes: true, valorGasto: null, observacao: null,
+    }));
   });
 
   it('data de conclusão no futuro mostra a mensagem da spec e não chama a API', async () => {

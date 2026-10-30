@@ -51,8 +51,8 @@ Tempo previsto: **8 a 10 minutos**. Os slides que acompanham estão na apresenta
 | Passo | Ação | O que mostrar e falar |
 |---|---|---|
 | 3.1 | **Itens**, filtre por categoria e por situação | **Consulta** com filtros (`GET /itens?categoriaId=&status=`). O status não é gravado: é calculado na leitura. |
-| 3.2 | Abra o item vencido → **Concluir** sem marcar os passos | **Regra RN06:** a API responde **422 `PASSOS_PENDENTES`** e o front pergunta **"Concluir mesmo assim?"**. |
-| 3.3 | **Concluir mesmo assim** | **RN05/RN15:** histórico gravado, novo prazo calculado e mensagem positiva ("Boa! Próxima vez: …"). O item sai do centro do Radar. |
+| 3.2 | Abra o item vencido → **Concluir** | A janela pede só a data (e a km, se o item for por uso; a nova validade, se for de data única). |
+| 3.3 | Toque em **Concluir** | **RN05/RN15:** histórico gravado, novo prazo calculado e mensagem positiva ("Boa! Próxima vez: …"). O item sai do centro do Radar. |
 | 3.4 | **Histórico** | A conclusão aparece (`GET /historico`), vinda da tabela `historicos`. |
 | 3.5 | **Perfil › Veículos → Atualizar km** com um valor **menor** que o atual | **RN07:** a km nunca diminui → **422 `KM_MENOR`**, com a mensagem de erro na tela. |
 | 3.6 | Atualize com um valor **maior** | Os itens do veículo (ex.: troca de óleo) **recalculam o status** pela km. |
@@ -95,5 +95,5 @@ cascata. No **Neon**, a tabela `usuarios` não tem mais a conta da demonstraçã
 | E a API com o banco? | Entity Framework Core 10 + Npgsql; migrations versionam o banco e criam o catálogo; repositórios filtram sempre pelo dono (RN12). |
 | Como evitam ataque de força bruta? | 5 tentativas de login por minuto por IP (429) e bloqueio da conta por 15 min após 5 falhas. Além disso, toda a API aceita no máximo 300 requisições por minuto por IP (DV21). |
 | E se alguém tentar ver o item de outra pessoa? | O id do usuário vem só do token; recurso de outro usuário responde **404**. |
-| Como sabem que funciona? | 150 testes automatizados (50 unitários, 68 de integração com PostgreSQL real, 21 do front, 11 do app), cobertura de 97,3% no Domain e CI no GitHub Actions a cada push. |
+| Como sabem que funciona? | 153 testes automatizados (50 unitários, 69 de integração com PostgreSQL real, 23 do front, 11 do app), cobertura de 97,3% no Domain e CI no GitHub Actions a cada push. |
 | Por que Vercel + Render + Neon? | Gratuitos e separados por função. O Vercel repassa `/api/*` para o Render, então o navegador vê um só endereço e o cookie `SameSite=Strict` funciona. |

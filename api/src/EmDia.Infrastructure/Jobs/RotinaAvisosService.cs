@@ -122,14 +122,19 @@ public class RotinaAvisosService(
             : $"Em Dia · Lembrete: {item.Nome} {situacao}";
     }
 
+    /// <summary>Prazo e dia, sem mais nada (DV26). Ex.: "vence amanhã (30/10/2026)".</summary>
+    private static string PrazoComData(Item item, Veiculo? veiculo, DateOnly hoje)
+    {
+        var prazo = item.TextoPrazo(hoje, veiculo);
+        return item.DataEfetiva(hoje, veiculo) is { } data ? $"{prazo} ({Formatos.Data(data)})" : prazo;
+    }
+
     /// <summary>Notificação no celular: o mesmo aviso do e-mail, em uma linha; tocar abre o item.</summary>
     private static NotificacaoPush Notificacao(Item item, StatusItem status, DeveAvisar decisao, Veiculo? veiculo, DateOnly hoje)
     {
         var titulo = Assunto(item, status, decisao).Replace("Em Dia · ", "");
-        var passo = item.Passos.FirstOrDefault(p => !p.Concluido)?.Descricao;
-        var prazo = item.TextoPrazo(hoje, veiculo);
-        var corpo = $"{char.ToUpper(prazo[0])}{prazo[1..]}." + (passo is null ? "" : $" Próximo passo: {passo}");
-        return new NotificacaoPush(titulo, corpo, $"/itens/{item.Id}");
+        var prazo = PrazoComData(item, veiculo, hoje);
+        return new NotificacaoPush(titulo, $"{char.ToUpper(prazo[0])}{prazo[1..]}.", $"/itens/{item.Id}");
     }
 
     /// <summary>Texto curto, positivo e sem culpa (RN15).</summary>
@@ -137,19 +142,12 @@ public class RotinaAvisosService(
     {
         var nome = System.Net.WebUtility.HtmlEncode(usuario.Nome);
         var itemNome = System.Net.WebUtility.HtmlEncode(item.Nome);
-        var prazo = item.TextoPrazo(hoje, veiculo);
-        var data = item.DataEfetiva(hoje, veiculo) is { } d ? Formatos.Data(d) : "";
-        var passo = item.Passos.FirstOrDefault(p => !p.Concluido)?.Descricao;
-        var proximoPasso = passo is null ? "" :
-            $"<p>Próximo passo pequeno: <strong>{System.Net.WebUtility.HtmlEncode(passo)}</strong></p>";
 
         return $"""
             <div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:20px">
               <h2 style="color:#0f756e;margin:0 0 12px">Em Dia</h2>
               <p>Olá, {nome}!</p>
-              <p><strong>{itemNome}</strong>: {prazo} ({data}).</p>
-              {proximoPasso}
-              <p>Abra o seu Radar para marcar os passos ou concluir quando terminar.</p>
+              <p><strong>{itemNome}</strong>: {PrazoComData(item, veiculo, hoje)}.</p>
             </div>
             """;
     }

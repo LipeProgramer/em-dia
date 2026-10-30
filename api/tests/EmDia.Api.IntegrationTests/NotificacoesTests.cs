@@ -64,6 +64,7 @@ public class NotificacoesTests(IntegrationTestFactory f)
         var (_, notificacao) = f.Notificacoes.Enviadas.Last(n => n.UsuarioId == c.UsuarioId);
         notificacao.Titulo.Should().Contain("IPVA");
         notificacao.Url.Should().StartWith("/itens/");
+        notificacao.Corpo.Should().Be("Faltam 17 dias (01/11/2026).");
 
         (await c.Delete("/api/v1/push/inscricoes", new { endpoint })).StatusCode.Should().Be(HttpStatusCode.NoContent);
         await c.CriarDataUnicaAsync("2026-11-02", nome: "Licenciamento", antecedencia: 30);
