@@ -55,61 +55,162 @@ em-dia/
 
 > A pasta `mobile/` traz o app em React Native + Expo (extra), que roda no **Expo Go** e usa a mesma API. Como rodar no celular: [`mobile/README.md`](mobile/README.md).
 
-## Como executar (desenvolvimento local)
+## Instalar em outro PC (Windows)
 
-### Pré-requisitos
-- [.NET 10 SDK](https://dot.net)
-- [Node.js 22+](https://nodejs.org)
-- Docker Desktop (para o banco local e os testes de integração) **ou** um PostgreSQL 17 na porta 5433
+> **Só quer usar o sistema?** Não precisa instalar nada: abra <https://em-dia-projeto-facul.vercel.app>.
+> O passo a passo abaixo é para rodar e alterar o código no seu computador. Essa cópia usa um **banco próprio, que começa
+> vazio**: contas e itens do site online não aparecem nela (e vice-versa).
 
-### 1. Banco de dados
+Faça tudo no **PowerShell**. Na primeira vez leva uns 20 minutos, a maior parte baixando programas.
+
+### 1. Instalar os programas
+
+Pule o que já tiver instalado:
+
+```powershell
+winget install --id Git.Git -e
+winget install --id Microsoft.DotNet.SDK.10 -e
+winget install --id OpenJS.NodeJS.LTS -e
+winget install --id Docker.DockerDesktop -e
+```
+
+Depois, **reinicie o computador** e **abra o Docker Desktop** uma vez, até ele mostrar que está rodando. Em um PowerShell
+novo, confira as versões (.NET 10 e Node 22 ou mais novo):
+
+```powershell
+git --version
+dotnet --version
+node --version
+docker --version
+```
+
+### 2. Baixar o projeto
+
+```powershell
+git clone https://github.com/felipemsantoss/em-dia.git
+cd em-dia
+```
+
+### 3. Subir o banco de dados
+
+Com o Docker Desktop aberto, na pasta `em-dia`:
+
 ```powershell
 docker compose up -d
 ```
 
-### 2. Segredos da API (nunca no código — spec §4.2 e §4.6)
+Isso cria um PostgreSQL na porta 5433, só para este computador. Os dados ficam guardados entre um uso e outro.
+
+### 4. Criar a chave de login (só na primeira vez)
+
+Cada computador tem a sua chave, e ela nunca vai para o GitHub. Os três comandos criam uma chave aleatória e a guardam
+nos segredos do .NET:
+
 ```powershell
-cd api
-dotnet user-secrets set "Jwt:Key" "<uma chave aleatória com pelo menos 32 caracteres>" --project src/EmDia.Api
-# Opcional, para enviar e-mails de verdade (sem isso, os avisos só são registrados em log):
-dotnet user-secrets set "Email:Smtp:Host" "smtp.seuprovedor.com" --project src/EmDia.Api
-dotnet user-secrets set "Email:Smtp:Usuario" "usuario" --project src/EmDia.Api
-dotnet user-secrets set "Email:Smtp:Senha" "senha" --project src/EmDia.Api
+$bytes = New-Object byte[] 48
+[Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($bytes)
+dotnet user-secrets set "Jwt:Key" ([Convert]::ToBase64String($bytes)) --project api/src/EmDia.Api
 ```
 
-### 3. Migrations e dados iniciais
+### 5. Criar as tabelas
+
 ```powershell
+cd api
+dotnet restore
 dotnet tool restore
 dotnet ef database update --project src/EmDia.Infrastructure --startup-project src/EmDia.Api
 ```
 
-### 4. API
+Isso cria as tabelas e já coloca as categorias, os modelos prontos e as perguntas do check-up.
+
+### 6. Ligar a API
+
+Ainda na pasta `api`. Deixe esta janela aberta enquanto usa o sistema:
+
 ```powershell
 dotnet run --project src/EmDia.Api --launch-profile http
-# Swagger: http://localhost:5196/swagger
 ```
 
-### 5. Frontend
+Espere aparecer `Now listening on`. Para conferir, abra o Swagger em <http://localhost:5196/swagger>.
+
+### 7. Ligar o site
+
+Abra **outro PowerShell**, na pasta `em-dia`, e deixe também aberto:
+
 ```powershell
 cd web
 npm install
 npm run dev
-# http://localhost:5173 (as chamadas /api vão para a API pelo proxy do Vite)
 ```
 
-### 6. Testes
+### 8. Testar
+
+Abra <http://localhost:5173> e clique em **Criar conta**. Se o check-up abrir depois do cadastro, está tudo funcionando.
+
+### Nas próximas vezes
+
+Abra o Docker Desktop e use dois PowerShell, a partir da pasta `em-dia`:
+
 ```powershell
-# Unitários (Domain) — com cobertura
+docker compose up -d
 cd api
+dotnet run --project src/EmDia.Api --launch-profile http
+```
+
+```powershell
+cd web
+npm run dev
+```
+
+Para pegar a versão mais nova do GitHub, na pasta `em-dia`:
+
+```powershell
+git pull
+cd api
+dotnet restore
+dotnet ef database update --project src/EmDia.Infrastructure --startup-project src/EmDia.Api
+cd ../web
+npm install
+```
+
+### Se der erro
+
+| O que aparece | O que fazer |
+|---|---|
+| `winget`, `dotnet`, `node` ou `git` "não é reconhecido" | Feche e abra o PowerShell. Se continuar, reinicie o computador. |
+| `npm` diz que a execução de scripts foi desabilitada | Rode `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` e abra o PowerShell de novo. |
+| `docker compose` não conecta ou reclama do "daemon" | O Docker Desktop não está aberto. Abra e espere ele terminar de iniciar. |
+| A porta 5433 já está em uso | Outro PostgreSQL está nessa porta. Pare-o, ou troque a porta no `docker-compose.yml` e em `api/src/EmDia.Api/appsettings.Development.json`. |
+| A API para com "Jwt:Key ausente ou curta" | Refaça o passo 4. |
+| A API fala que não conseguiu conectar ao banco | Confira o passo 3 e se o Docker Desktop está aberto. |
+| O site mostra "Algo deu errado" ou "Sem conexão" | A API não está ligada: confira a janela do passo 6. |
+
+### Opcional
+
+**E-mail de verdade.** Sem isto, os avisos e o link de "Esqueci minha senha" só aparecem na janela da API. Em
+`api`, com os dados do [Brevo](docs/deploy.md#e-mail-smtp) ou de outro serviço:
+
+```powershell
+dotnet user-secrets set "Email:Smtp:Host" "smtp-relay.brevo.com" --project src/EmDia.Api
+dotnet user-secrets set "Email:Smtp:Usuario" "seu-login-smtp" --project src/EmDia.Api
+dotnet user-secrets set "Email:Smtp:Senha" "sua-chave-smtp" --project src/EmDia.Api
+dotnet user-secrets set "Email:Remetente" "seu-remetente-verificado" --project src/EmDia.Api
+```
+
+**App no celular (Expo Go).** Veja [`mobile/README.md`](mobile/README.md).
+
+**Rodar os testes:**
+
+```powershell
+# Na pasta api. Unitários (Domain), com cobertura
 dotnet test tests/EmDia.Domain.Tests --collect:"XPlat Code Coverage"
 
-# Integração — usa Testcontainers (Docker). Sem Docker, aponte para um PostgreSQL de testes
+# Na pasta api. Integração: usa Testcontainers (Docker). Sem Docker, aponte para um PostgreSQL de testes
 # (o banco informado é APAGADO e recriado):
 #   $env:EMDIA_TEST_DB = "Host=localhost;Port=5433;Database=emdia_test;Username=emdia;Password=emdia_dev"
 dotnet test tests/EmDia.Api.IntegrationTests
 
-# Frontend
-cd ../web
+# Na pasta web
 npx vitest run
 ```
 
